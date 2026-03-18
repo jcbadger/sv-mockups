@@ -3,250 +3,487 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Search Dropdown Mockup</title>
+<title>ShareVault Search Pulldown Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0ee; display: flex; justify-content: center; padding: 2rem; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body,input{font-family:'DM Sans',sans-serif;background:#f2f3f9;}
+#search-wrapper{position:relative;width:430px;}
+#dropdown{overflow:hidden;max-height:0;transition:max-height 0.18s ease-out;border:1px solid #e0e8ee;border-top:none;background:#fff;position:absolute;width:100%;z-index:100;top:100%;}
+#dropdown.open{max-height:700px;transition:max-height 0.2s ease-in;}
+#fixed-tip{display:none;position:fixed;background:#fff;border:1px solid #4d9ff7;padding:8px 10px;font-size:12px;color:#000;width:220px;z-index:999;line-height:1.5;pointer-events:none;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+.fade-in{animation:fadeIn 0.3s ease-in;}
+.fade-out{animation:fadeOut 0.2s ease-out forwards;}
 </style>
 </head>
 <body>
-<div style="width: 380px;">
+<div style="padding:1.5rem;display:flex;flex-direction:column;align-items:center;gap:0;">
+<div id="search-wrapper">
 
-  <div id="search-box" style="background:#fff;border:1px solid #ccc;display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:text;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input id="search-input" type="text" placeholder="Search" style="border:none;outline:none;background:transparent;font-size:14px;color:#333;width:100%;font-family:inherit;" />
+  <div id="search-box" style="background:#fff;border:1px solid #e0e8ee;display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:text;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="14 10 14 14" style="flex-shrink:0;"><path fill="#B8C1CA" fill-rule="evenodd" d="m27.772 22.672-3.305-3.305a5.8 5.8 0 0 0 1.2-3.534 5.833 5.833 0 1 0-5.834 5.833c1.33 0 2.553-.45 3.534-1.199l3.305 3.305a.77.77 0 0 0 .55.227.777.777 0 0 0 .55-1.327m-7.939-2.561a4.283 4.283 0 0 1-4.278-4.278 4.283 4.283 0 0 1 4.278-4.278 4.283 4.283 0 0 1 4.278 4.278 4.283 4.283 0 0 1-4.278 4.278"/></svg>
+    <input id="search-input" type="text" placeholder="Search" style="border:none;outline:none;-webkit-appearance:none;box-shadow:none;background:transparent;font-size:13px;color:#000;width:100%;font-family:'DM Sans',sans-serif;"/>
+    <span id="pin-btn" style="display:none;cursor:pointer;flex-shrink:0;" onclick="pinCurrentSearch()">
+      <svg id="pin-field-icon" width="15" height="15" viewBox="0 0 24 24" fill="#4d9ff7"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/></svg>
+    </span>
+    <span id="clear-btn" style="display:none;cursor:pointer;flex-shrink:0;" onclick="clearSearch()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="#B7C1CA" fill-rule="evenodd" d="M0 0h16v16H0zm8.706 8 2.147-2.146a.5.5 0 0 0-.707-.708L8 7.293 5.853 5.146a.5.5 0 0 0-.707.708L7.292 8l-2.146 2.146A.502.502 0 0 0 5.5 11a.5.5 0 0 0 .354-.146L8 8.707l2.147 2.147a.5.5 0 0 0 .707-.708z"/></svg>
+    </span>
   </div>
 
-  <div id="dropdown" style="display:none;background:#fff;border:0.5px solid #ccc;border-top:none;">
-    <div style="padding:8px 12px;border-bottom:0.5px solid #e0e0e0;display:flex;align-items:center;gap:16px;">
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#333;cursor:pointer;" onclick="setMode('files')">
-        <span id="files-radio" style="width:14px;height:14px;border-radius:50%;border:2px solid #378ADD;background:#378ADD;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <span style="width:5px;height:5px;border-radius:50%;background:white;"></span>
-        </span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+  <div id="dropdown">
+    <div id="mode-bar" style="padding:8px 12px;border-bottom:1px solid #e0e8ee;display:flex;align-items:center;gap:16px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#000;cursor:pointer;">
+        <span id="files-radio" style="display:inline-flex;flex-shrink:0;"></span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 11 14"><path d="M0 0v14h11V5L6 0zm9.59 5H6V1.41zM1 1h4v5h5v7H1z" fill="#94a4aa"/></svg>
         Files
       </label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#333;cursor:pointer;" onclick="setMode('folders')">
-        <span id="folders-radio" style="width:14px;height:14px;border-radius:50%;border:1.5px solid #ccc;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"></span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#000;cursor:pointer;">
+        <span id="folders-radio" style="display:inline-flex;flex-shrink:0;"></span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 14"><path d="M13.125 4.998H14v8.151c0 .47-.392.851-.876.851H.876A.86.86 0 0 1 0 13.149V4.998h.875c0 2.3-.001 8.154.001 8.154 0 0 12.249-.001 12.249-.003V4.667zM5.854.852C5.431.369 5.086 0 4.489 0H1.313C.588 0 0 .671 0 1.498V5l1.309-.001h11.382L14 5V2.998c0-.827-.586-1.498-1.31-1.498H7.111c-.365 0-.922-.265-1.18-.56zM13 2.998V4H1V1.498C1 1.224 1.192 1 1.429 1H4.54c.358 0 .478.264.731.559l.075.088c.414.482 1.178.852 1.763.852h5.465c.235 0 .426.223.426.499" fill="#94a4aa"/></svg>
         Folders
       </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#000;cursor:pointer;">
+        <span id="meaning-radio" style="display:inline-flex;flex-shrink:0;"></span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="#b73eb4" viewBox="0 0 24 24"><path d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
+        Meaning
+      </label>
+      <span style="margin-left:auto;flex-shrink:0;cursor:pointer;">
+        <svg width="16" height="16" viewBox="77 526 16 16"><path fill="#4d9ff7" fill-rule="evenodd" d="M85 527.143A6.865 6.865 0 0 1 91.857 534 6.866 6.866 0 0 1 85 540.857 6.865 6.865 0 0 1 78.143 534 6.864 6.864 0 0 1 85 527.143M85 526a8 8 0 1 0 0 16 8 8 0 0 0 0-16m-2.094 6.89q0-.504.152-.915.15-.411.438-.704.288-.292.695-.453.406-.16.91-.16.42 0 .781.124.362.122.631.356.27.234.425.58.156.35.156.787 0 .32-.069.553a1.47 1.47 0 0 1-.442.704q-.147.132-.294.26a8 8 0 0 0-.32.284 1.6 1.6 0 0 0-.256.307q-.11.17-.169.397-.059.229-.058.558h-.989q0-.403.041-.681.042-.279.133-.49t.224-.37q.132-.159.315-.315.145-.129.28-.238.132-.11.237-.242a1.03 1.03 0 0 0 .224-.69q0-.274-.096-.471a1 1 0 0 0-.233-.316.9.9 0 0 0-.293-.173.8.8 0 0 0-.273-.055q-.567 0-.838.37-.27.37-.27.992zm1.454 3.309h1.225v1.143H84.36z"/></svg>
+      </span>
     </div>
     <div id="list-container" style="padding:6px 0;"></div>
   </div>
 
 </div>
 
+<div style="width:430px;padding-top:320px;font-size:12px;color:#5d676f;line-height:1.9;">
+  <strong style="color:#000;font-size:13px;">Try these searches:</strong><br>
+  Type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">fin</code> or <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">corp</code> — name matching with bold highlighting<br>
+  Type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">2.</code> or <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">2.1</code> — index number prefix search<br>
+  Type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">1.1-1</code> — file index with dash normalization<br>
+  Type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">12345678</code> — exact file ID match<br>
+  Switch to <strong>Folders</strong> mode and type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">fin</code><br>
+  Switch to <strong>Meaning</strong> and type anything<br>
+  Type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">doc</code> — matches folder descriptions (hover 💬 icon)
+</div>
+
+<div id="fixed-tip"></div>
+</div>
+
 <script>
-const PIN_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#999"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/></svg>`;
-const UNPIN_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#999"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/><line x1="3" y1="21" x2="21" y2="3" stroke="#999" stroke-width="2"/></svg>`;
-const CLOCK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#999"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3zm-1 5v5l4 2.5-.75 1.23L11 14V8h1z"/></svg>`;
-const FILE_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
-const FOLDER_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
-const PIN_HEADER_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="#999"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/></svg>`;
-const CLOCK_HEADER_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="#999"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3zm-1 5v5l4 2.5-.75 1.23L11 14V8h1z"/></svg>`;
+const P='#4d9ff7',AI='#b73eb4',ICON='#94a4aa',TEXT='#000',TEXT2='#5d676f',HOVER='#e4e8ee',BORDER='#e0e8ee';
 
-let pinned = [
-  { id: 1, text: 'change of control', count: 12, type: 'folder' },
-  { id: 2, text: 'recurring revenue', count: 22, type: 'file' }
+const RADIO_ON=`<svg viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="7" stroke="${P}" fill="none" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="${P}"/></svg>`;
+const RADIO_OFF=`<svg viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="7" stroke="${ICON}" fill="none" stroke-width="1.5"/></svg>`;
+const FILE_P=`<svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 11 14"><path d="M0 0v14h11V5L6 0zm9.59 5H6V1.41zM1 1h4v5h5v7H1z" fill="${P}"/></svg>`;
+const FOLDER_P=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 14"><path d="M13.125 4.998H14v8.151c0 .47-.392.851-.876.851H.876A.86.86 0 0 1 0 13.149V4.998h.875c0 2.3-.001 8.154.001 8.154 0 0 12.249-.001 12.249-.003V4.667zM5.854.852C5.431.369 5.086 0 4.489 0H1.313C.588 0 0 .671 0 1.498V5l1.309-.001h11.382L14 5V2.998c0-.827-.586-1.498-1.31-1.498H7.111c-.365 0-.922-.265-1.18-.56zM13 2.998V4H1V1.498C1 1.224 1.192 1 1.429 1H4.54c.358 0 .478.264.731.559l.075.088c.414.482 1.178.852 1.763.852h5.465c.235 0 .426.223.426.499" fill="${P}"/></svg>`;
+const FILE_G=`<svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 11 14"><path d="M0 0v14h11V5L6 0zm9.59 5H6V1.41zM1 1h4v5h5v7H1z" fill="${ICON}"/></svg>`;
+const FOLDER_G=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 14"><path d="M13.125 4.998H14v8.151c0 .47-.392.851-.876.851H.876A.86.86 0 0 1 0 13.149V4.998h.875c0 2.3-.001 8.154.001 8.154 0 0 12.249-.001 12.249-.003V4.667zM5.854.852C5.431.369 5.086 0 4.489 0H1.313C.588 0 0 .671 0 1.498V5l1.309-.001h11.382L14 5V2.998c0-.827-.586-1.498-1.31-1.498H7.111c-.365 0-.922-.265-1.18-.56zM13 2.998V4H1V1.498C1 1.224 1.192 1 1.429 1H4.54c.358 0 .478.264.731.559l.075.088c.414.482 1.178.852 1.763.852h5.465c.235 0 .426.223.426.499" fill="${ICON}"/></svg>`;
+const CLOCK_P=`<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="15 2 15 15"><path fill="${P}" fill-rule="evenodd" d="M22 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14m0 13c-3.309 0-6-2.692-6-6s2.691-6 6-6c3.308 0 6 2.692 6 6s-2.692 6-6 6m.5-5.442 1.828 1.829-.707.707L21.527 10H21.5V5h1z"/></svg>`;
+const CLOCK_G=`<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="15 2 15 15"><path fill="${ICON}" fill-rule="evenodd" d="M22 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14m0 13c-3.309 0-6-2.692-6-6s2.691-6 6-6c3.308 0 6 2.692 6 6s-2.692 6-6 6m.5-5.442 1.828 1.829-.707.707L21.527 10H21.5V5h1z"/></svg>`;
+const PIN_P=`<svg width="15" height="15" viewBox="0 0 24 24" fill="${P}"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/></svg>`;
+const PIN_G=`<svg width="15" height="15" viewBox="0 0 24 24" fill="${ICON}"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/></svg>`;
+const UNPIN=`<svg width="15" height="15" viewBox="0 0 24 24" fill="#999"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/><line x1="3" y1="21" x2="21" y2="3" stroke="#999" stroke-width="2"/></svg>`;
+const PIN_HDR=`<svg width="13" height="13" viewBox="0 0 24 24" fill="${ICON}"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/></svg>`;
+const SPARKLE=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="${AI}" viewBox="0 0 24 24"><path d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>`;
+const DESC_ICO=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="13" height="13" style="flex-shrink:0;cursor:default;"><g fill="${ICON}" fill-rule="evenodd"><path d="M13.936 0H1.96A1.947 1.947 0 0 0 .015 1.945v7.856c0 1.073.872 1.945 1.945 1.945h6.558v3.78a.475.475 0 0 0 .834.31l3.543-4.09h1.04a1.947 1.947 0 0 0 1.946-1.945V1.945A1.947 1.947 0 0 0 13.936 0m.995 9.801a.997.997 0 0 1-.995.996H12.7a.47.47 0 0 0-.38.164l-2.852 3.292v-2.981a.475.475 0 0 0-.475-.475H1.96A.997.997 0 0 1 .964 9.8V1.945c0-.549.447-.996.996-.996h11.976c.549 0 .995.447.995.996z"/><path d="M13.262 3.13H2.633a.475.475 0 0 0 0 .95h10.63a.475.475 0 0 0 0-.95m-.001 2.268H2.633a.475.475 0 0 0 0 .95h10.63a.475.475 0 0 0 0-.95M7.664 7.666H2.633a.475.475 0 0 0 0 .95h5.031a.475.475 0 1 0 0-.95"/></g></svg>`;
+const FOLDER_TIP=`<svg xmlns="http://www.w3.org/2000/svg" width="13" height="12" viewBox="0 0 14 14"><path d="M13.125 4.998H14v8.151c0 .47-.392.851-.876.851H.876A.86.86 0 0 1 0 13.149V4.998h.875c0 2.3-.001 8.154.001 8.154 0 0 12.249-.001 12.249-.003V4.667zM5.854.852C5.431.369 5.086 0 4.489 0H1.313C.588 0 0 .671 0 1.498V5l1.309-.001h11.382L14 5V2.998c0-.827-.586-1.498-1.31-1.498H7.111c-.365 0-.922-.265-1.18-.56zM13 2.998V4H1V1.498C1 1.224 1.192 1 1.429 1H4.54c.358 0 .478.264.731.559l.075.088c.414.482 1.178.852 1.763.852h5.465c.235 0 .426.223.426.499" fill="${P}"/></svg>`;
+
+const allFolders=[
+  {full:'1.',display:'1. Corporate Records',desc:'All corporate governance documents and records'},
+  {full:'1.1.',display:'1.1. Annual Shareholder Reports',desc:'Annual reports issued to shareholders'},
+  {full:'1.2.',display:'1.2. Board Minutes',desc:'Minutes from all board of directors meetings'},
+  {full:'1.3.',display:'1.3. Articles of Incorporation',desc:''},
+  {full:'1.4.',display:'1.4. Bylaws',desc:''},
+  {full:'1.5.',display:'1.5. Corporate Resolutions',desc:''},
+  {full:'2.',display:'2. Financials',desc:'All financial statements and reports'},
+  {full:'2.1.',display:'2.1. Consolidated Financials',desc:'Consolidated financial statements across all entities'},
+  {full:'2.1.1.',display:'2.1.1. 2026 YTD',desc:''},
+  {full:'2.1.2.',display:'2.1.2. 2025 Annual',desc:''},
+  {full:'2.1.3.',display:'2.1.3. 2024 Annual',desc:''},
+  {full:'2.2.',display:'2.2. Financial Statements',desc:''},
+  {full:'2.3.',display:'2.3. Tax Returns',desc:'Federal and state tax returns'},
+  {full:'2.4.',display:'2.4. Accounts Receivable',desc:'Outstanding customer receivables'},
+  {full:'2.5.',display:'2.5. Accounts Payable',desc:'Outstanding vendor payables'},
+  {full:'3.',display:'3. Indebtedness',desc:'All debt instruments and credit agreements'},
+  {full:'3.1.',display:'3.1. Credit Agreements',desc:''},
+  {full:'3.2.',display:'3.2. Promissory Notes',desc:''},
+  {full:'4.',display:'4. Engineering',desc:'Technical documentation and architecture'},
+  {full:'4.1.',display:'4.1. Architecture',desc:'System architecture diagrams and documentation'},
+  {full:'5.',display:'5. Human Resources',desc:'Employee agreements and HR policies'},
+  {full:'5.1.',display:'5.1. Employment Agreements',desc:''},
+  {full:'5.2.',display:'5.2. Benefit Plans',desc:''},
+  {full:'6.',display:'6. Legal',desc:'Legal contracts and litigation documents'},
+  {full:'6.1.',display:'6.1. Material Contracts',desc:''},
+  {full:'6.2.',display:'6.2. Litigation',desc:'Pending and resolved litigation matters'},
+  {full:'7.',display:'7. IP',desc:'Intellectual property including patents and trademarks'},
+  {full:'7.1.',display:'7.1. Patents',desc:''},
+  {full:'7.2.',display:'7.2. Trademarks',desc:''},
+  {full:'8.',display:'8. Real Estate',desc:'Property leases and real estate documents'},
+  {full:'9.',display:'9. Insurance',desc:'Insurance policies and certificates'},
+  {full:'10.',display:'10. Environmental',desc:'Environmental compliance documents'},
 ];
-let recent = [
-  { id: 3, text: 'limited liability', count: 8, type: 'file' },
-  { id: 4, text: 'financials', count: 3, type: 'folder' },
-  { id: 5, text: 'indemnification', count: 5, type: 'file' },
-  { id: 6, text: 'corporate records', count: 5, type: 'folder' },
-  { id: 7, text: 'representations and warranties', count: 7, type: 'file' }
+
+const allFiles=[
+  {fileId:'12345678',idx:'1–1.',name:'Certificate-of-Incorporation.docx'},
+  {fileId:'23456789',idx:'1.1–1.',name:'Board-Minutes-2025-Q4.pdf'},
+  {fileId:'34567890',idx:'1.1–2.',name:'Board-Minutes-2025-Q3.pdf'},
+  {fileId:'45678901',idx:'1.1–3.',name:'Board-Minutes-2025-Q2.pdf'},
+  {fileId:'56789012',idx:'1.2–1.',name:'Articles-of-Incorporation.pdf'},
+  {fileId:'67890123',idx:'1.3–1.',name:'Bylaws-2024.pdf'},
+  {fileId:'78901234',idx:'2–1.',name:'Financial-Summary-2025.pdf'},
+  {fileId:'89012345',idx:'2.1–1.',name:'consolidated-financials-2025.xlsx'},
+  {fileId:'90123456',idx:'2.1–2.',name:'consolidated-financials-2024.xlsx'},
+  {fileId:'01234567',idx:'2.1.1–1.',name:'2026-YTD-summary.pdf'},
+  {fileId:'11234567',idx:'2.1.1–2.',name:'2026-YTD-detail.xlsx'},
+  {fileId:'21234567',idx:'2.1.2–1.',name:'2025-Annual-Report.pdf'},
+  {fileId:'31234567',idx:'2.2–1.',name:'financial-statements-q4-2025.pdf'},
+  {fileId:'41234567',idx:'2.2–2.',name:'financial-statements-q3-2025.pdf'},
+  {fileId:'51234567',idx:'2.3–1.',name:'tax-return-2024.pdf'},
+  {fileId:'61234567',idx:'2.3–2.',name:'tax-return-2023.pdf'},
+  {fileId:'71234567',idx:'3–1.',name:'credit-agreement-primary.pdf'},
+  {fileId:'81234567',idx:'3.1–1.',name:'credit-agreement-amendment-1.pdf'},
+  {fileId:'91234567',idx:'3.2–1.',name:'promissory-note-2023.pdf'},
+  {fileId:'12345670',idx:'5.1–1.',name:'employment-agreements-executives.pdf'},
+  {fileId:'12345671',idx:'5.1–2.',name:'employment-agreements-engineers.pdf'},
+  {fileId:'12345672',idx:'6.1–1.',name:'material-contracts-list.pdf'},
+  {fileId:'12345673',idx:'7.1–1.',name:'patent-schedule.pdf'},
+  {fileId:'12345674',idx:'7.2–1.',name:'trademark-registrations.pdf'},
 ];
 
-const allFolders = [
-  '1. Corporate Records', '1.1. Annual Shareholder Reports',
-  '2. Financials', '2.1. Consolidated Financials',
-  '2.1.1. 2026 YTD', '2.2. Financial Statements',
-  '3. Indebtedness', '4. Engineering',
-  '5. Human Resources', '6. My Folder', '7. Legal', '8. IP'
-];
+let pinned=[{id:1,text:'change of control',count:12,type:'folder'},{id:2,text:'recurring revenue',count:22,type:'file'}];
+let recent=[{id:3,text:'limited liability',count:8,type:'file'},{id:4,text:'financials',count:3,type:'folder'},{id:5,text:'indemnification',count:5,type:'file'}];
+let meaningRecent=['clauses that limit our liability','change of control provisions'];
+const meaningExamples=['termination rights','indemnification obligations','representations about intellectual property','debt covenants and restrictions','employee retention agreements'];
 
-const allFiles = [
-  'Tetraplex Annual Report 2025.pdf',
-  'consolidated-financials-2025.xlsx',
-  'financial-statements-q4.pdf',
-  'Certificate-of-Incorporation.docx',
-  'employment-agreements.pdf',
-  'ip-assignments.pdf',
-  'board-minutes-2025.pdf'
-];
+let mode='files',searchCommitted=false,nextId=100,isOpen=false,tipTimer=null;
 
-let mode = 'files';
+function nd(s){return s.replace(/[-\u2013\u2014]/g,'-');}
+function ph(m){return m==='files'?'Search Files':m==='folders'?'Search Folders':'Describe what you\'re looking for';}
 
-function setMode(m) {
-  mode = m;
-  const fr = document.getElementById('files-radio');
-  const fdr = document.getElementById('folders-radio');
-  if (m === 'files') {
-    fr.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid #378ADD;background:#378ADD;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
-    fr.innerHTML = '<span style="width:5px;height:5px;border-radius:50%;background:white;"></span>';
-    fdr.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid #ccc;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
-    fdr.innerHTML = '';
+const fixedTip=document.getElementById('fixed-tip');
+
+function showTip(el,folderName,bodyHtml){
+  clearTimeout(tipTimer);
+  tipTimer=setTimeout(()=>{
+    fixedTip.style.display='block';
+    const tipW=220;
+    const vw=window.innerWidth;
+    const r=el.getBoundingClientRect();
+    const iconCenterX=r.left+r.width/2;
+    const ptrFromLeft=10;
+    let left=iconCenterX-ptrFromLeft;
+    if(left+tipW>vw-8) left=vw-tipW-8;
+    if(left<8) left=8;
+    const ptrOffset=Math.max(8,Math.min(iconCenterX-left,tipW-16));
+    fixedTip.style.left=left+'px';
+    fixedTip.style.top=(r.bottom+8)+'px';
+    const ptr=`<div style="position:absolute;top:-6px;left:${ptrOffset}px;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:5px solid #4d9ff7;"></div><div style="position:absolute;top:-4px;left:${ptrOffset}px;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:4px solid #fff;"></div>`;
+    fixedTip.innerHTML=ptr+`<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">${FOLDER_TIP}<strong style="color:${TEXT};font-weight:700;">${folderName}</strong></div>${bodyHtml}`;
+  },150);
+}
+function hideTip(){clearTimeout(tipTimer);fixedTip.style.display='none';}
+
+function openDD(){document.getElementById('dropdown').classList.add('open');document.getElementById('search-box').style.borderColor=P;isOpen=true;}
+function closeDD(cb){document.getElementById('dropdown').classList.remove('open');document.getElementById('search-box').style.borderColor=BORDER;isOpen=false;hideTip();if(cb)setTimeout(cb,200);}
+function closeModeSwitch(m){applyMode(m);setTimeout(()=>closeDD(),220);}
+
+function applyMode(m){
+  mode=m;
+  document.getElementById('files-radio').innerHTML=m==='files'?RADIO_ON:RADIO_OFF;
+  document.getElementById('folders-radio').innerHTML=m==='folders'?RADIO_ON:RADIO_OFF;
+  document.getElementById('meaning-radio').innerHTML=m==='meaning'?RADIO_ON:RADIO_OFF;
+}
+function setMode(m){applyMode(m);const inp=document.getElementById('search-input');if(!inp.value)inp.placeholder=ph(m);render();}
+
+function isAlreadyPinned(q){return!!pinned.find(p=>p.text===q);}
+
+function updatePinFieldIcon(){
+  const q=document.getElementById('search-input').value.trim();
+  const btn=document.getElementById('pin-btn');
+  const svg=btn.querySelector('svg');
+  const el=svg.querySelector('line');
+  if(!q||mode==='meaning'){btn.style.display='none';return;}
+  btn.style.display='inline-flex';
+  if(isAlreadyPinned(q)){
+    btn.title='Unpin this search';svg.setAttribute('fill','#999');
+    if(!el){const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1','3');l.setAttribute('y1','21');l.setAttribute('x2','21');l.setAttribute('y2','3');l.setAttribute('stroke','#999');l.setAttribute('stroke-width','2');svg.appendChild(l);}
+  } else if(pinned.length>=5){
+    btn.title='Maximum 5 pinned searches — unpin one to add more';svg.setAttribute('fill','#ccc');if(el)el.remove();
   } else {
-    fdr.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid #378ADD;background:#378ADD;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
-    fdr.innerHTML = '<span style="width:5px;height:5px;border-radius:50%;background:white;"></span>';
-    fr.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid #ccc;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
-    fr.innerHTML = '';
+    btn.title='Pin this search';svg.setAttribute('fill',P);if(el)el.remove();
   }
+}
+
+function pinCurrentSearch(){
+  const q=document.getElementById('search-input').value.trim();
+  if(!q||mode==='meaning')return;
+  if(isAlreadyPinned(q)){
+    const idx=pinned.findIndex(p=>p.text===q);
+    if(idx!==-1){recent.unshift(pinned.splice(idx,1)[0]);if(recent.length>5)recent=recent.slice(0,5);}
+    updatePinFieldIcon();return;
+  }
+  if(pinned.length>=5)return;
+  const item={id:nextId++,text:q,count:'?',type:mode==='folders'?'folder':'file'};
+  document.getElementById('pin-btn').style.display='none';
+  document.getElementById('clear-btn').style.display='none';
+  searchCommitted=false;
+  document.getElementById('search-input').value='';
+  render();openDD();
+  setTimeout(()=>{pinned.unshift(item);render();const fr=document.querySelector('.pin-row');if(fr)fr.classList.add('fade-in');},200);
+}
+
+function clearSearch(){
+  document.getElementById('search-input').value='';
+  document.getElementById('clear-btn').style.display='none';
+  document.getElementById('pin-btn').style.display='none';
+  searchCommitted=false;
+  document.getElementById('search-input').focus();render();
+}
+
+function commitSearch(){
+  searchCommitted=true;
+  const q=document.getElementById('search-input').value;
+  if(q&&mode!=='meaning'){document.getElementById('pin-btn').style.display='inline-flex';updatePinFieldIcon();}
+  closeDD();
+}
+
+function selectRecent(text,itemMode){
+  document.getElementById('search-input').value=text;
+  document.getElementById('clear-btn').style.display='inline-flex';
+  searchCommitted=true;updatePinFieldIcon();
+  if(itemMode&&itemMode!==mode)closeModeSwitch(itemMode);else closeDD();
+}
+
+function selectMeaning(text){
+  document.getElementById('search-input').value=text;
+  document.getElementById('clear-btn').style.display='inline-flex';
+  document.getElementById('pin-btn').style.display='none';
+  searchCommitted=true;closeDD();
+}
+
+function boldM(text,query){
+  if(!query)return text;
+  const idx=nd(text.toLowerCase()).indexOf(nd(query.toLowerCase()));
+  if(idx===-1)return text;
+  return text.slice(0,idx)+`<strong style="color:${P};">`+text.slice(idx,idx+query.length)+'</strong>'+text.slice(idx+query.length);
+}
+function boldIdx(display,query){
+  if(nd(display.toLowerCase()).startsWith(nd(query.toLowerCase())))
+    return `<strong style="color:${P};">`+display.slice(0,query.length)+'</strong>'+display.slice(query.length);
+  return display;
+}
+function isIdx(q){return /^\d/.test(q);}
+function matchIdx(full,query){return nd(full.toLowerCase()).startsWith(nd(query.toLowerCase()));}
+
+function pinItem(id){
+  const i=recent.findIndex(r=>r.id===id);
+  if(i===-1||pinned.length>=5)return;
+  const item=recent[i];
+  const row=document.querySelector(`.recent-row[data-id="${id}"]`);
+  if(row){row.classList.add('fade-out');setTimeout(()=>{recent.splice(i,1);pinned.unshift(item);render();const fr=document.querySelector('.pin-row');if(fr)fr.classList.add('fade-in');},220);}
+  else{recent.splice(i,1);pinned.unshift(item);render();}
+}
+function unpinItem(id){
+  const i=pinned.findIndex(p=>p.id===id);
+  if(i===-1)return;
+  recent.unshift(pinned.splice(i,1)[0]);
+  if(recent.length>5)recent=recent.slice(0,5);
   render();
 }
 
-function boldMatch(text, query) {
-  if (!query) return text;
-  const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return text;
-  return text.slice(0, idx) + '<strong>' + text.slice(idx, idx + query.length) + '</strong>' + text.slice(idx + query.length);
+function hdr(iconHtml,label){
+  const d=document.createElement('div');
+  d.style.cssText='padding:5px 12px 2px;display:flex;align-items:center;gap:6px;';
+  d.innerHTML=`${iconHtml}<span style="font-size:11px;font-weight:500;color:${TEXT2};text-transform:uppercase;letter-spacing:0.04em;">${label}</span>`;
+  return d;
 }
+function divEl(){const d=document.createElement('div');d.style.cssText=`margin:4px 12px;border-top:1px solid ${BORDER};`;return d;}
 
-function pinItem(id) {
-  const idx = recent.findIndex(r => r.id === id);
-  if (idx === -1 || pinned.length >= 5) return;
-  pinned.unshift(recent.splice(idx, 1)[0]);
-  render();
-}
-
-function unpinItem(id) {
-  const idx = pinned.findIndex(p => p.id === id);
-  if (idx === -1) return;
-  recent.unshift(pinned.splice(idx, 1)[0]);
-  render();
-}
-
-function makeRow(item, isPinned) {
-  const icon = item.type === 'file' ? FILE_SVG : FOLDER_SVG;
-  const defaultIcon = isPinned ? PIN_SVG : CLOCK_SVG;
-  const hoverIcon = isPinned ? UNPIN_SVG : PIN_SVG;
-  const action = isPinned ? `unpinItem(${item.id})` : `pinItem(${item.id})`;
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;padding:5px 12px;cursor:pointer;gap:8px;';
-  row.onmouseenter = () => row.style.background = '#f5f5f5';
-  row.onmouseleave = () => row.style.background = 'transparent';
-  row.innerHTML = `${icon}
-    <span style="font-size:13px;color:#333;flex:1;">${item.text}</span>
-    <span style="font-size:12px;color:#999;">(${item.count})</span>
-    <span style="display:inline-flex;cursor:pointer;padding:4px;"
-      onmouseenter="this.querySelector('.d').style.display='none';this.querySelector('.h').style.display='block'"
-      onmouseleave="this.querySelector('.d').style.display='block';this.querySelector('.h').style.display='none'"
-      onclick="event.stopPropagation();${action}">
-      <span class="d">${defaultIcon}</span>
-      <span class="h" style="display:none">${hoverIcon}</span>
-    </span>`;
+function makeRow(item,isPinned){
+  const icon=item.type==='file'?FILE_P:FOLDER_P;
+  const iMode=item.type==='file'?'files':'folders';
+  const row=document.createElement('div');
+  row.className=isPinned?'pin-row':'recent-row';
+  row.dataset.id=item.id;
+  row.style.cssText='display:flex;align-items:center;padding:5px 12px;cursor:pointer;gap:8px;';
+  row.onmouseenter=()=>row.style.background=HOVER;
+  row.onmouseleave=()=>row.style.background='transparent';
+  const pinSpan=document.createElement('span');
+  pinSpan.style.cssText='display:inline-flex;cursor:pointer;padding:2px;flex-shrink:0;align-items:center;';
+  pinSpan.innerHTML=isPinned?PIN_P:CLOCK_P;
+  pinSpan.onmouseenter=()=>{pinSpan.innerHTML=isPinned?UNPIN:PIN_G;};
+  pinSpan.onmouseleave=()=>{pinSpan.innerHTML=isPinned?PIN_P:CLOCK_P;};
+  pinSpan.onclick=(e)=>{e.stopPropagation();isPinned?unpinItem(item.id):pinItem(item.id);};
+  row.insertAdjacentHTML('afterbegin',icon);
+  const ts=document.createElement('span');ts.style.cssText=`font-size:13px;color:${TEXT};flex:1;`;ts.textContent=item.text;
+  const cs=document.createElement('span');cs.style.cssText=`font-size:12px;color:${TEXT2};`;cs.textContent=`(${item.count})`;
+  row.appendChild(ts);row.appendChild(cs);row.appendChild(pinSpan);
+  row.addEventListener('click',e=>{if(e.target.closest('span')&&e.target.closest('span').onclick)return;selectRecent(item.text,iMode);});
   return row;
 }
 
-function makeSectionHeader(iconSvg, label) {
-  const div = document.createElement('div');
-  div.style.cssText = 'padding:5px 12px 2px;display:flex;align-items:center;gap:6px;';
-  div.innerHTML = `${iconSvg}<span style="font-size:11px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:0.04em;">${label}</span>`;
-  return div;
-}
-
-function makeDivider() {
-  const div = document.createElement('div');
-  div.style.cssText = 'margin:4px 12px;border-top:0.5px solid #e0e0e0;';
-  return div;
-}
-
-function makeSuggestionRow(iconSvg, label, isAllLink) {
-  const row = document.createElement('div');
-  if (isAllLink) {
-    row.style.cssText = 'display:flex;align-items:center;padding:5px 12px 5px 34px;cursor:pointer;gap:8px;';
-    row.innerHTML = `<span style="font-size:13px;color:#378ADD;">${label}</span>`;
+function suggRow(iconHtml,label,isLink,clickFn,descTip,folderName,query){
+  const row=document.createElement('div');
+  if(isLink){
+    row.style.cssText='display:flex;align-items:center;padding:5px 12px 5px 32px;cursor:pointer;';
+    row.innerHTML=`<span style="font-size:13px;color:${P};">${label}</span>`;
   } else {
-    row.style.cssText = 'display:flex;align-items:center;padding:5px 12px;cursor:pointer;gap:8px;';
-    row.innerHTML = `${iconSvg}<span style="font-size:13px;color:#333;flex:1;">${label}</span>`;
+    row.style.cssText='display:flex;align-items:center;padding:5px 12px;cursor:pointer;gap:8px;';
+    row.innerHTML=`${iconHtml}<span style="font-size:13px;color:${TEXT};flex:1;">${label}</span>`;
+    if(descTip){
+      const di=document.createElement('span');
+      di.style.cssText='display:inline-flex;align-items:center;flex-shrink:0;padding:2px;';
+      di.innerHTML=DESC_ICO;
+      di.onmouseenter=()=>showTip(di,folderName,boldM(descTip,query||''));
+      di.onmouseleave=()=>hideTip();
+      row.appendChild(di);
+    }
   }
-  row.onmouseenter = () => row.style.background = '#f5f5f5';
-  row.onmouseleave = () => row.style.background = 'transparent';
+  row.onmouseenter=()=>row.style.background=HOVER;
+  row.onmouseleave=()=>row.style.background='transparent';
+  if(clickFn) row.addEventListener('click',e=>{if(!e.target.closest('svg[xmlns]')||e.target.closest('svg[xmlns]').getAttribute('viewBox')==='0 0 11 14'||e.target.closest('svg[xmlns]').getAttribute('viewBox')==='0 0 14 14')clickFn();});
   return row;
 }
 
-function renderSuggestions(query) {
-  const container = document.getElementById('list-container');
-  container.innerHTML = '';
-  const matchedFolders = allFolders.filter(f => f.toLowerCase().includes(query.toLowerCase()));
+function enterRow(label){
+  const row=document.createElement('div');
+  row.style.cssText=`display:flex;align-items:center;padding:6px 12px;cursor:pointer;border-top:1px solid ${BORDER};margin-top:2px;`;
+  row.innerHTML=`<span style="font-size:13px;color:${P};">${label}</span>`;
+  row.onmouseenter=()=>row.style.background=HOVER;
+  row.onmouseleave=()=>row.style.background='transparent';
+  row.addEventListener('click',()=>commitSearch());
+  return row;
+}
 
-  if (mode === 'folders') {
-    if (matchedFolders.length > 0) {
-      container.appendChild(makeSectionHeader(FOLDER_SVG, 'Folders'));
-      matchedFolders.slice(0, 9).forEach(f => container.appendChild(makeSuggestionRow(FOLDER_SVG, boldMatch(f, query), false)));
-      if (matchedFolders.length > 9) container.appendChild(makeSuggestionRow('', 'All matching folders →', true));
+function renderMeaning(query){
+  const c=document.getElementById('list-container');c.innerHTML='';
+  if(!query||query.length<3){
+    if(meaningRecent.length>0){
+      c.appendChild(hdr(SPARKLE,'Recent'));
+      meaningRecent.slice(0,5).forEach(t=>{
+        const row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;padding:5px 12px;cursor:pointer;gap:8px;';
+        row.onmouseenter=()=>row.style.background=HOVER;row.onmouseleave=()=>row.style.background='transparent';
+        row.innerHTML=`${SPARKLE}<span style="font-size:13px;color:${TEXT};flex:1;">${t}</span>`;
+        row.addEventListener('click',()=>selectMeaning(t));c.appendChild(row);
+      });
+      c.appendChild(divEl());
+    }
+    const th=document.createElement('div');th.style.cssText='padding:5px 12px 2px;display:flex;align-items:center;gap:6px;';
+    th.innerHTML=`${SPARKLE}<span style="font-size:11px;font-weight:500;color:${TEXT2};text-transform:uppercase;letter-spacing:0.04em;">Try</span>`;
+    c.appendChild(th);
+    meaningExamples.forEach(t=>{
+      const row=document.createElement('div');row.style.cssText=`display:flex;align-items:center;padding:5px 12px 5px 30px;cursor:pointer;`;
+      row.onmouseenter=()=>row.style.background=HOVER;row.onmouseleave=()=>row.style.background='transparent';
+      row.innerHTML=`<span style="font-size:13px;color:${TEXT2};font-style:italic;">${t}</span>`;
+      row.addEventListener('click',()=>selectMeaning(t));c.appendChild(row);
+    });
+  } else {
+    c.appendChild(enterRow('Press Enter to search by meaning'));
+  }
+}
+
+function renderSuggestions(query){
+  const c=document.getElementById('list-container');c.innerHTML='';
+  const isI=isIdx(query);
+  const fidMatch=allFiles.find(f=>f.fileId===query);
+  let mF=isI?allFolders.filter(f=>matchIdx(f.full,query)):allFolders.filter(f=>
+    nd(f.display.toLowerCase()).includes(nd(query.toLowerCase()))||(f.desc&&nd(f.desc.toLowerCase()).includes(nd(query.toLowerCase())))
+  );
+  let mFi=fidMatch?[fidMatch]:isI?allFiles.filter(f=>matchIdx(f.idx,query)):allFiles.filter(f=>nd(f.name.toLowerCase()).includes(nd(query.toLowerCase())));
+
+  if(mode==='folders'){
+    if(mF.length>0){
+      c.appendChild(hdr(FOLDER_G,'Folders'));
+      mF.slice(0,9).forEach(f=>{
+        const nm=!isI&&nd(f.display.toLowerCase()).includes(nd(query.toLowerCase()));
+        const dm=!isI&&f.desc&&nd(f.desc.toLowerCase()).includes(nd(query.toLowerCase()))&&!nm;
+        const lbl=isI?boldIdx(f.display,query):nm?boldM(f.display,query):f.display;
+        c.appendChild(suggRow(FOLDER_P,lbl,false,()=>closeDD(),dm?f.desc:null,f.display,query));
+      });
+      if(mF.length>9) c.appendChild(suggRow('','All matching folders →',true,()=>closeDD()));
     } else {
-      const e = document.createElement('div');
-      e.style.cssText = 'padding:12px;font-size:13px;color:#999;text-align:center;';
-      e.textContent = 'No matches found';
-      container.appendChild(e);
+      const e=document.createElement('div');e.style.cssText=`padding:12px;font-size:13px;color:${TEXT2};text-align:center;`;e.textContent='No matches found';c.appendChild(e);
     }
     return;
   }
 
-  const matchedFiles = allFiles.filter(f => f.toLowerCase().includes(query.toLowerCase()));
-  const hasF = matchedFolders.length > 0, hasFi = matchedFiles.length > 0;
-  let folderSlots = 4, fileSlots = 4;
-  if (!hasF) fileSlots = 9;
-  else if (!hasFi) folderSlots = 9;
+  const hasF=mF.length>0,hasFi=mFi.length>0;
+  let fs=4,fis=4;
+  if(!hasF)fis=9;else if(!hasFi)fs=9;
 
-  if (hasF) {
-    container.appendChild(makeSectionHeader(FOLDER_SVG, 'Folders'));
-    matchedFolders.slice(0, folderSlots).forEach(f => container.appendChild(makeSuggestionRow(FOLDER_SVG, boldMatch(f, query), false)));
-    if (matchedFolders.length > folderSlots) container.appendChild(makeSuggestionRow('', 'All matching folders →', true));
+  if(hasF){
+    c.appendChild(hdr(FOLDER_G,'Folders'));
+    mF.slice(0,fs).forEach(f=>{
+      const nm=!isI&&nd(f.display.toLowerCase()).includes(nd(query.toLowerCase()));
+      const dm=!isI&&f.desc&&nd(f.desc.toLowerCase()).includes(nd(query.toLowerCase()))&&!nm;
+      const lbl=isI?boldIdx(f.display,query):nm?boldM(f.display,query):f.display;
+      c.appendChild(suggRow(FOLDER_P,lbl,false,()=>{if(mode!=='folders')closeModeSwitch('folders');else closeDD();},dm?f.desc:null,f.display,query));
+    });
+    if(mF.length>fs) c.appendChild(suggRow('','All matching folders →',true,()=>closeDD()));
   }
-  if (hasFi) {
-    if (hasF) container.appendChild(makeDivider());
-    container.appendChild(makeSectionHeader(FILE_SVG, 'Files'));
-    matchedFiles.slice(0, fileSlots).forEach(f => container.appendChild(makeSuggestionRow(FILE_SVG, boldMatch(f, query), false)));
-    if (matchedFiles.length > fileSlots) container.appendChild(makeSuggestionRow('', 'All matching files →', true));
+  if(hasFi){
+    if(hasF)c.appendChild(divEl());
+    c.appendChild(hdr(FILE_G,'Files'));
+    mFi.slice(0,fis).forEach(f=>{
+      const full=`${f.idx} ${f.name}`;
+      const lbl=(isI||fidMatch)?boldIdx(full,query):boldM(full,query);
+      c.appendChild(suggRow(FILE_P,lbl,false,()=>closeDD()));
+    });
+    if(mFi.length>fis) c.appendChild(suggRow('','All matching files →',true,()=>closeDD()));
   }
-  if (!hasF && !hasFi) {
-    const e = document.createElement('div');
-    e.style.cssText = 'padding:12px;font-size:13px;color:#999;text-align:center;';
-    e.textContent = 'No matches found';
-    container.appendChild(e);
+  if(!hasF&&!hasFi){
+    const e=document.createElement('div');e.style.cssText=`padding:12px;font-size:13px;color:${TEXT2};text-align:center;`;e.textContent='No matches found';c.appendChild(e);
+  }
+  if(mode==='files') c.appendChild(enterRow('Press Enter to search file contents and descriptions'));
+}
+
+function render(){
+  const query=document.getElementById('search-input').value;
+  const hasQ=query.length>0;
+  document.getElementById('clear-btn').style.display=hasQ?'inline-flex':'none';
+  if(hasQ&&searchCommitted&&mode!=='meaning')updatePinFieldIcon();
+  else if(!hasQ||mode==='meaning')document.getElementById('pin-btn').style.display='none';
+  if(mode==='meaning'){renderMeaning(query);return;}
+  const c=document.getElementById('list-container');
+  if(hasQ){
+    const isI=isIdx(query);
+    const thresh=isI?(query.length>=2&&/^\d+[\.\-\u2013\u2014]/.test(query)):query.length>=3;
+    const fid=allFiles.find(f=>f.fileId===query);
+    if(thresh||fid){renderSuggestions(query);return;}
+    c.innerHTML='';return;
+  }
+  c.innerHTML='';
+  if(pinned.length>0){c.appendChild(hdr(PIN_HDR,'Pinned'));pinned.forEach(item=>c.appendChild(makeRow(item,true)));}
+  if(recent.length>0){
+    if(pinned.length>0)c.appendChild(divEl());
+    c.appendChild(hdr(CLOCK_G,'Recent'));
+    recent.slice(0,5).forEach(item=>c.appendChild(makeRow(item,false)));
   }
 }
 
-function render() {
-  const query = document.getElementById('search-input').value;
-  const container = document.getElementById('list-container');
-  if (query.length >= 3 || (query.length >= 2 && /^\d+\.$/.test(query))) {
-    renderSuggestions(query);
-    return;
-  }
-  container.innerHTML = '';
-  if (pinned.length > 0) {
-    container.appendChild(makeSectionHeader(PIN_HEADER_SVG, 'Pinned'));
-    pinned.forEach(item => container.appendChild(makeRow(item, true)));
-  }
-  if (recent.length > 0) {
-    if (pinned.length > 0) container.appendChild(makeDivider());
-    container.appendChild(makeSectionHeader(CLOCK_HEADER_SVG, 'Recent'));
-    recent.forEach(item => container.appendChild(makeRow(item, false)));
-  }
-}
+const sb=document.getElementById('search-box');
+const si=document.getElementById('search-input');
+const mb=document.getElementById('mode-bar');
+applyMode('files');
 
-const searchBox = document.getElementById('search-box');
-const searchInput = document.getElementById('search-input');
-const dropdown = document.getElementById('dropdown');
-
-searchInput.addEventListener('focus', () => {
-  searchBox.style.border = '1.5px solid #378ADD';
-  dropdown.style.display = 'block';
-  render();
+mb.addEventListener('click',e=>{
+  e.stopPropagation();
+  const lbl=e.target.closest('label');
+  if(!lbl)return;
+  if(lbl.querySelector('#files-radio'))setMode('files');
+  else if(lbl.querySelector('#folders-radio'))setMode('folders');
+  else if(lbl.querySelector('#meaning-radio'))setMode('meaning');
 });
 
-searchInput.addEventListener('input', render);
-
-document.addEventListener('click', e => {
-  if (!searchBox.parentElement.contains(e.target)) {
-    dropdown.style.display = 'none';
-    searchBox.style.border = '1px solid #ccc';
-  }
-});
+si.addEventListener('focus',()=>{if(!si.value)si.placeholder=ph(mode);openDD();render();});
+si.addEventListener('keydown',e=>{if(e.key==='Enter')commitSearch();});
+si.addEventListener('input',()=>{searchCommitted=false;document.getElementById('pin-btn').style.display='none';if(!isOpen)openDD();render();});
+document.addEventListener('click',e=>{if(!sb.parentElement.contains(e.target)){closeDD();if(!si.value)si.placeholder='Search';}});
 </script>
 </body>
 </html>
