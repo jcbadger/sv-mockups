@@ -1,0 +1,260 @@
+<div style="padding: 1.5rem; display: flex; justify-content: center; background: #f0f0ee;">
+  <div style="width: 380px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+
+    <div id="search-box" style="background: #fff; border: 1px solid #ccc; display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: text;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search-input" type="text" placeholder="Search" style="border:none;outline:none;background:transparent;font-size:14px;color:#333;width:100%;font-family:inherit;" />
+    </div>
+
+    <div id="dropdown" style="display:none; background: #fff; border: 0.5px solid #ccc; border-top: none;">
+      <div style="padding: 8px 12px; border-bottom: 0.5px solid #e0e0e0; display: flex; align-items: center; gap: 16px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#333;cursor:pointer;" onclick="setMode('files')">
+          <span id="files-radio" style="width:14px;height:14px;border-radius:50%;border:2px solid #378ADD;background:#378ADD;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="width:5px;height:5px;border-radius:50%;background:white;"></span>
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Files
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#333;cursor:pointer;" onclick="setMode('folders')">
+          <span id="folders-radio" style="width:14px;height:14px;border-radius:50%;border:1.5px solid #ccc;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Folders
+        </label>
+      </div>
+      <div id="list-container" style="padding: 6px 0;"></div>
+    </div>
+  </div>
+</div>
+const PIN_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#999"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/></svg>`;
+const UNPIN_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#999"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/><line x1="3" y1="21" x2="21" y2="3" stroke="#999" stroke-width="2"/></svg>`;
+const CLOCK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#999"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3zm-1 5v5l4 2.5-.75 1.23L11 14V8h1z"/></svg>`;
+const FILE_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+const FOLDER_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+const PIN_HEADER_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="#999"><path d="M17 4v7l2 3v2h-6v5l-1 1-1-1v-5H5v-2l2-3V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2zM9 4v7.75L7.5 14h9L15 11.75V4H9z"/></svg>`;
+const CLOCK_HEADER_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="#999"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3zm-1 5v5l4 2.5-.75 1.23L11 14V8h1z"/></svg>`;
+
+let pinned = [
+  { id: 1, text: 'change of control', count: 12, type: 'folder' },
+  { id: 2, text: 'recurring revenue', count: 22, type: 'file' }
+];
+let recent = [
+  { id: 3, text: 'limited liability', count: 8, type: 'file' },
+  { id: 4, text: 'financials', count: 3, type: 'folder' },
+  { id: 5, text: 'indemnification', count: 5, type: 'file' },
+  { id: 6, text: 'corporate records', count: 5, type: 'folder' },
+  { id: 7, text: 'representations and warranties', count: 7, type: 'file' }
+];
+
+const allFolders = [
+  '1. Corporate Records',
+  '1.1. Annual Shareholder Reports',
+  '2. Financials',
+  '2.1. Consolidated Financials',
+  '2.1.1. 2026 YTD',
+  '2.2. Financial Statements',
+  '3. Indebtedness',
+  '4. Engineering',
+  '5. Human Resources',
+  '6. My Folder',
+  '7. Legal',
+  '8. IP',
+];
+
+const allFiles = [
+  { name: 'Tetraplex Annual Report 2025.pdf', type: 'file' },
+  { name: 'consolidated-financials-2025.xlsx', type: 'file' },
+  { name: 'financial-statements-q4.pdf', type: 'file' },
+  { name: 'Certificate-of-Incorporation.docx', type: 'file' },
+  { name: 'employment-agreements.pdf', type: 'file' },
+  { name: 'ip-assignments.pdf', type: 'file' },
+  { name: 'board-minutes-2025.pdf', type: 'file' },
+];
+
+let mode = 'files';
+let isOpen = false;
+
+function setMode(m) {
+  mode = m;
+  const fr = document.getElementById('files-radio');
+  const fdr = document.getElementById('folders-radio');
+  if (m === 'files') {
+    fr.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid #378ADD;background:#378ADD;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
+    fr.innerHTML = '<span style="width:5px;height:5px;border-radius:50%;background:white;"></span>';
+    fdr.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid #ccc;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
+    fdr.innerHTML = '';
+  } else {
+    fdr.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid #378ADD;background:#378ADD;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
+    fdr.innerHTML = '<span style="width:5px;height:5px;border-radius:50%;background:white;"></span>';
+    fr.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1.5px solid #ccc;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;';
+    fr.innerHTML = '';
+  }
+  render();
+}
+
+function boldMatch(text, query) {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return text.slice(0, idx) + '<strong>' + text.slice(idx, idx + query.length) + '</strong>' + text.slice(idx + query.length);
+}
+
+function pinItem(id) {
+  const idx = recent.findIndex(r => r.id === id);
+  if (idx === -1 || pinned.length >= 5) return;
+  pinned.unshift(recent.splice(idx, 1)[0]);
+  render();
+}
+
+function unpinItem(id) {
+  const idx = pinned.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  recent.unshift(pinned.splice(idx, 1)[0]);
+  render();
+}
+
+function makeRow(item, isPinned) {
+  const icon = item.type === 'file' ? FILE_SVG : FOLDER_SVG;
+  const defaultIcon = isPinned ? PIN_SVG : CLOCK_SVG;
+  const hoverIcon = isPinned ? UNPIN_SVG : PIN_SVG;
+  const action = isPinned ? `unpinItem(${item.id})` : `pinItem(${item.id})`;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;padding:5px 12px;cursor:pointer;gap:8px;';
+  row.onmouseenter = () => row.style.background = '#f5f5f5';
+  row.onmouseleave = () => row.style.background = 'transparent';
+  row.innerHTML = `${icon}
+    <span style="font-size:13px;color:#333;flex:1;">${item.text}</span>
+    <span style="font-size:12px;color:#999;">(${item.count})</span>
+    <span style="display:inline-flex;cursor:pointer;padding:4px;"
+      onmouseenter="this.querySelector('.d').style.display='none';this.querySelector('.h').style.display='block'"
+      onmouseleave="this.querySelector('.d').style.display='block';this.querySelector('.h').style.display='none'"
+      onclick="event.stopPropagation();${action}">
+      <span class="d">${defaultIcon}</span>
+      <span class="h" style="display:none">${hoverIcon}</span>
+    </span>`;
+  return row;
+}
+
+function makeSectionHeader(iconSvg, label) {
+  const div = document.createElement('div');
+  div.style.cssText = 'padding:5px 12px 2px;display:flex;align-items:center;gap:6px;';
+  div.innerHTML = `${iconSvg}<span style="font-size:11px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:0.04em;">${label}</span>`;
+  return div;
+}
+
+function makeDivider() {
+  const div = document.createElement('div');
+  div.style.cssText = 'margin:4px 12px;border-top:0.5px solid #e0e0e0;';
+  return div;
+}
+
+function makeSuggestionRow(iconSvg, label, isAllLink) {
+  const row = document.createElement('div');
+  if (isAllLink) {
+    row.style.cssText = 'display:flex;align-items:center;padding:5px 12px 5px 34px;cursor:pointer;gap:8px;';
+    row.innerHTML = `<span style="font-size:13px;color:#378ADD;">${label}</span>`;
+  } else {
+    row.style.cssText = 'display:flex;align-items:center;padding:5px 12px;cursor:pointer;gap:8px;';
+    row.innerHTML = `${iconSvg}<span style="font-size:13px;color:#333;flex:1;">${label}</span>`;
+  }
+  row.onmouseenter = () => row.style.background = '#f5f5f5';
+  row.onmouseleave = () => row.style.background = 'transparent';
+  return row;
+}
+
+function renderSuggestions(query) {
+  const container = document.getElementById('list-container');
+  container.innerHTML = '';
+
+  const matchedFolders = allFolders.filter(f => f.toLowerCase().includes(query.toLowerCase()));
+
+  if (mode === 'folders') {
+    if (matchedFolders.length > 0) {
+      container.appendChild(makeSectionHeader(FOLDER_SVG, 'Folders'));
+      matchedFolders.slice(0, 9).forEach(f => {
+        container.appendChild(makeSuggestionRow(FOLDER_SVG, boldMatch(f, query), false));
+      });
+      if (matchedFolders.length > 9) {
+        container.appendChild(makeSuggestionRow('', 'All matching folders →', true));
+      }
+    } else {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:12px;font-size:13px;color:#999;text-align:center;';
+      empty.textContent = 'No matches found';
+      container.appendChild(empty);
+    }
+    return;
+  }
+
+  const matchedFiles = allFiles.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
+  let folderSlots = 4, fileSlots = 4;
+  const hasF = matchedFolders.length > 0, hasFi = matchedFiles.length > 0;
+  const headers = (hasF ? 1 : 0) + (hasFi ? 1 : 0);
+  if (!hasF) fileSlots = 10 - headers;
+  else if (!hasFi) folderSlots = 10 - headers;
+
+  if (hasF) {
+    container.appendChild(makeSectionHeader(FOLDER_SVG, 'Folders'));
+    matchedFolders.slice(0, folderSlots).forEach(f => {
+      container.appendChild(makeSuggestionRow(FOLDER_SVG, boldMatch(f, query), false));
+    });
+    if (matchedFolders.length > folderSlots) container.appendChild(makeSuggestionRow('', 'All matching folders →', true));
+  }
+
+  if (hasFi) {
+    if (hasF) container.appendChild(makeDivider());
+    container.appendChild(makeSectionHeader(FILE_SVG, 'Files'));
+    matchedFiles.slice(0, fileSlots).forEach(f => {
+      container.appendChild(makeSuggestionRow(FILE_SVG, boldMatch(f.name, query), false));
+    });
+    if (matchedFiles.length > fileSlots) container.appendChild(makeSuggestionRow('', 'All matching files →', true));
+  }
+
+  if (!hasF && !hasFi) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'padding:12px;font-size:13px;color:#999;text-align:center;';
+    empty.textContent = 'No matches found';
+    container.appendChild(empty);
+  }
+}
+
+function render() {
+  const query = document.getElementById('search-input').value;
+  const container = document.getElementById('list-container');
+
+  if (query.length >= 3 || (query.length >= 2 && /^\d+\.$/.test(query))) {
+    renderSuggestions(query);
+    return;
+  }
+
+  container.innerHTML = '';
+  if (pinned.length > 0) {
+    container.appendChild(makeSectionHeader(PIN_HEADER_SVG, 'Pinned'));
+    pinned.forEach(item => container.appendChild(makeRow(item, true)));
+  }
+  if (recent.length > 0) {
+    if (pinned.length > 0) container.appendChild(makeDivider());
+    container.appendChild(makeSectionHeader(CLOCK_HEADER_SVG, 'Recent'));
+    recent.forEach(item => container.appendChild(makeRow(item, false)));
+  }
+}
+
+const searchBox = document.getElementById('search-box');
+const searchInput = document.getElementById('search-input');
+const dropdown = document.getElementById('dropdown');
+
+searchInput.addEventListener('focus', () => {
+  isOpen = true;
+  searchBox.style.border = '1.5px solid #378ADD';
+  dropdown.style.display = 'block';
+  render();
+});
+
+searchInput.addEventListener('input', () => { render(); });
+
+document.addEventListener('click', (e) => {
+  if (!searchBox.parentElement.contains(e.target)) {
+    isOpen = false;
+    dropdown.style.display = 'none';
+    searchBox.style.border = '1px solid #ccc';
+  }
+});
