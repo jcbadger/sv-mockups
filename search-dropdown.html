@@ -472,14 +472,16 @@ function render(){
 const sb=document.getElementById('search-box');
 const si=document.getElementById('search-input');
 const mb=document.getElementById('mode-bar');
+  
 document.getElementById('meaning-checkbox').innerHTML=CHECKBOX_OFF;
 applyMode('files');
 
-document.getElementById('meaning-checkbox').addEventListener('change',e=>{
-  meaning=e.target.checked;
+document.querySelector('#mode-bar label:last-of-type').addEventListener('click',e=>{
+  e.stopPropagation();
+  meaning=!meaning;
   document.getElementById('meaning-checkbox').innerHTML=meaning?CHECKBOX_ON:CHECKBOX_OFF;
+  render();
 });
-
 
 mb.addEventListener('click',e=>{
   e.stopPropagation();
