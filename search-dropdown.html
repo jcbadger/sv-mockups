@@ -16,6 +16,41 @@ body,input{font-family:'DM Sans',sans-serif;background:#f2f3f9;}
 @keyframes fadeOut{from{opacity:1}to{opacity:0}}
 .fade-in{animation:fadeIn 0.3s ease-in;}
 .fade-out{animation:fadeOut 0.2s ease-out forwards;}
+
+/* Pin/clock icon hover via pure CSS */
+.item-row { background: transparent; }
+.item-row:hover { background: #e4e8ee; }
+
+/* Icon layers */
+.pin-icon { position:relative; width:19px; height:19px; flex-shrink:0; cursor:pointer; }
+.pin-icon .i-default,
+.pin-icon .i-rowhover,
+.pin-icon .i-iconhover { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+
+/* Recent rows: default=dim clock, row-hover=blue clock, icon-hover=blue pin */
+.item-row.is-recent .pin-icon .i-default   { opacity:1; }
+.item-row.is-recent .pin-icon .i-rowhover  { opacity:0; }
+.item-row.is-recent .pin-icon .i-iconhover { opacity:0; }
+.item-row.is-recent:hover .pin-icon .i-default   { opacity:0; }
+.item-row.is-recent:hover .pin-icon .i-rowhover  { opacity:1; }
+.item-row.is-recent:hover .pin-icon .i-iconhover { opacity:0; }
+.item-row.is-recent:hover .pin-icon:hover .i-default   { opacity:0; }
+.item-row.is-recent:hover .pin-icon:hover .i-rowhover  { opacity:0; }
+.item-row.is-recent:hover .pin-icon:hover .i-iconhover { opacity:1; }
+
+/* Pinned rows: default=blue pin, row-hover=blue pin, icon-hover=strikethrough pin */
+.item-row.is-pinned .pin-icon .i-default   { opacity:1; }
+.item-row.is-pinned .pin-icon .i-rowhover  { opacity:0; }
+.item-row.is-pinned .pin-icon .i-iconhover { opacity:0; }
+.item-row.is-pinned:hover .pin-icon .i-default   { opacity:0; }
+.item-row.is-pinned:hover .pin-icon .i-rowhover  { opacity:1; }
+.item-row.is-pinned:hover .pin-icon .i-iconhover { opacity:0; }
+.item-row.is-pinned:hover .pin-icon:hover .i-default   { opacity:0; }
+.item-row.is-pinned:hover .pin-icon:hover .i-rowhover  { opacity:0; }
+.item-row.is-pinned:hover .pin-icon:hover .i-iconhover { opacity:1; }
+
+/* Re-enable pointer events on pin-icon itself */
+.pin-icon { pointer-events: auto; }
 </style>
 </head>
 <body>
@@ -46,7 +81,7 @@ body,input{font-family:'DM Sans',sans-serif;background:#f2f3f9;}
         Folders
       </label>
       
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#000;cursor:pointer;margin-left:8px;padding-left:16px;border-left:1px solid #e0e8ee;">
+      <label id="meaning-label" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#000;cursor:pointer;margin-left:8px;padding-left:16px;border-left:1px solid #e0e8ee;">
         <span id="meaning-checkbox" style="display:inline-flex;flex-shrink:0;"></span>
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="#b73eb4" viewBox="0 0 24 24"><path d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
         Meaning
@@ -162,11 +197,19 @@ let recent=[{id:3,text:'limited liability',count:8,type:'file'},{id:4,text:'fina
 let meaningRecent=['clauses that limit our liability','change of control provisions'];
 const meaningExamples=['termination rights','indemnification obligations','representations about intellectual property','debt covenants and restrictions','employee retention agreements'];
 
-let mode='files',searchCommitted=false,nextId=100,isOpen=false,tipTimer=null;
-let meaning=false;
+// mode tracks the radio selection ('files' or 'folders')
+// meaningOn tracks whether the Meaning checkbox is checked
+// The effective search mode is: meaningOn ? 'meaning' : mode
+let mode='files', meaningOn=false;
+let searchCommitted=false,nextId=100,isOpen=false,tipTimer=null;
+
+function effectiveMode(){ return meaningOn ? 'meaning' : mode; }
 
 function nd(s){return s.replace(/[-\u2013\u2014]/g,'-');}
-function ph(m){return m==='files'?'Search Files':m==='folders'?'Search Folders':'Describe what you\'re looking for';}
+function ph(m){
+  if(meaningOn) return mode==='folders'?'Describe the folders you\'re looking for':'Describe the files you\'re looking for';
+  return m==='folders'?'Search Folders':'Search Files';
+}
 
 const fixedTip=document.getElementById('fixed-tip');
 
@@ -200,7 +243,23 @@ function applyMode(m){
   document.getElementById('files-radio').innerHTML=m==='files'?RADIO_ON:RADIO_OFF;
   document.getElementById('folders-radio').innerHTML=m==='folders'?RADIO_ON:RADIO_OFF;
 }
-function setMode(m){applyMode(m);const inp=document.getElementById('search-input');if(!inp.value)inp.placeholder=ph(m);render();}
+
+function setMode(m){
+  applyMode(m);
+  const inp=document.getElementById('search-input');
+  if(!inp.value) inp.placeholder = ph(effectiveMode());
+  render();
+}
+
+function toggleMeaning(){
+  meaningOn=!meaningOn;
+  document.getElementById('meaning-checkbox').innerHTML=meaningOn?CHECKBOX_ON:CHECKBOX_OFF;
+  const inp=document.getElementById('search-input');
+  if(!inp.value) inp.placeholder=ph(effectiveMode());
+  // Hide pin when switching to meaning mode
+  if(meaningOn) document.getElementById('pin-btn').style.display='none';
+  render();
+}
 
 function isAlreadyPinned(q){return!!pinned.find(p=>p.text===q);}
 
@@ -209,7 +268,7 @@ function updatePinFieldIcon(){
   const btn=document.getElementById('pin-btn');
   const svg=btn.querySelector('svg');
   const el=svg.querySelector('line');
-  if(!q||mode==='meaning'){btn.style.display='none';return;}
+  if(!q||meaningOn){btn.style.display='none';return;}
   btn.style.display='inline-flex';
   if(isAlreadyPinned(q)){
     btn.title='Unpin this search';svg.setAttribute('fill','#999');
@@ -223,7 +282,7 @@ function updatePinFieldIcon(){
 
 function pinCurrentSearch(){
   const q=document.getElementById('search-input').value.trim();
-  if(!q||mode==='meaning')return;
+  if(!q||meaningOn)return;
   if(isAlreadyPinned(q)){
     const idx=pinned.findIndex(p=>p.text===q);
     if(idx!==-1){recent.unshift(pinned.splice(idx,1)[0]);if(recent.length>5)recent=recent.slice(0,5);}
@@ -250,7 +309,7 @@ function clearSearch(){
 function commitSearch(){
   searchCommitted=true;
   const q=document.getElementById('search-input').value;
-  if(q&&!meaning){document.getElementById('pin-btn').style.display='inline-flex';updatePinFieldIcon();}
+  if(q&&!meaningOn){document.getElementById('pin-btn').style.display='inline-flex';updatePinFieldIcon();}
   closeDD();
 }
 
@@ -310,22 +369,23 @@ function makeRow(item,isPinned){
   const icon=item.type==='file'?FILE_P:FOLDER_P;
   const iMode=item.type==='file'?'files':'folders';
   const row=document.createElement('div');
-  row.className=isPinned?'pin-row':'recent-row';
+  row.className=`item-row ${isPinned?'is-pinned':'is-recent'} ${isPinned?'pin-row':'recent-row'}`;
   row.dataset.id=item.id;
   row.style.cssText='display:flex;align-items:center;padding:5px 12px;cursor:pointer;gap:8px;';
-  row.onmouseenter=()=>row.style.background=HOVER;
-  row.onmouseleave=()=>row.style.background='transparent';
+
   const pinSpan=document.createElement('span');
-  pinSpan.style.cssText='display:inline-flex;cursor:pointer;padding:2px;flex-shrink:0;align-items:center;';
-  pinSpan.innerHTML=isPinned?PIN_P:CLOCK_P;
-  pinSpan.onmouseenter=()=>{pinSpan.innerHTML=isPinned?UNPIN:PIN_G;};
-  pinSpan.onmouseleave=()=>{pinSpan.innerHTML=isPinned?PIN_P:CLOCK_P;};
+  pinSpan.className='pin-icon';
+  pinSpan.innerHTML=
+    `<span class="i-default">${isPinned?PIN_P:CLOCK_G}</span>`+
+    `<span class="i-rowhover">${isPinned?PIN_P:CLOCK_P}</span>`+
+    `<span class="i-iconhover">${isPinned?UNPIN:PIN_G}</span>`;
   pinSpan.onclick=(e)=>{e.stopPropagation();isPinned?unpinItem(item.id):pinItem(item.id);};
+
   row.insertAdjacentHTML('afterbegin',icon);
   const ts=document.createElement('span');ts.style.cssText=`font-size:13px;color:${TEXT};flex:1;`;ts.textContent=item.text;
   const cs=document.createElement('span');cs.style.cssText=`font-size:12px;color:${TEXT2};`;cs.textContent=`(${item.count})`;
   row.appendChild(ts);row.appendChild(cs);row.appendChild(pinSpan);
-  row.addEventListener('click',e=>{if(e.target.closest('span')&&e.target.closest('span').onclick)return;selectRecent(item.text,iMode);});
+  row.addEventListener('click',e=>{if(e.target.closest('.pin-icon'))return;selectRecent(item.text,iMode);});
   return row;
 }
 
@@ -449,9 +509,12 @@ function render(){
   const query=document.getElementById('search-input').value;
   const hasQ=query.length>0;
   document.getElementById('clear-btn').style.display=hasQ?'inline-flex':'none';
-  if(hasQ&&searchCommitted&&mode!=='meaning')updatePinFieldIcon();
-  else if(!hasQ||mode==='meaning')document.getElementById('pin-btn').style.display='none';
-  if(mode==='meaning'){renderMeaning(query);return;}
+  if(hasQ&&searchCommitted&&!meaningOn) updatePinFieldIcon();
+  else if(!hasQ||meaningOn) document.getElementById('pin-btn').style.display='none';
+
+  // Route to meaning UI if checkbox is checked
+  if(meaningOn){renderMeaning(query);return;}
+
   const c=document.getElementById('list-container');
   if(hasQ){
     const isI=isIdx(query);
@@ -476,22 +539,23 @@ const mb=document.getElementById('mode-bar');
 document.getElementById('meaning-checkbox').innerHTML=CHECKBOX_OFF;
 applyMode('files');
 
-document.querySelector('#mode-bar label:last-of-type').addEventListener('click',e=>{
+// Meaning checkbox — now uses toggleMeaning() which properly drives render()
+document.getElementById('meaning-label').addEventListener('click',e=>{
   e.stopPropagation();
-  meaning=!meaning;
-  document.getElementById('meaning-checkbox').innerHTML=meaning?CHECKBOX_ON:CHECKBOX_OFF;
-  render();
+  toggleMeaning();
 });
 
+// Radio buttons for Files / Folders
 mb.addEventListener('click',e=>{
   e.stopPropagation();
   const lbl=e.target.closest('label');
-  if(!lbl)return;
+  if(!lbl||lbl.id==='meaning-label')return;
   if(lbl.querySelector('#files-radio'))setMode('files');
   else if(lbl.querySelector('#folders-radio'))setMode('folders');
 });
 
-si.addEventListener('focus',()=>{if(!si.value)si.placeholder=ph(mode);openDD();render();});
+mb.addEventListener('mousedown',e=>e.preventDefault()); // prevent input blur when clicking mode controls
+si.addEventListener('focus',()=>{if(!si.value)si.placeholder=ph(effectiveMode());openDD();render();});
 si.addEventListener('keydown',e=>{if(e.key==='Enter')commitSearch();});
 si.addEventListener('input',()=>{searchCommitted=false;document.getElementById('pin-btn').style.display='none';if(!isOpen)openDD();render();});
 document.addEventListener('click',e=>{if(!sb.parentElement.contains(e.target)){closeDD();if(!si.value)si.placeholder='Search';}});
