@@ -1,4 +1,4 @@
-<!DOCTYPE html>  // this changes nothing!
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -241,7 +241,7 @@
     var blockH = lineH * nLines;
     var scaledTextW = maxTextW * (fontSize / testSize);
 
-	var tileVertH = (scaledTextW * sinA + blockH * cosA) * 0.85;
+	var tileVertH = (scaledTextW * sinA + blockH * cosA) * 0.75;
 
     var numTiles = Math.max(1, Math.floor(H / tileVertH));
 
