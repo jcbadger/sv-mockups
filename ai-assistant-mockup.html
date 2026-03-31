@@ -353,10 +353,10 @@
     ctx.clearRect(0, 0, W, H);
     var lines = [
       { text: 'STRICTLY CONFIDENTIAL', bold: true },
-      { text: 'CoreX Corporation', bold: false },
-      { text: 'Opened by jsmith@corex.com', bold: false },
-      { text: 'on Mar 30, 2026 at 5:31:35 PM', bold: false },
-      { text: 'IP: 198.51.42.17', bold: false }
+      { text: 'CoreX Corporation', bold: true },
+      { text: 'Opened by jsmith@corex.com', bold: true },
+      { text: 'on Mar 30, 2026 at 5:31:35 PM', bold: true },
+      { text: 'IP: 198.51.42.17', bold: true }
     ];
     var naturalAngle = Math.atan2(H, W);
     var angleRad = Math.min(naturalAngle, 55 * Math.PI / 180);
