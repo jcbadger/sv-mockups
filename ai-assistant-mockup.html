@@ -40,20 +40,77 @@
   .drawer.docked-right .resize-handle { right: auto; left: -4px; }
   .drawer.maximized .resize-handle { display: none; }
 
-  .drawer-header { padding: 10px 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: relative; background: #fff; z-index: 10; }
-  .drawer-title {
-    font-size: 13px; font-weight: 600;
-    background: linear-gradient(135deg, #b73eb4, #4B55D6);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    display: flex; align-items: center; gap: 7px;
+  .drawer-header {
+    padding: 10px 12px; border-bottom: 1px solid #eee;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; position: relative; background: #fff; z-index: 10;
   }
+  .drawer-title-wrap { display: flex; align-items: center; gap: 7px; }
+  .drawer-title-text { font-size: 13px; font-weight: 600; background: linear-gradient(135deg, #b73eb4, #4B55D6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .drawer-title-model { font-size: 11px; font-weight: 400; color: #999; }
   .header-actions { display: flex; align-items: center; gap: 3px; }
   .hbtn { background: none; border: 1px solid #ddd; border-radius: 5px; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s; flex-shrink: 0; }
   .hbtn:hover { background: #f5f5f5; }
   .hbtn.active { border-color: #b73eb4; background: rgba(183,62,180,0.08); }
 
-  .privacy-banner { padding: 7px 14px; background: #f9f6ff; border-bottom: 1px solid #ede8fb; flex-shrink: 0; text-align: center; position: relative; z-index: 10; }
-  .privacy-banner-text { font-size: 11px; color: #7a6fa0; line-height: 1.4; }
+  .chat-banner {
+    padding: 8px 14px 7px; background: #f9f6ff; border-bottom: 1px solid #ede8fb;
+    flex-shrink: 0; position: relative; z-index: 10;
+  }
+  .chat-title-row {
+    display: flex; align-items: center; justify-content: center;
+    position: relative; min-height: 26px; gap: 6px;
+  }
+  .chat-title {
+    font-size: 13px; font-weight: 600; text-align: center;
+    background: linear-gradient(135deg, #b73eb4, #4B55D6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    flex: 1; cursor: default; padding: 0 4px;
+  }
+  .chat-title-input {
+    flex: 1; font-size: 13px; font-weight: 600; text-align: center;
+    border: 1px solid #d8c8f0; border-radius: 6px;
+    background: #fff; color: #b73eb4;
+    padding: 3px 8px; outline: none; font-family: inherit;
+    display: none;
+  }
+  .chat-title-input:focus { border-color: #c4a0e0; }
+  .chat-kebab-btn {
+    background: none; border: none; cursor: pointer;
+    color: #b73eb4; font-size: 17px; line-height: 1;
+    border-radius: 4px; padding: 2px 5px; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .chat-kebab-btn:hover { background: rgba(183,62,180,0.1); }
+
+  .chat-kebab-menu {
+    position: absolute; top: 30px; right: 0;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 150px;
+    overflow: hidden; display: none; z-index: 100;
+  }
+  .chat-kebab-menu.open { display: block; }
+  .kebab-item {
+    padding: 9px 13px; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; color: #222;
+  }
+  .kebab-item:hover { background: #f5f5f7; }
+  .kebab-item.danger { color: #d0021b; }
+  .kebab-item.danger:hover { background: #fff5f5; }
+
+  .confirm-bar {
+    background: #fff5f5; border: 1px solid #ffcccc; border-radius: 6px;
+    padding: 7px 10px; margin-top: 6px; display: none;
+    font-size: 11px; color: #d0021b;
+    align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .confirm-bar.show { display: flex; }
+  .confirm-btns { display: flex; gap: 5px; flex-shrink: 0; }
+  .confirm-btn { font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer; border: none; font-weight: 500; }
+  .confirm-btn.yes { background: #d0021b; color: #fff; }
+  .confirm-btn.no { background: #eee; color: #444; }
+
+  .privacy-text { font-size: 11px; color: #7a6fa0; text-align: center; margin-top: 5px; line-height: 1.4; }
 
   .msgs-wrap { flex: 1; position: relative; overflow: hidden; }
   .watermark-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
@@ -72,18 +129,49 @@
   .chat-inp:focus { border-color: #b73eb4; }
   .send-btn { background: linear-gradient(135deg, #b73eb4, #4B55D6); border: none; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-  .input-toolbar { padding: 0 12px 6px; display: flex; align-items: center; gap: 6px; }
-  .round-btn { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #ccc; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; transition: border-color 0.15s, color 0.15s; position: relative; flex-shrink: 0; }
+  .input-toolbar { padding: 0 12px 6px; display: flex; align-items: center; gap: 6px; position: relative; }
+  .round-btn { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #ccc; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
   .round-btn:hover { border-color: #b73eb4; color: #b73eb4; }
   .round-btn.active { border-color: #b73eb4; color: #b73eb4; background: rgba(183,62,180,0.06); }
 
-  .dropdown-menu { position: absolute; bottom: 34px; left: 0; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 220px; overflow: hidden; display: none; z-index: 50; }
+  .dropdown-menu {
+    position: absolute; bottom: 34px; left: 0;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.13); width: 220px;
+    display: none; z-index: 500;
+    overflow: hidden;
+  }
   .dropdown-menu.open { display: block; }
   .dropdown-header { padding: 8px 14px; font-size: 11px; color: #999; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
-  .dropdown-item { padding: 10px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .dropdown-item { padding: 9px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
   .dropdown-item:hover { background: #f5f5f7; }
   .dropdown-item.new-chat { color: #b73eb4; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
-  .dropdown-item-date { font-size: 11px; color: #999; margin-left: auto; }
+
+  .hist-item {
+    padding: 9px 14px; font-size: 13px; color: #222; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hist-item:hover { background: #f5f5f7; }
+  .hist-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist-item-date { font-size: 11px; color: #999; flex-shrink: 0; }
+  .hist-delete-btn {
+    background: none; border: none; cursor: pointer;
+    color: #ccc; font-size: 13px; font-weight: 700;
+    padding: 2px 4px; border-radius: 4px; flex-shrink: 0;
+    opacity: 0; transition: opacity 0.15s, color 0.15s;
+    line-height: 1;
+  }
+  .hist-item:hover .hist-delete-btn { opacity: 1; }
+  .hist-delete-btn:hover { color: #d0021b !important; background: #fff0f0; }
+
+  .hist-confirm-row {
+    background: #fff5f5; border-top: 1px solid #ffcccc;
+    padding: 7px 14px; display: none;
+    font-size: 11px; color: #d0021b;
+    align-items: center; justify-content: space-between;
+  }
+  .hist-confirm-row.show { display: flex; }
+
   .disclaimer { padding: 5px 14px 8px; font-size: 11px; color: #aaa; text-align: center; line-height: 1.4; }
 </style>
 </head>
@@ -94,17 +182,15 @@
 <button class="fab" id="fab" onclick="openDrawer()">
   <div class="fab-tooltip">AI Assistant</div>
   <svg width="36" height="36" viewBox="0 0 24 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M2 6C2 4.9 2.9 4 4 4h16c1.1 0 2 .9 2 2v11c0 1.1-.9 2-2 2H8l-6 4V6Z" fill="white" opacity="0.93"></path>
+    <path d="M2 6C2 4.9 2.9 4 4 4h16c1.1 0 2 .9 2 2v11c0 1.1-.9 2-2 2H8l-6 4V6Z" fill="white" opacity="0.93"/>
     <g transform="scale(0.52) translate(13 10.5)">
-      <path stroke="url(#sg)" stroke-width="1.1" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"></path>
-      <path stroke="url(#sg)" stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"></path>
+      <path stroke="url(#sg)" stroke-width="1.1" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/>
+      <path stroke="url(#sg)" stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/>
     </g>
     <defs>
       <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="
-#b73eb4"></stop>
-        <stop offset="100%" stop-color="
-#4B55D6"></stop>
+        <stop offset="0%" stop-color="#b73eb4"/>
+        <stop offset="100%" stop-color="#4B55D6"/>
       </linearGradient>
     </defs>
   </svg>
@@ -114,12 +200,13 @@
   <div class="resize-handle" id="resizeHandle"></div>
 
   <div class="drawer-header">
-    <div class="drawer-title">
+    <div class="drawer-title-wrap">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <path d="M2 5C2 3.9 2.9 3 4 3h16c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H8l-6 4V5Z" fill="url(#hg)" opacity="0.9"/>
         <defs><linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b73eb4"/><stop offset="100%" stop-color="#4B55D6"/></linearGradient></defs>
       </svg>
-      AI Assistant
+      <span class="drawer-title-text">AI Assistant</span>
+      <span class="drawer-title-model">(Sonnet 4.6)</span>
     </div>
     <div class="header-actions">
       <button class="hbtn active" id="btnLeft" onclick="dockLeft()" title="Dock left">
@@ -137,8 +224,32 @@
     </div>
   </div>
 
-  <div class="privacy-banner">
-    <span class="privacy-banner-text">Chats are private and not visible to anyone else.</span>
+  <div class="chat-banner">
+    <div class="chat-title-row">
+      <span class="chat-title" id="chatTitle" ondblclick="startRename()">New Chat</span>
+      <input class="chat-title-input" id="chatTitleInput"
+        onblur="finishRename()"
+        onkeydown="if(event.key==='Enter')finishRename();if(event.key==='Escape')cancelRename();" />
+      <button class="chat-kebab-btn" id="chatKebabBtn" onclick="toggleChatKebab(event)" title="Chat options">⋮</button>
+      <div class="chat-kebab-menu" id="chatKebabMenu">
+        <div class="kebab-item" onclick="startRename()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5l2 2-9 9H2.5v-2l9-9z" stroke="#444" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Rename
+        </div>
+        <div class="kebab-item danger" onclick="showDeleteConfirm()">
+          <span style="font-size:14px;font-weight:700;line-height:1;">✕</span>
+          Delete
+        </div>
+      </div>
+    </div>
+    <div class="confirm-bar" id="chatConfirmBar">
+      <span>Delete this chat? This cannot be undone.</span>
+      <div class="confirm-btns">
+        <button class="confirm-btn yes" onclick="doDeleteChat()">Delete</button>
+        <button class="confirm-btn no" onclick="hideDeleteConfirm()">Cancel</button>
+      </div>
+    </div>
+    <div class="privacy-text">Chats are private and not visible to anyone else.</div>
   </div>
 
   <div class="msgs-wrap" id="msgsWrap">
@@ -158,34 +269,70 @@
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 12V2M2 7l5-5 5 5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
-    <div class="input-toolbar">
-      <button class="round-btn" id="plusBtn" onclick="toggleMenu('plusMenu',event)" title="More options">
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        <div class="dropdown-menu" id="plusMenu">
-          <div class="dropdown-item new-chat" onclick="newChat()">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
-            New chat
-          </div>
-          <div class="dropdown-item" onclick="uploadFile()">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 10v2.5c0 .8.7 1.5 1.5 1.5h7c.8 0 1.5-.7 1.5-1.5V10M8 2v8M5 5l3-3 3 3" stroke="#666" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Upload file <span style="font-size:11px;color:#999;margin-left:3px;">(private)</span>
-          </div>
-        </div>
-      </button>
-      <button class="round-btn" id="histBtn" onclick="toggleMenu('histMenu',event)" title="Chat history">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-        <div class="dropdown-menu" id="histMenu" style="width:240px;">
-          <div class="dropdown-item new-chat" onclick="newChat()">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
-            New chat
-          </div>
-          <div class="dropdown-header">Recent chats</div>
-          <div class="dropdown-item" onclick="loadConvo('What are the key terms in the NDA?')">Key terms in the NDA<span class="dropdown-item-date">Today</span></div>
-          <div class="dropdown-item" onclick="loadConvo('Summarize the financials')">Financials summary<span class="dropdown-item-date">Yesterday</span></div>
-          <div class="dropdown-item" onclick="loadConvo('How do I invite a new user?')">How to invite a new user<span class="dropdown-item-date">Mar 27</span></div>
-        </div>
-      </button>
+<div class="input-toolbar" id="inputToolbar">
+  <button class="round-btn" id="plusBtn" onclick="toggleMenu('plusMenu',event)" title="New chat / Upload">
+    <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </button>
+  <button class="round-btn" id="histBtn" onclick="toggleMenu('histMenu',event)" title="Chat history">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+  </button>
+
+  <div class="dropdown-menu" id="plusMenu">
+    <div class="dropdown-item new-chat" onclick="newChat()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
+      New chat
     </div>
+    <div class="dropdown-item" onclick="uploadFile()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 10v2.5c0 .8.7 1.5 1.5 1.5h7c.8 0 1.5-.7 1.5-1.5V10M8 2v8M5 5l3-3 3 3" stroke="#666" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Upload file <span style="font-size:11px;color:#999;margin-left:3px;">(private)</span>
+    </div>
+  </div>
+
+  <div class="dropdown-menu" id="histMenu" style="width:260px;">
+    <div class="dropdown-item new-chat" onclick="newChat()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
+      New chat
+    </div>
+    <div class="dropdown-header">Recent chats</div>
+    <div class="hist-item" id="hist0" onclick="loadConvo('Key terms in the NDA','hist0')">
+      <span class="hist-item-name">Key terms in the NDA</span>
+      <span class="hist-item-date">Today</span>
+      <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm0')" title="Delete chat">✕</button>
+    </div>
+    <div class="hist-confirm-row" id="histConfirm0">
+      <span>Delete? Cannot be undone.</span>
+      <div class="confirm-btns">
+        <button class="confirm-btn yes" onclick="doHistDelete(event,'hist0','histConfirm0')">Delete</button>
+        <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm0')">Cancel</button>
+      </div>
+    </div>
+    <div class="hist-item" id="hist1" onclick="loadConvo('Financials summary','hist1')">
+      <span class="hist-item-name">Financials summary</span>
+      <span class="hist-item-date">Yesterday</span>
+      <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm1')" title="Delete chat">✕</button>
+    </div>
+    <div class="hist-confirm-row" id="histConfirm1">
+      <span>Delete? Cannot be undone.</span>
+      <div class="confirm-btns">
+        <button class="confirm-btn yes" onclick="doHistDelete(event,'hist1','histConfirm1')">Delete</button>
+        <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm1')">Cancel</button>
+      </div>
+    </div>
+    <div class="hist-item" id="hist2" onclick="loadConvo('How to invite a new user','hist2')">
+      <span class="hist-item-name">How to invite a new user</span>
+      <span class="hist-item-date">Mar 27</span>
+      <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm2')" title="Delete chat">✕</button>
+    </div>
+    <div class="hist-confirm-row" id="histConfirm2">
+      <span>Delete? Cannot be undone.</span>
+      <div class="confirm-btns">
+        <button class="confirm-btn yes" onclick="doHistDelete(event,'hist2','histConfirm2')">Delete</button>
+        <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm2')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
     <div class="disclaimer">AI Assistant can make mistakes. Please double-check responses.</div>
   </div>
 </div>
@@ -193,18 +340,17 @@
 <script>
   var maximized = false;
   var prevDockState = 'left';
+  var currentTitle = 'New Chat';
+  var prevTitle = 'New Chat';
 
   function drawWatermark() {
     var wrap = document.getElementById('msgsWrap');
     var canvas = document.getElementById('wmCanvas');
-    var W = wrap.offsetWidth;
-    var H = wrap.offsetHeight;
+    var W = wrap.offsetWidth; var H = wrap.offsetHeight;
     if (!W || !H) return;
-    canvas.width = W;
-    canvas.height = H;
+    canvas.width = W; canvas.height = H;
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, W, H);
-
     var lines = [
       { text: 'STRICTLY CONFIDENTIAL', bold: true },
       { text: 'CoreX Corporation', bold: false },
@@ -212,51 +358,31 @@
       { text: 'on Mar 30, 2026 at 5:31:35 PM', bold: false },
       { text: 'IP: 198.51.42.17', bold: false }
     ];
-
     var naturalAngle = Math.atan2(H, W);
-    var maxAngle = 55 * Math.PI / 180;
-    var angleRad = Math.min(naturalAngle, maxAngle);
-    var cosA = Math.cos(angleRad);
-    var sinA = Math.sin(angleRad);
-    var lineSpacing = 1.2;
-    var nLines = lines.length;
-    var margin = 0.96;
-
-    var testSize = 100;
-    var maxTextW = 0;
+    var angleRad = Math.min(naturalAngle, 55 * Math.PI / 180);
+    var cosA = Math.cos(angleRad); var sinA = Math.sin(angleRad);
+    var lineSpacing = 1.2; var nLines = lines.length;
+    var testSize = 100; var maxTextW = 0;
     lines.forEach(function(l) {
       ctx.font = (l.bold ? 'bold ' : '') + testSize + 'px Arial';
       var m = ctx.measureText(l.text).width;
       if (m > maxTextW) maxTextW = m;
     });
-
     var blockH100 = testSize * lineSpacing * nLines;
-
-    var scaleForW = (W * margin) / (maxTextW * cosA + blockH100 * sinA);
-    var scaleForH = (H * margin) / (maxTextW * sinA + blockH100 * cosA);
-    var scale = Math.min(scaleForW, scaleForH);
-
+    var scale = Math.min((W * 0.96) / (maxTextW * cosA + blockH100 * sinA), (H * 0.96) / (maxTextW * sinA + blockH100 * cosA));
     var fontSize = Math.max(8, Math.floor(testSize * scale));
     var lineH = fontSize * lineSpacing;
     var blockH = lineH * nLines;
     var scaledTextW = maxTextW * (fontSize / testSize);
-
-	var tileVertH = (scaledTextW * sinA + blockH * cosA) * 0.75;
-
+    var tileVertH = (scaledTextW * sinA + blockH * cosA) * 0.85;
     var numTiles = Math.max(1, Math.floor(H / tileVertH));
-
-    var totalUsed = (numTiles - 1) * tileVertH;
-    var startY = (H - totalUsed) / 2;
-
+    var startY = (H - (numTiles - 1) * tileVertH) / 2;
     for (var t = 0; t < numTiles; t++) {
-      var cy = startY + t * tileVertH;
       ctx.save();
-      ctx.translate(W / 2, cy);
+      ctx.translate(W / 2, startY + t * tileVertH);
       ctx.rotate(-angleRad);
-      ctx.globalAlpha = 0.15;
-      ctx.fillStyle = '#4B55D6';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = 0.15; ctx.fillStyle = '#4B55D6';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       lines.forEach(function(line, i) {
         ctx.font = (line.bold ? 'bold ' : '') + fontSize + 'px Arial';
         ctx.fillText(line.text, 0, (i - (nLines - 1) / 2) * lineH);
@@ -265,21 +391,11 @@
     }
   }
 
-  var resizeTimer;
-  var ro = new ResizeObserver(function() {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(drawWatermark, 30);
-  });
-  ro.observe(document.getElementById('msgsWrap'));
+  new ResizeObserver(function() { setTimeout(drawWatermark, 30); }).observe(document.getElementById('msgsWrap'));
 
-  function openDrawer() {
-    document.getElementById('drawer').classList.add('open');
-    document.getElementById('fab').style.display = 'none';
-    setTimeout(drawWatermark, 50);
-  }
+  function openDrawer() { document.getElementById('drawer').classList.add('open'); document.getElementById('fab').style.display = 'none'; setTimeout(drawWatermark, 50); }
   function closeDrawer() {
-    var d = document.getElementById('drawer');
-    d.classList.remove('open');
+    var d = document.getElementById('drawer'); d.classList.remove('open');
     document.getElementById('fab').style.display = 'flex';
     if (maximized) { d.classList.remove('maximized'); d.style.width = ''; maximized = false; document.getElementById('btnMax').classList.remove('active'); restoreDockHighlight(); }
     closeAllMenus();
@@ -288,33 +404,20 @@
     var d = document.getElementById('drawer');
     if (maximized) { d.classList.remove('maximized'); d.style.width = ''; maximized = false; document.getElementById('btnMax').classList.remove('active'); }
     d.classList.remove('docked-right'); d.style.width = '';
-    prevDockState = 'left';
-    document.getElementById('btnLeft').classList.add('active');
-    document.getElementById('btnRight').classList.remove('active');
+    prevDockState = 'left'; document.getElementById('btnLeft').classList.add('active'); document.getElementById('btnRight').classList.remove('active');
     setTimeout(drawWatermark, 50);
   }
   function dockRight() {
     var d = document.getElementById('drawer');
     if (maximized) { d.classList.remove('maximized'); d.style.width = ''; maximized = false; document.getElementById('btnMax').classList.remove('active'); }
     d.classList.add('docked-right'); d.style.width = '';
-    prevDockState = 'right';
-    document.getElementById('btnRight').classList.add('active');
-    document.getElementById('btnLeft').classList.remove('active');
+    prevDockState = 'right'; document.getElementById('btnRight').classList.add('active'); document.getElementById('btnLeft').classList.remove('active');
     setTimeout(drawWatermark, 50);
   }
   function toggleMax() {
-    var d = document.getElementById('drawer');
-    maximized = !maximized;
-    if (maximized) {
-      d.classList.add('maximized');
-      document.getElementById('btnMax').classList.add('active');
-      document.getElementById('btnLeft').classList.remove('active');
-      document.getElementById('btnRight').classList.remove('active');
-    } else {
-      d.classList.remove('maximized'); d.style.width = '';
-      document.getElementById('btnMax').classList.remove('active');
-      restoreDockHighlight();
-    }
+    var d = document.getElementById('drawer'); maximized = !maximized;
+    if (maximized) { d.classList.add('maximized'); document.getElementById('btnMax').classList.add('active'); document.getElementById('btnLeft').classList.remove('active'); document.getElementById('btnRight').classList.remove('active'); }
+    else { d.classList.remove('maximized'); d.style.width = ''; document.getElementById('btnMax').classList.remove('active'); restoreDockHighlight(); }
     setTimeout(drawWatermark, 50);
   }
   function restoreDockHighlight() {
@@ -324,29 +427,87 @@
   function closeAllMenus() {
     ['plusMenu','histMenu'].forEach(function(id){ document.getElementById(id).classList.remove('open'); });
     ['plusBtn','histBtn'].forEach(function(id){ document.getElementById(id).classList.remove('active'); });
+    document.getElementById('chatKebabMenu').classList.remove('open');
+    document.querySelectorAll('.hist-confirm-row').forEach(function(r){ r.classList.remove('show'); });
   }
   function toggleMenu(id, e) {
     e.stopPropagation();
     var isOpen = document.getElementById(id).classList.contains('open');
     closeAllMenus();
-    if (!isOpen) {
-      document.getElementById(id).classList.add('open');
-      document.getElementById(id === 'plusMenu' ? 'plusBtn' : 'histBtn').classList.add('active');
-    }
+    if (!isOpen) { document.getElementById(id).classList.add('open'); document.getElementById(id === 'plusMenu' ? 'plusBtn' : 'histBtn').classList.add('active'); }
+  }
+  function toggleChatKebab(e) {
+    e.stopPropagation();
+    var m = document.getElementById('chatKebabMenu');
+    var isOpen = m.classList.contains('open');
+    closeAllMenus();
+    if (!isOpen) m.classList.add('open');
   }
   document.addEventListener('click', closeAllMenus);
 
+  function startRename() {
+    closeAllMenus();
+    var title = document.getElementById('chatTitle');
+    var input = document.getElementById('chatTitleInput');
+    prevTitle = title.textContent;
+    input.value = prevTitle;
+    title.style.display = 'none';
+    input.style.display = 'block';
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+  function finishRename() {
+    var title = document.getElementById('chatTitle');
+    var input = document.getElementById('chatTitleInput');
+    var val = input.value.trim();
+    title.textContent = val || prevTitle;
+    currentTitle = title.textContent;
+    input.style.display = 'none';
+    title.style.display = '';
+  }
+  function cancelRename() {
+    var title = document.getElementById('chatTitle');
+    var input = document.getElementById('chatTitleInput');
+    title.textContent = prevTitle;
+    input.style.display = 'none';
+    title.style.display = '';
+  }
+  function showDeleteConfirm() { closeAllMenus(); document.getElementById('chatConfirmBar').classList.add('show'); }
+  function hideDeleteConfirm() { document.getElementById('chatConfirmBar').classList.remove('show'); }
+  function doDeleteChat() { hideDeleteConfirm(); newChat(); }
+
+  function showHistConfirm(e, id) {
+    e.stopPropagation();
+    document.querySelectorAll('.hist-confirm-row').forEach(function(r){ r.classList.remove('show'); });
+    document.getElementById(id).classList.add('show');
+  }
+  function hideHistConfirm(e, id) { e.stopPropagation(); document.getElementById(id).classList.remove('show'); }
+  function doHistDelete(e, itemId, confirmId) {
+    e.stopPropagation();
+    var item = document.getElementById(itemId);
+    var conf = document.getElementById(confirmId);
+    if (item) item.remove();
+    if (conf) conf.remove();
+  }
+
   function newChat() {
     document.getElementById('msgs').innerHTML = '<div class="msg-wrap-ai"><div class="msg-label">AI Assistant</div><div class="bubble-ai">Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.</div></div>';
-    closeAllMenus();
+    document.getElementById('chatTitle').textContent = 'New Chat';
+    document.getElementById('chatTitle').style.display = '';
+    document.getElementById('chatTitleInput').style.display = 'none';
+    document.getElementById('chatConfirmBar').classList.remove('show');
+    currentTitle = 'New Chat'; closeAllMenus();
   }
   function uploadFile() { alert('File upload coming soon.'); closeAllMenus(); }
-  function loadConvo(text) {
+  function loadConvo(title, histId) {
+    if (event && event.target && (event.target.classList.contains('hist-delete-btn') || event.target.closest('.hist-confirm-row'))) return;
     newChat();
+    document.getElementById('chatTitle').textContent = title;
+    currentTitle = title;
     setTimeout(function() {
       var msgs = document.getElementById('msgs');
       var u = document.createElement('div'); u.className = 'msg-wrap-user';
-      u.innerHTML = '<div class="msg-label msg-label-right">You</div><div class="bubble-user">' + text + '</div>';
+      u.innerHTML = '<div class="msg-label msg-label-right">You</div><div class="bubble-user">' + title + '</div>';
       msgs.appendChild(u);
       var a = document.createElement('div'); a.className = 'msg-wrap-ai';
       a.innerHTML = '<div class="msg-label">AI Assistant</div><div class="bubble-ai">Here is what I found about that…</div>';
@@ -361,6 +522,11 @@
     var u = document.createElement('div'); u.className = 'msg-wrap-user';
     u.innerHTML = '<div class="msg-label msg-label-right">You</div><div class="bubble-user">' + text + '</div>';
     msgs.appendChild(u); inp.value = ''; msgs.scrollTop = msgs.scrollHeight;
+    if (currentTitle === 'New Chat') {
+      var words = text.split(' ').slice(0, 5).join(' ');
+      document.getElementById('chatTitle').textContent = words;
+      currentTitle = words;
+    }
     setTimeout(function() {
       var a = document.createElement('div'); a.className = 'msg-wrap-ai';
       a.innerHTML = '<div class="msg-label">AI Assistant</div><div class="bubble-ai">Searching the vault…</div>';
@@ -378,7 +544,7 @@
     if (!isResizing || maximized) return;
     var d = document.getElementById('drawer');
     var dx = d.classList.contains('docked-right') ? startX - e.clientX : e.clientX - startX;
-    d.style.width = Math.max(280, Math.min(window.innerWidth * 0.8, startW + dx)) + 'px';
+    d.style.width = Math.max(310, Math.min(window.innerWidth * 0.8, startW + dx)) + 'px';
     drawWatermark();
   });
   document.addEventListener('mouseup', function() {
