@@ -47,11 +47,11 @@
   }
   .drawer-title-wrap { display: flex; align-items: center; gap: 7px; }
   .drawer-title-text { font-size: 13px; font-weight: 600; background: linear-gradient(135deg, #b73eb4, #4B55D6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .drawer-title-model { font-size: 11px; font-weight: 400; color: #999; }
   .header-actions { display: flex; align-items: center; gap: 3px; }
   .hbtn { background: none; border: 1px solid #ddd; border-radius: 5px; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s; flex-shrink: 0; }
   .hbtn:hover { background: #f5f5f5; }
   .hbtn.active { border-color: #b73eb4; background: rgba(183,62,180,0.08); }
+  .model-label { font-size: 11px; font-style: italic; color: #aaa; margin-left: auto; white-space: nowrap; }
 
   .chat-banner {
     padding: 8px 14px 7px; background: #f9f6ff; border-bottom: 1px solid #ede8fb;
@@ -173,6 +173,8 @@
   .hist-confirm-row.show { display: flex; }
 
   .disclaimer { padding: 5px 14px 8px; font-size: 11px; color: #aaa; text-align: center; line-height: 1.4; }
+  .disclaimer a { color: #b73eb4; text-decoration: none; 
+  .disclaimer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -206,7 +208,6 @@
         <defs><linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b73eb4"/><stop offset="100%" stop-color="#4B55D6"/></linearGradient></defs>
       </svg>
       <span class="drawer-title-text">AI Assistant</span>
-      <span class="drawer-title-model">(Sonnet 4.6)</span>
     </div>
     <div class="header-actions">
       <button class="hbtn active" id="btnLeft" onclick="dockLeft()" title="Dock left">
@@ -276,7 +277,7 @@
   <button class="round-btn" id="histBtn" onclick="toggleMenu('histMenu',event)" title="Chat history">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
   </button>
-
+  <span class="model-label">Claude Sonnet 4.6</span>
   <div class="dropdown-menu" id="plusMenu">
     <div class="dropdown-item new-chat" onclick="newChat()">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -333,7 +334,7 @@
   </div>
 </div>
 
-    <div class="disclaimer">AI Assistant can make mistakes. Please double-check responses.</div>
+    <div class="disclaimer">️AI may make mistakes · <a href="#" onclick="showAINotice();return false;">About AI Assistant</a></div>
   </div>
 </div>
 
@@ -343,6 +344,10 @@
   var currentTitle = 'New Chat';
   var prevTitle = 'New Chat';
 
+  function showAINotice() {
+	alert('AI Assistant may make mistakes. Please verify important information.\n\nYour data is never used for AI training.\n\nShareVault AI Policy');
+  }
+  
   function drawWatermark() {
     var wrap = document.getElementById('msgsWrap');
     var canvas = document.getElementById('wmCanvas');
