@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -109,6 +110,18 @@
   .confirm-btn { font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer; border: none; font-weight: 500; }
   .confirm-btn.yes { background: #d0021b; color: #fff; }
   .confirm-btn.no { background: #eee; color: #444; }
+  
+  .suggestions-panel {
+    position: absolute; bottom: 34px; left: 0;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.13); width: max-content; max-width: calc(100%);
+    display: none; z-index: 500; overflow: hidden;
+  }
+  .suggestions-panel.open { display: block; }
+  .suggestions-header { padding: 9px 14px; font-size: 11px; color: #999; font-weight: 500; border-bottom: 1px solid #f0f0f0; text-align: left; }
+  .suggestion-item { padding: 9px 14px; font-size: 13px; color: #444; cursor: pointer; border-bottom: 1px solid #f9f9f9; text-align: left; }
+  .suggestion-item:hover { background: #f9f6ff; color: #b73eb4; }
+  .suggestion-item:last-child { border-bottom: none; }
 
   .privacy-text { font-size: 11px; color: #7a6fa0; text-align: center; margin-top: 5px; line-height: 1.4; }
 
@@ -262,7 +275,6 @@
       </div>
     </div>
   </div>
-
   <div class="input-area">
     <div class="input-row">
       <input class="chat-inp" id="inp" placeholder="Ask anything about this ShareVault…" onkeydown="if(event.key==='Enter')send()"/>
@@ -277,7 +289,12 @@
   <button class="round-btn" id="histBtn" onclick="toggleMenu('histMenu',event)" title="Chat history">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
   </button>
+  <button class="round-btn" id="suggestBtn" onclick="toggleMenu('suggestionsPanel',event)" title="Suggested questions">
+    <span class="material-symbols-outlined" style="font-size:16px;">lightbulb_2</span>
+  </button>
+
   <span class="model-label">Claude Sonnet 4.6</span>
+
   <div class="dropdown-menu" id="plusMenu">
     <div class="dropdown-item new-chat" onclick="newChat()">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -332,9 +349,20 @@
       </div>
     </div>
   </div>
-</div>
 
-    <div class="disclaimer">️AI may make mistakes · <a href="#" onclick="showAINotice();return false;">About AI Assistant</a></div>
+  <div class="suggestions-panel" id="suggestionsPanel">
+    <div class="suggestions-header">Suggested questions</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'Summarize the most recent Tetraplex annual report')">Summarize the most recent Tetraplex annual report</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key terms in the bylaws?')">What are the key terms in the bylaws?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'What do the BOD minutes say about major decisions in 2023?')">What do the BOD minutes say about major decisions in 2023?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'What is the Certificate of Incorporation?')">What is the Certificate of Incorporation?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key financial highlights from the 2024 annual report?')">What are the key financial highlights from the 2024 annual report?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'What regulatory filings are included in this data room?')">What regulatory filings are included in this data room?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'What marketing documents are available?')">What marketing documents are available?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'Are there any documents related to intellectual property?')">Are there any documents related to intellectual property?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'How do I search for documents?')">How do I search for documents?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'How do I view or download files?')">How do I view or download files?</div>
+    <div class="suggestion-item" onclick="askSuggestion(event, 'How do I reach ShareVault support?')">How do I reach ShareVault support?</div>
   </div>
 </div>
 
@@ -433,14 +461,22 @@
     ['plusMenu','histMenu'].forEach(function(id){ document.getElementById(id).classList.remove('open'); });
     ['plusBtn','histBtn'].forEach(function(id){ document.getElementById(id).classList.remove('active'); });
     document.getElementById('chatKebabMenu').classList.remove('open');
+    document.getElementById('suggestionsPanel').classList.remove('open');
+    document.getElementById('suggestBtn') && document.getElementById('suggestBtn').classList.remove('active');
     document.querySelectorAll('.hist-confirm-row').forEach(function(r){ r.classList.remove('show'); });
   }
+  
   function toggleMenu(id, e) {
     e.stopPropagation();
     var isOpen = document.getElementById(id).classList.contains('open');
     closeAllMenus();
-    if (!isOpen) { document.getElementById(id).classList.add('open'); document.getElementById(id === 'plusMenu' ? 'plusBtn' : 'histBtn').classList.add('active'); }
+    if (!isOpen) {
+      document.getElementById(id).classList.add('open');
+      var btnMap = { 'plusMenu': 'plusBtn', 'histMenu': 'histBtn', 'suggestionsPanel': 'suggestBtn' };
+      if (btnMap[id]) document.getElementById(btnMap[id]).classList.add('active');
+    }
   }
+  
   function toggleChatKebab(e) {
     e.stopPropagation();
     var m = document.getElementById('chatKebabMenu');
@@ -520,6 +556,14 @@
     }, 100);
     closeAllMenus();
   }
+  
+  function askSuggestion(e, text) {
+    e.stopPropagation();
+    closeAllMenus();
+    document.getElementById('inp').value = text;
+    send();
+  }
+
   function send() {
     var inp = document.getElementById('inp');
     var text = inp.value.trim(); if (!text) return;
