@@ -1,0 +1,52 @@
+<head>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<style>
+  .half { padding: 28px 40px; display: flex; align-items: center; gap: 14px; font-family: "DM Sans", sans-serif; font-weight: 900}
+  .light { background: #f2f3f9; border-radius: 12px 12px 0 0; }
+  .dark { background: #2a2350; border-radius: 0 0 12px 12px; }
+  .enable-lbl { font-size: 14px; font-weight: 500; }
+  .light .enable-lbl { color: #000; }
+  .dark .enable-lbl { color: #fff; }
+  .toggle { width: 52px; height: 30px; border-radius: 15px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+  .toggle.on { background: #4d9ff7; }
+  .toggle.on.dark-toggle { background: #c731ba; }
+  .toggle.off { background: #808080; }
+  .knob { position: absolute; width: 24px; height: 24px; background: #fff; border-radius: 50%; top: 3px; transition: left 0.2s; display: flex; align-items: center; justify-content: center; }
+  .toggle.on .knob { left: 25px; }
+  .toggle.off .knob { left: 3px; }
+  .divider { height: 1px; background: #e0e0e0; }
+</style>
+
+<div class="half light">
+  <span class="enable-lbl">Enable</span>
+  <div class="toggle on" id="toggleLight" onclick="toggleIt('toggleLight', false)">
+    <div class="knob" id="knobLight">
+      <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#4d9ff7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</div>
+<div class="divider"></div>
+<div class="half dark">
+  <span class="enable-lbl">Enable</span>
+  <div class="toggle on dark-toggle" id="toggleDark" onclick="toggleIt('toggleDark', true)">
+    <div class="knob" id="knobDark">
+      <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#c731ba" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</div>
+
+<script>
+  var checkLight = '<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#4d9ff7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var checkDark = '<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#c731ba" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var xSvg = '<svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 1l7 7M8 1L1 8" stroke="#808080" stroke-width="1.8" stroke-linecap="round"/></svg>';
+
+  function toggleIt(id, isDark) {
+    var t = document.getElementById(id);
+    var knob = t.querySelector('.knob');
+    var isOn = t.classList.contains('on');
+    t.classList.toggle('on');
+    t.classList.toggle('off');
+    knob.innerHTML = isOn ? xSvg : (isDark ? checkDark : checkLight);
+  }
+</script>
