@@ -109,8 +109,9 @@
   .confirm-btns { display: flex; gap: 5px; flex-shrink: 0; }
   .confirm-btn { font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer; border: none; font-weight: 500; }
   .confirm-btn.yes { background: #d0021b; color: #fff; }
+  .confirm-btn.yes:disabled { background: #e0a0a0; color: #fff; cursor: not-allowed; }
   .confirm-btn.no { background: #eee; color: #444; }
-  
+
   .suggestions-panel {
     position: absolute; bottom: 34px; left: 0;
     background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
@@ -127,14 +128,55 @@
 
   .msgs-wrap { flex: 1; position: relative; overflow: hidden; }
   .watermark-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-  .msgs { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; z-index: 1; }
+  .msgs { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 0px; z-index: 1; }
 
-  .msg-wrap-ai { align-self: flex-start; max-width: 88%; }
+  .msg-wrap-ai { align-self: flex-start; max-width: 88%; position: relative; }
   .msg-wrap-user { align-self: flex-end; max-width: 88%; }
-  .msg-label { font-size: 10px; color: #999; margin-bottom: 3px; }
+  .msg-label { font-size: 11px; color: #999; margin-bottom: 3px; }
   .msg-label-right { text-align: right; }
-  .bubble-ai { background: #f5f5f7; border-radius: 10px 10px 10px 2px; padding: 9px 12px; font-size: 13px; line-height: 1.5; color: #222; user-select: none; -webkit-user-select: none; }
-  .bubble-user { background: linear-gradient(135deg, #b73eb4, #4B55D6); border-radius: 10px 10px 2px 10px; padding: 9px 12px; font-size: 13px; line-height: 1.5; color: #fff; user-select: none; -webkit-user-select: none; }
+  .bubble-ai { background: #f5f5f7; border-radius: 10px 10px 10px 2px; padding: 9px 12px; font-size: 14px; line-height: 1.5; color: #222; user-select: none; -webkit-user-select: none; }
+  .bubble-user { background: linear-gradient(135deg, #b73eb4, #4B55D6); border-radius: 10px 10px 2px 10px; padding: 9px 12px; font-size: 14px; line-height: 1.5; color: #fff; user-select: none; -webkit-user-select: none; }
+
+  .bubble-actions {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 2px; padding: 3px 2px 0; min-height: 22px;
+  }
+  .bubble-actions .ts { font-size: 11px; color: #999; margin-right: 4px; }
+  .action-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 2px 3px; border-radius: 4px;
+    color: #bbb; display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s, background 0.15s;
+  }
+  .action-btn .material-symbols-outlined { font-size: 14px; }
+  .action-btn:hover { color: #b73eb4; background: rgba(183,62,180,0.08); }
+  .action-btn.active-up { color: #1a9e4a; background: rgba(26,158,74,0.1); }
+  .action-btn.active-down { color: #d0021b; background: rgba(208,2,27,0.1); }
+  .bubble-actions.hover-only { visibility: hidden; }
+  .msg-wrap-ai:hover .bubble-actions.hover-only { visibility: visible; }
+  .bubble-actions.hover-only:has(.active-up, .active-down) { visibility: visible; }
+
+  .feedback-thanks {
+    font-size: 12px; color: #1a9e4a;
+    text-align: right; padding: 2px 2px 0;
+    min-height: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .feedback-thanks.show { opacity: 1; }
+
+  .feedback-dropdown {
+    position: fixed;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 210px;
+    padding: 8px 0; z-index: 2147483647; display: none;
+  }
+  .feedback-dropdown.open { display: block; }
+  .feedback-dropdown-title { font-size: 14px; color: #999; font-weight: 700; padding: 4px 14px 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
+  .feedback-option { padding: 7px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .feedback-option:hover { background: #f5f5f7; }
+  .feedback-option input { accent-color: #b73eb4; cursor: pointer; }
+  .feedback-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 14px 4px; border-top: 1px solid #f0f0f0; margin-top: 4px; }
 
   .input-area { border-top: 1px solid #eee; flex-shrink: 0; position: relative; z-index: 10; background: #fff; }
   .input-row { padding: 10px 12px 6px; display: flex; gap: 7px; align-items: center; }
@@ -151,8 +193,7 @@
     position: absolute; bottom: 34px; left: 0;
     background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.13); width: 220px;
-    display: none; z-index: 500;
-    overflow: hidden;
+    display: none; z-index: 500; overflow: hidden;
   }
   .dropdown-menu.open { display: block; }
   .dropdown-header { padding: 8px 14px; font-size: 11px; color: #999; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
@@ -160,33 +201,18 @@
   .dropdown-item:hover { background: #f5f5f7; }
   .dropdown-item.new-chat { color: #b73eb4; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
 
-  .hist-item {
-    padding: 9px 14px; font-size: 13px; color: #222; cursor: pointer;
-    display: flex; align-items: center; gap: 6px;
-  }
+  .hist-item { padding: 9px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 6px; }
   .hist-item:hover { background: #f5f5f7; }
   .hist-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hist-item-date { font-size: 11px; color: #999; flex-shrink: 0; }
-  .hist-delete-btn {
-    background: none; border: none; cursor: pointer;
-    color: #ccc; font-size: 13px; font-weight: 700;
-    padding: 2px 4px; border-radius: 4px; flex-shrink: 0;
-    opacity: 0; transition: opacity 0.15s, color 0.15s;
-    line-height: 1;
-  }
+  .hist-delete-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 13px; font-weight: 700; padding: 2px 4px; border-radius: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s, color 0.15s; line-height: 1; }
   .hist-item:hover .hist-delete-btn { opacity: 1; }
   .hist-delete-btn:hover { color: #d0021b !important; background: #fff0f0; }
-
-  .hist-confirm-row {
-    background: #fff5f5; border-top: 1px solid #ffcccc;
-    padding: 7px 14px; display: none;
-    font-size: 11px; color: #d0021b;
-    align-items: center; justify-content: space-between;
-  }
+  .hist-confirm-row { background: #fff5f5; border-top: 1px solid #ffcccc; padding: 7px 14px; display: none; font-size: 11px; color: #d0021b; align-items: center; justify-content: space-between; }
   .hist-confirm-row.show { display: flex; }
 
   .disclaimer { padding: 5px 14px 8px; font-size: 11px; color: #aaa; text-align: center; line-height: 1.4; }
-  .disclaimer a { color: #b73eb4; text-decoration: none; 
+  .disclaimer a { color: #b73eb4; text-decoration: none; }
   .disclaimer a:hover { text-decoration: underline; }
 </style>
 </head>
@@ -263,18 +289,14 @@
         <button class="confirm-btn no" onclick="hideDeleteConfirm()">Cancel</button>
       </div>
     </div>
-    <div class="privacy-text">Chats are private and not visible to anyone else.</div>
+    <div class="privacy-text">Chat content is private · <a href="#" onclick="showTrackingNotice();return false;" style="color:#7a6fa0;">What we track</a></div>
   </div>
 
   <div class="msgs-wrap" id="msgsWrap">
     <canvas class="watermark-canvas" id="wmCanvas"></canvas>
-    <div class="msgs" id="msgs">
-      <div class="msg-wrap-ai">
-        <div class="msg-label">AI Assistant</div>
-        <div class="bubble-ai">Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.</div>
-      </div>
-    </div>
+    <div class="msgs" id="msgs"></div>
   </div>
+
   <div class="input-area">
     <div class="input-row">
       <input class="chat-inp" id="inp" placeholder="Ask anything about this ShareVault…" onkeydown="if(event.key==='Enter')send()"/>
@@ -282,87 +304,90 @@
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 12V2M2 7l5-5 5 5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
-<div class="input-toolbar" id="inputToolbar">
-  <button class="round-btn" id="plusBtn" onclick="toggleMenu('plusMenu',event)" title="New chat / Upload">
-    <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-  </button>
-  <button class="round-btn" id="histBtn" onclick="toggleMenu('histMenu',event)" title="Chat history">
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-  </button>
-  <button class="round-btn" id="suggestBtn" onclick="toggleMenu('suggestionsPanel',event)" title="Suggested questions">
-    <span class="material-symbols-outlined" style="font-size:16px;">lightbulb_2</span>
-  </button>
+    <div class="input-toolbar" id="inputToolbar">
+      <button class="round-btn" id="plusBtn" onclick="toggleMenu('plusMenu',event)" title="New chat / Upload">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+      <button class="round-btn" id="histBtn" onclick="toggleMenu('histMenu',event)" title="Chat history">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="round-btn" id="suggestBtn" onclick="toggleMenu('suggestionsPanel',event)" title="Suggested questions">
+        <span class="material-symbols-outlined" style="font-size:16px;">lightbulb_2</span>
+      </button>
 
-  <span class="model-label">Claude Sonnet 4.6</span>
+      <span class="model-label">Claude Sonnet 4.6</span>
 
-  <div class="dropdown-menu" id="plusMenu">
-    <div class="dropdown-item new-chat" onclick="newChat()">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
-      New chat
-    </div>
-    <div class="dropdown-item" onclick="uploadFile()">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 10v2.5c0 .8.7 1.5 1.5 1.5h7c.8 0 1.5-.7 1.5-1.5V10M8 2v8M5 5l3-3 3 3" stroke="#666" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Upload file <span style="font-size:11px;color:#999;margin-left:3px;">(private)</span>
-    </div>
-  </div>
+      <div class="dropdown-menu" id="plusMenu">
+        <div class="dropdown-item new-chat" onclick="newChat()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
+          New chat
+        </div>
+        <div class="dropdown-item" onclick="uploadFile()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 10v2.5c0 .8.7 1.5 1.5 1.5h7c.8 0 1.5-.7 1.5-1.5V10M8 2v8M5 5l3-3 3 3" stroke="#666" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Upload file <span style="font-size:12px;color:#999;margin-left:3px;">(private)</span>
+        </div>
+      </div>
 
-  <div class="dropdown-menu" id="histMenu" style="width:260px;">
-    <div class="dropdown-item new-chat" onclick="newChat()">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
-      New chat
-    </div>
-    <div class="dropdown-header">Recent chats</div>
-    <div class="hist-item" id="hist0" onclick="loadConvo('Key terms in the NDA','hist0')">
-      <span class="hist-item-name">Key terms in the NDA</span>
-      <span class="hist-item-date">Today</span>
-      <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm0')" title="Delete chat">✕</button>
-    </div>
-    <div class="hist-confirm-row" id="histConfirm0">
-      <span>Delete? Cannot be undone.</span>
-      <div class="confirm-btns">
-        <button class="confirm-btn yes" onclick="doHistDelete(event,'hist0','histConfirm0')">Delete</button>
-        <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm0')">Cancel</button>
+      <div class="dropdown-menu" id="histMenu" style="width:260px;">
+        <div class="dropdown-item new-chat" onclick="newChat()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#b73eb4" stroke-width="1.4" stroke-linecap="round"/></svg>
+          New chat
+        </div>
+        <div class="dropdown-header">Recent chats</div>
+        <div class="hist-item" id="hist0" onclick="loadConvo('Key terms in the NDA','hist0')">
+          <span class="hist-item-name">Key terms in the NDA</span>
+          <span class="hist-item-date">Today</span>
+          <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm0')" title="Delete chat">✕</button>
+        </div>
+        <div class="hist-confirm-row" id="histConfirm0">
+          <span>Delete? Cannot be undone.</span>
+          <div class="confirm-btns">
+            <button class="confirm-btn yes" onclick="doHistDelete(event,'hist0','histConfirm0')">Delete</button>
+            <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm0')">Cancel</button>
+          </div>
+        </div>
+        <div class="hist-item" id="hist1" onclick="loadConvo('Financials summary','hist1')">
+          <span class="hist-item-name">Financials summary</span>
+          <span class="hist-item-date">Yesterday</span>
+          <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm1')" title="Delete chat">✕</button>
+        </div>
+        <div class="hist-confirm-row" id="histConfirm1">
+          <span>Delete? Cannot be undone.</span>
+          <div class="confirm-btns">
+            <button class="confirm-btn yes" onclick="doHistDelete(event,'hist1','histConfirm1')">Delete</button>
+            <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm1')">Cancel</button>
+          </div>
+        </div>
+        <div class="hist-item" id="hist2" onclick="loadConvo('How to invite a new user','hist2')">
+          <span class="hist-item-name">How to invite a new user</span>
+          <span class="hist-item-date">Mar 27</span>
+          <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm2')" title="Delete chat">✕</button>
+        </div>
+        <div class="hist-confirm-row" id="histConfirm2">
+          <span>Delete? Cannot be undone.</span>
+          <div class="confirm-btns">
+            <button class="confirm-btn yes" onclick="doHistDelete(event,'hist2','histConfirm2')">Delete</button>
+            <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm2')">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="suggestions-panel" id="suggestionsPanel">
+        <div class="suggestions-header">Suggested questions</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'Summarize the most recent Tetraplex annual report')">Summarize the most recent Tetraplex annual report</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key terms in the bylaws?')">What are the key terms in the bylaws?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What do the BOD minutes say about major decisions in 2023?')">What do the BOD minutes say about major decisions in 2023?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What is the Certificate of Incorporation?')">What is the Certificate of Incorporation?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key financial highlights from the 2024 annual report?')">What are the key financial highlights from the 2024 annual report?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What regulatory filings are included in this data room?')">What regulatory filings are included in this data room?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What marketing documents are available?')">What marketing documents are available?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'Are there any documents related to intellectual property?')">Are there any documents related to intellectual property?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I search for documents?')">How do I search for documents?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I view or download files?')">How do I view or download files?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I reach ShareVault support?')">How do I reach ShareVault support?</div>
       </div>
     </div>
-    <div class="hist-item" id="hist1" onclick="loadConvo('Financials summary','hist1')">
-      <span class="hist-item-name">Financials summary</span>
-      <span class="hist-item-date">Yesterday</span>
-      <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm1')" title="Delete chat">✕</button>
-    </div>
-    <div class="hist-confirm-row" id="histConfirm1">
-      <span>Delete? Cannot be undone.</span>
-      <div class="confirm-btns">
-        <button class="confirm-btn yes" onclick="doHistDelete(event,'hist1','histConfirm1')">Delete</button>
-        <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm1')">Cancel</button>
-      </div>
-    </div>
-    <div class="hist-item" id="hist2" onclick="loadConvo('How to invite a new user','hist2')">
-      <span class="hist-item-name">How to invite a new user</span>
-      <span class="hist-item-date">Mar 27</span>
-      <button class="hist-delete-btn" onclick="showHistConfirm(event,'histConfirm2')" title="Delete chat">✕</button>
-    </div>
-    <div class="hist-confirm-row" id="histConfirm2">
-      <span>Delete? Cannot be undone.</span>
-      <div class="confirm-btns">
-        <button class="confirm-btn yes" onclick="doHistDelete(event,'hist2','histConfirm2')">Delete</button>
-        <button class="confirm-btn no" onclick="hideHistConfirm(event,'histConfirm2')">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="suggestions-panel" id="suggestionsPanel">
-    <div class="suggestions-header">Suggested questions</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'Summarize the most recent Tetraplex annual report')">Summarize the most recent Tetraplex annual report</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key terms in the bylaws?')">What are the key terms in the bylaws?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'What do the BOD minutes say about major decisions in 2023?')">What do the BOD minutes say about major decisions in 2023?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'What is the Certificate of Incorporation?')">What is the Certificate of Incorporation?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key financial highlights from the 2024 annual report?')">What are the key financial highlights from the 2024 annual report?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'What regulatory filings are included in this data room?')">What regulatory filings are included in this data room?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'What marketing documents are available?')">What marketing documents are available?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'Are there any documents related to intellectual property?')">Are there any documents related to intellectual property?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'How do I search for documents?')">How do I search for documents?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'How do I view or download files?')">How do I view or download files?</div>
-    <div class="suggestion-item" onclick="askSuggestion(event, 'How do I reach ShareVault support?')">How do I reach ShareVault support?</div>
+    <div class="disclaimer">AI may make mistakes · <a href="#" onclick="showAINotice();return false;">About AI Assistant</a></div>
   </div>
 </div>
 
@@ -373,9 +398,9 @@
   var prevTitle = 'New Chat';
 
   function showAINotice() {
-	alert('AI Assistant may make mistakes. Please verify important information.\n\nYour data is never used for AI training.\n\nShareVault AI Policy');
+    alert('AI Assistant may make mistakes. Please verify important information.\n\nYour data is never used for AI training.\n\nShareVault AI Policy');
   }
-  
+
   function drawWatermark() {
     var wrap = document.getElementById('msgsWrap');
     var canvas = document.getElementById('wmCanvas');
@@ -407,7 +432,7 @@
     var lineH = fontSize * lineSpacing;
     var blockH = lineH * nLines;
     var scaledTextW = maxTextW * (fontSize / testSize);
-    var tileVertH = (scaledTextW * sinA + blockH * cosA) * 0.85;
+    var tileVertH = (scaledTextW * sinA + blockH * cosA) * 0.75;
     var numTiles = Math.max(1, Math.floor(H / tileVertH));
     var startY = (H - (numTiles - 1) * tileVertH) / 2;
     for (var t = 0; t < numTiles; t++) {
@@ -462,10 +487,10 @@
     ['plusBtn','histBtn'].forEach(function(id){ document.getElementById(id).classList.remove('active'); });
     document.getElementById('chatKebabMenu').classList.remove('open');
     document.getElementById('suggestionsPanel').classList.remove('open');
-    document.getElementById('suggestBtn') && document.getElementById('suggestBtn').classList.remove('active');
+    if (document.getElementById('suggestBtn')) document.getElementById('suggestBtn').classList.remove('active');
     document.querySelectorAll('.hist-confirm-row').forEach(function(r){ r.classList.remove('show'); });
+    document.querySelectorAll('.feedback-dropdown').forEach(function(d){ d.classList.remove('open'); });
   }
-  
   function toggleMenu(id, e) {
     e.stopPropagation();
     var isOpen = document.getElementById(id).classList.contains('open');
@@ -476,7 +501,6 @@
       if (btnMap[id]) document.getElementById(btnMap[id]).classList.add('active');
     }
   }
-  
   function toggleChatKebab(e) {
     e.stopPropagation();
     var m = document.getElementById('chatKebabMenu');
@@ -531,15 +555,125 @@
     if (conf) conf.remove();
   }
 
+  function addAiMessage(text, isLatest) {
+    var wrap = document.createElement('div');
+    wrap.className = 'msg-wrap-ai';
+    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    var uid = 'fb' + Date.now();
+    var actionsClass = isLatest ? 'bubble-actions' : 'bubble-actions hover-only';
+    wrap.innerHTML =
+      '<div class="msg-label">AI Assistant</div>' +
+      '<div class="bubble-ai">' + text + '</div>' +
+      '<div class="' + actionsClass + '" data-uid="' + uid + '">' +
+        '<span class="ts">' + time + '</span>' +
+        '<button class="action-btn" title="Helpful">' +
+          '<span class="material-symbols-outlined">thumb_up</span>' +
+        '</button>' +
+        '<button class="action-btn" title="Not helpful">' +
+          '<span class="material-symbols-outlined">thumb_down</span>' +
+        '</button>' +
+      '</div>' +
+      '<div class="feedback-thanks" id="' + uid + 'thanks"></div>' +
+      '<div class="feedback-dropdown" id="' + uid + '">' +
+        '<div class="feedback-dropdown-title">What was the problem?</div>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="incorrect"> Incorrect information</label>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="harmful"> Harmful content</label>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="other"> Other</label>' +
+        '<div class="feedback-actions">' +
+          '<button class="confirm-btn no" id="' + uid + 'cancel">Cancel</button>' +
+          '<button class="confirm-btn yes" id="' + uid + 'submit" disabled>Submit</button>' +
+        '</div>' +
+      '</div>';
+
+    var actions = wrap.querySelector('[data-uid="' + uid + '"]');
+    var upBtn = actions.querySelectorAll('.action-btn')[0];
+    var downBtn = actions.querySelectorAll('.action-btn')[1];
+    var dropdown = wrap.querySelector('#' + uid);
+    var submitBtn = wrap.querySelector('#' + uid + 'submit');
+    var cancelBtn = wrap.querySelector('#' + uid + 'cancel');
+    var thanks = wrap.querySelector('#' + uid + 'thanks');
+
+    dropdown.querySelectorAll('input[type=radio]').forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        submitBtn.disabled = false;
+      });
+    });
+
+    cancelBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.classList.remove('open');
+    });
+
+    submitBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (submitBtn.disabled) return;
+      dropdown.classList.remove('open');
+      upBtn.classList.remove('active-up');
+      downBtn.classList.add('active-down');
+      thanks.textContent = 'Thanks for your feedback!';
+      thanks.classList.add('show');
+      setTimeout(function() { thanks.classList.remove('show'); }, 2000);
+    });
+
+    upBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isActive = upBtn.classList.contains('active-up');
+      upBtn.classList.toggle('active-up', !isActive);
+      downBtn.classList.remove('active-down');
+      dropdown.classList.remove('open');
+      if (!isActive) {
+        thanks.textContent = 'Thanks for your feedback!';
+        thanks.classList.add('show');
+        setTimeout(function() { thanks.classList.remove('show'); }, 2000);
+      }
+    });
+
+    downBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (downBtn.classList.contains('active-down')) {
+        downBtn.classList.remove('active-down');
+        dropdown.querySelectorAll('input[type=radio]').forEach(function(r){ r.checked = false; });
+        submitBtn.disabled = true;
+        dropdown.classList.remove('open');
+        return;
+      }
+      upBtn.classList.remove('active-up');
+      var isOpen = dropdown.classList.contains('open');
+      document.querySelectorAll('.feedback-dropdown').forEach(function(d){ d.classList.remove('open'); });
+      if (!isOpen) {
+        if (dropdown.parentNode !== document.body) {
+          document.body.appendChild(dropdown);
+          dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+        }
+        var rect = downBtn.getBoundingClientRect();
+        var dropH = 190;
+        var top = rect.top - dropH - 4;
+        if (top < 8) top = rect.bottom + 4;
+        var left = Math.max(8, Math.min(rect.left, window.innerWidth - 218));
+        dropdown.style.top = top + 'px';
+        dropdown.style.left = left + 'px';
+        dropdown.classList.add('open');
+      }
+    });
+
+    return wrap;
+  }
+
   function newChat() {
-    document.getElementById('msgs').innerHTML = '<div class="msg-wrap-ai"><div class="msg-label">AI Assistant</div><div class="bubble-ai">Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.</div></div>';
+    var msgs = document.getElementById('msgs');
+    msgs.innerHTML = '';
+    var greeting = addAiMessage('Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.', true);
+    msgs.appendChild(greeting);
     document.getElementById('chatTitle').textContent = 'New Chat';
     document.getElementById('chatTitle').style.display = '';
     document.getElementById('chatTitleInput').style.display = 'none';
     document.getElementById('chatConfirmBar').classList.remove('show');
-    currentTitle = 'New Chat'; closeAllMenus();
+    currentTitle = 'New Chat';
+    closeAllMenus();
   }
+
   function uploadFile() { alert('File upload coming soon.'); closeAllMenus(); }
+
   function loadConvo(title, histId) {
     if (event && event.target && (event.target.classList.contains('hist-delete-btn') || event.target.closest('.hist-confirm-row'))) return;
     newChat();
@@ -550,13 +684,15 @@
       var u = document.createElement('div'); u.className = 'msg-wrap-user';
       u.innerHTML = '<div class="msg-label msg-label-right">You</div><div class="bubble-user">' + title + '</div>';
       msgs.appendChild(u);
-      var a = document.createElement('div'); a.className = 'msg-wrap-ai';
-      a.innerHTML = '<div class="msg-label">AI Assistant</div><div class="bubble-ai">Here is what I found about that…</div>';
+      msgs.querySelectorAll('.bubble-actions:not(.hover-only)').forEach(function(el) {
+        el.classList.add('hover-only');
+      });
+      var a = addAiMessage('Here is what I found about that…', true);
       msgs.appendChild(a); msgs.scrollTop = msgs.scrollHeight;
     }, 100);
     closeAllMenus();
   }
-  
+
   function askSuggestion(e, text) {
     e.stopPropagation();
     closeAllMenus();
@@ -577,11 +713,14 @@
       currentTitle = words;
     }
     setTimeout(function() {
-      var a = document.createElement('div'); a.className = 'msg-wrap-ai';
-      a.innerHTML = '<div class="msg-label">AI Assistant</div><div class="bubble-ai">Searching the vault…</div>';
+      msgs.querySelectorAll('.bubble-actions:not(.hover-only)').forEach(function(el) {
+        el.classList.add('hover-only');
+      });
+      var a = addAiMessage('Searching the ShareVault…', true);
       msgs.appendChild(a); msgs.scrollTop = msgs.scrollHeight;
     }, 600);
   }
+
   document.getElementById('msgs').addEventListener('copy', function(e) { e.preventDefault(); });
 
   var isResizing = false, startX, startW;
@@ -599,6 +738,12 @@
   document.addEventListener('mouseup', function() {
     if (isResizing) { isResizing = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
   });
+
+  newChat();
+  
+  function showTrackingNotice() {
+    alert('The content of your questions and AI responses is never logged or visible to anyone else.\n\nShareVault AI Assistant logs usage metadata for governance purposes, including:\n* Number of words in your queries and responses.\n* Response times.\n* Document citations.\n* AI-generated topic labels.');
+  }
 </script>
 </body>
 </html>
