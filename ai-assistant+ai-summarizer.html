@@ -1912,8 +1912,9 @@ var conversations = {
     if (e) {
       var banner = document.getElementById('scopeBanner');
       var br = banner.getBoundingClientRect();
-      var clickX = (e.clientX - br.left) / (parseFloat(panel.style.zoom || getComputedStyle(panel.parentElement).zoom) || 1);
-      var panelW = Math.min(480, br.width - 20);
+      var zoom = parseFloat(document.getElementById('drawerScaler').style.zoom) || 1;
+      var clickX = (e.clientX - br.left) / zoom;
+      var panelW = Math.min(480, br.width / zoom - 20);
       var left = Math.max(10, Math.min(clickX - panelW/2, br.width - panelW - 10));
       panel.style.left = left + 'px';
       panel.style.right = 'auto';
