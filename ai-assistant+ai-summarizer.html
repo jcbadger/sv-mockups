@@ -1,0 +1,2531 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+  #bg { position: fixed; object-fit: contain; z-index: 0; /* sized and positioned by reposition() */ }
+
+  .fab {
+    position: fixed; z-index: 100;
+    border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #b73eb4 0%, #4B55D6 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 14px rgba(183,62,180,0.5); transition: transform 0.15s;
+  }
+  .fab:hover { transform: scale(1.08); }
+  .fab:hover .fab-tooltip { opacity: 1; pointer-events: auto; }
+  .fab-tooltip {
+    position: absolute; left: 64px; bottom: 14px;
+    background: #111; color: #fff; font-size: 12px; font-weight: 500;
+    padding: 5px 10px; border-radius: 6px; white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+
+  .drawer {
+    position: fixed; width: 375px;
+    background: #fff; border-right: 1px solid #e0e0e0;
+    display: flex; flex-direction: column;
+    transform: translateX(-100%); visibility: hidden;
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
+    z-index: 200; box-shadow: 4px 0 20px rgba(0,0,0,0.12), 0 -6px 16px rgba(0,0,0,0.18);
+  }
+  .drawer.open { transform: translateX(0); visibility: visible; transition: transform 0.25s ease, visibility 0s linear 0s; }
+  .drawer.docked-right { left: auto; right: 0; border-right: none; border-left: 1px solid #e0e0e0; transform: translateX(100%); box-shadow: -4px 0 20px rgba(0,0,0,0.12); }
+  .drawer.docked-right.open { transform: translateX(0); }
+  .drawer.maximized { /* width managed by JS toggleMax() */ }
+
+  .resize-handle { position: absolute; top: 0; right: -4px; width: 8px; height: 100%; cursor: ew-resize; z-index: 300; }
+  .drawer.docked-right .resize-handle { right: auto; left: -4px; }
+  .drawer.maximized .resize-handle { display: none; }
+
+  .drawer-header {
+    height: 32px; padding: 0 12px; border-bottom: 1px solid #eee;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; position: relative;
+    background: linear-gradient(135deg, #b73eb4 0%, #4B55D6 100%);
+    z-index: 10;
+  }
+  .drawer-title-wrap { display: flex; align-items: center; gap: 7px; }
+  .drawer-title-text { font-size: 13px; font-weight: 700; color: #fff; -webkit-text-fill-color: #fff; }
+  .header-actions { display: flex; align-items: center; gap: 3px; }
+  .hbtn-close { margin-left: 8px !important; }
+  .hbtn { background: transparent; border: 1px solid transparent; border-radius: 5px; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s; flex-shrink: 0; }
+  .hbtn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
+  .hbtn.active { border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.18); }
+  .model-label { font-size: 11px; font-style: italic; color: #aaa; margin-left: auto; white-space: nowrap; }
+
+  .chat-banner {
+    padding: 8px 14px 7px; background: #fff; border-bottom: 1px solid #e8e8e8;
+    flex-shrink: 0; position: relative; z-index: 10;
+  }
+  .chat-title-row {
+    display: flex; align-items: center; justify-content: center;
+    position: relative; min-height: 26px; gap: 6px;
+  }
+  .chat-title {
+    font-size: 13px; font-weight: 600; text-align: center;
+    background: linear-gradient(135deg, #b73eb4, #4B55D6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    flex: 1; cursor: default; padding: 0 4px;
+  }
+  .chat-title-input {
+    flex: 1; font-size: 13px; font-weight: 600; text-align: center;
+    border: 1px solid #d8c8f0; border-radius: 6px;
+    background: #fff; color: #b73eb4;
+    padding: 3px 8px; outline: none; font-family: inherit;
+    display: none;
+  }
+  .chat-title-input:focus { border-color: #c4a0e0; }
+  .chat-kebab-btn {
+    background: none; border: none; cursor: pointer;
+    color: #b73eb4; font-size: 17px; line-height: 1;
+    border-radius: 4px; padding: 2px 5px; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .chat-kebab-btn:hover { background: rgba(183,62,180,0.1); }
+
+  .chat-kebab-menu {
+    position: absolute; top: 30px; right: 0;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 150px;
+    overflow: hidden; display: none; z-index: 100;
+  }
+  .chat-kebab-menu.open { display: block; }
+  .kebab-item {
+    padding: 9px 13px; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; color: #222;
+  }
+  .kebab-item:hover { background: #f5f5f7; }
+  .kebab-item.danger { color: #d0021b; }
+  .kebab-item.danger:hover { background: #fff5f5; }
+
+  .confirm-bar {
+    background: #fff5f5; border: 1px solid #ffcccc; border-radius: 6px;
+    padding: 7px 10px; margin-top: 6px; display: none;
+    font-size: 11px; color: #d0021b;
+    align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .confirm-bar.show { display: flex; }
+  .confirm-btns { display: flex; gap: 5px; flex-shrink: 0; }
+  .confirm-btn { font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer; border: none; font-weight: 500; }
+  .confirm-btn.yes { background: #d0021b; color: #fff; }
+  .confirm-btn.yes:disabled { background: #e0a0a0; color: #fff; cursor: not-allowed; }
+  .confirm-btn.no { background: #eee; color: #444; }
+
+  .suggestions-panel {
+    position: absolute; bottom: 34px; left: 0;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.13); width: max-content; max-width: calc(100%);
+    display: none; z-index: 500; overflow: hidden;
+  }
+  .suggestions-panel.open { display: block; }
+  .suggestions-header { padding: 9px 14px; font-size: 11px; color: #999; font-weight: 500; border-bottom: 1px solid #f0f0f0; text-align: left; }
+  .suggestion-item { padding: 9px 14px; font-size: 13px; color: #444; cursor: pointer; border-bottom: 1px solid #f9f9f9; text-align: left; }
+  .suggestion-item:hover { background: #f9f6ff; color: #b73eb4; }
+  .suggestion-item:last-child { border-bottom: none; }
+
+  .privacy-text { font-size: 11px; color: #aaa; text-align: center; margin-top: 5px; line-height: 1.4; }
+
+  .msgs-wrap { flex: 1; position: relative; overflow: hidden; min-height: 0; display: flex; flex-direction: column; }
+  .watermark-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+  .msgs { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 1; }
+
+  .msg-wrap-ai { align-self: flex-start; max-width: 88%; display: inline-flex; flex-direction: column; }
+  .msg-wrap-user { align-self: flex-end; max-width: 88%; }
+  .msg-label { font-size: 11px; color: #999; margin-bottom: 3px; }
+  .msg-label-right { text-align: right; }
+  .bubble-ai { background: #f5f5f7; border-radius: 10px 10px 10px 2px; padding: 9px 12px; font-size: 14px; line-height: 1.5; color: #222; user-select: none; -webkit-user-select: none; }
+  .bubble-user { background: linear-gradient(135deg, #b73eb4, #4B55D6); border-radius: 10px 10px 2px 10px; padding: 9px 12px; font-size: 14px; line-height: 1.5; color: #fff; user-select: none; -webkit-user-select: none; white-space: pre-wrap; word-break: break-word; }
+
+  .bubble-sources { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0; }
+  .bubble-sources-label { font-size: 10px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .bubble-source-item { display: flex; align-items: center; gap: 5px; padding: 2px 0; }
+  .bubble-source-item a { font-size: 11px; color: #b73eb4; text-decoration: none; }
+  .bubble-source-item a:hover { text-decoration: underline; }
+  .bubble-source-icon { font-size: 12px; color: #b73eb4; }
+
+  .bubble-actions {
+    display: flex; align-items: center;
+    gap: 4px; padding: 3px 0 0; min-height: 20px;
+  }
+  .bubble-actions .ts { display: none; }
+  .bubble-actions-right { display: contents; }
+  .bubble-feedback-msg {
+    flex: 1; font-size: 10px; color: #888;
+    opacity: 0; transition: opacity 0.15s; white-space: nowrap; min-width: 0;
+  }
+
+
+  .date-divider {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 4px; color: #bbb; font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .date-divider::before, .date-divider::after {
+    content: ''; flex: 1; height: 1px; background: #e8e8ee;
+  }
+
+  /* Timestamps: inline flex sibling, hidden by default, shown on hover */
+  .msg-row { display: flex; align-items: center; gap: 6px; }
+  .msg-row.ai  { justify-content: flex-start; }
+  .msg-row.usr { justify-content: flex-end; }
+  .msg-ts { align-self: center; }
+  .msg-ts {
+    font-size: 11.5px; color: #aaa; white-space: nowrap;
+    opacity: 0; transition: opacity 0.15s; flex-shrink: 0;
+  }
+  .msg-wrap-ai:hover  .msg-ts { opacity: 1; }
+  .msg-wrap-user:hover .msg-ts { opacity: 1; }
+  .msg-row.latest .msg-ts { opacity: 0.75; }  /* latest msg ts always visible */
+
+  .bubble-actions.no-thumbs { justify-content: flex-end; }
+  .bubble-feedback-msg.show { opacity: 1; }
+  .bubble-feedback-msg.thanks { color: #1a9e4a !important; }
+  .bubble-feedback-msg.canceled { color: #888 !important; }
+  .action-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 2px 3px; border-radius: 4px;
+    color: #bbb; display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s, background 0.15s;
+  }
+  .action-btn .material-symbols-outlined { font-size: 14px; }
+  .action-btn:hover { color: #b73eb4; background: rgba(183,62,180,0.08); }
+  .action-btn.active-up { color: #1a9e4a; background: rgba(26,158,74,0.1); }
+  .action-btn.active-down { color: #d0021b; background: rgba(208,2,27,0.1); }
+  .copy-btn { display: none; color: #bbb; }
+  .bubble-actions.hover-only { visibility: hidden; }
+  .msg-wrap-ai:hover .bubble-actions.hover-only { visibility: visible; }
+  .bubble-actions.hover-only:has(.active-up, .active-down) { visibility: visible; }
+  .bubble-actions.dropdown-open { visibility: visible !important; }
+
+
+  .feedback-comment {
+    display: block; width: calc(100% - 28px); margin: 4px 14px 0;
+    border: 1px solid #e0e0e0; border-radius: 4px; padding: 6px 8px;
+    font-size: 12px; font-family: inherit; resize: none; outline: none;
+    color: #333; line-height: 1.4; height: 56px;
+  }
+  .feedback-comment:focus { border-color: #b73eb4; }
+  .summ-feedback-comment {
+    display: block; width: calc(100% - 28px); margin: 4px 14px 0;
+    border: 1px solid #e0e0e0; border-radius: 4px; padding: 6px 8px;
+    font-size: 12px; font-family: inherit; resize: none; outline: none;
+    color: #333; line-height: 1.4; height: 56px;
+  }
+  .summ-feedback-comment:focus { border-color: #4d9ff7; }
+  .feedback-dropdown {
+    position: fixed;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 210px;
+    padding: 8px 0; z-index: 2147483647; display: none;
+  }
+  .feedback-dropdown.open { display: block; }
+  .feedback-dropdown-title { font-size: 11px; color: #999; font-weight: 500; padding: 4px 14px 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
+  .feedback-option { padding: 7px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .feedback-option:hover { background: #f5f5f7; }
+  .feedback-option input { accent-color: #b73eb4; cursor: pointer; }
+  .feedback-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 14px 4px; border-top: 1px solid #f0f0f0; margin-top: 4px; }
+
+  .input-area { border-top: 1px solid #eee; flex-shrink: 0; position: relative; z-index: 10; background: #fff; }
+  .input-row { padding: 10px 12px 6px; display: flex; gap: 7px; align-items: center; }
+  .chat-inp { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; font-size: 14px; outline: none; font-family: inherit; resize: none; line-height: 1.4; max-height: 120px; overflow-y: auto; display: block; }
+  .chat-inp:focus { border-color: #b73eb4; }
+  .input-row { align-items: flex-end; }  /* align send btn to bottom when textarea grows */
+  .send-btn { background: linear-gradient(135deg, #b73eb4, #4B55D6); border: none; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  .input-toolbar { padding: 0 12px 6px; display: flex; align-items: center; gap: 6px; position: relative; }
+  .round-btn { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #ccc; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
+  .round-btn:hover { border-color: #b73eb4; color: #b73eb4; }
+  .round-btn.active { border-color: #b73eb4; color: #b73eb4; background: rgba(183,62,180,0.06); }
+
+  .dropdown-menu {
+    position: absolute; bottom: 34px; left: 0;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.13); width: 220px;
+    display: none; z-index: 500; overflow: hidden;
+  }
+  .dropdown-menu.open { display: block; }
+  .dropdown-header { padding: 8px 14px; font-size: 11px; color: #999; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
+  .dropdown-item { padding: 9px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .dropdown-item:hover { background: #f5f5f7; }
+  .dropdown-item.new-chat { color: #b73eb4; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
+
+  .hist-item { padding: 9px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .hist-item:hover { background: #f5f5f7; }
+  .hist-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist-item-date { font-size: 11px; color: #999; flex-shrink: 0; }
+  .hist-delete-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 13px; font-weight: 700; padding: 2px 4px; border-radius: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s, color 0.15s; line-height: 1; }
+  .hist-item:hover .hist-delete-btn { opacity: 1; }
+  .hist-delete-btn:hover { color: #d0021b !important; background: #fff0f0; }
+  .hist-confirm-row { background: #fff5f5; border-top: 1px solid #ffcccc; padding: 7px 14px; display: none; font-size: 11px; color: #d0021b; align-items: center; justify-content: space-between; }
+  .hist-confirm-row.show { display: flex; }
+
+  .disclaimer { padding: 5px 14px 8px; font-size: 11px; color: #aaa; text-align: center; line-height: 1.4; }
+  .disclaimer a { color: #b73eb4; text-decoration: none; }
+  .disclaimer a:hover { text-decoration: underline; }
+
+  /* Drawer inner scaler — transform:scale() applied by JS */
+  #drawerScaler {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  /* Scope banner */
+  .scope-banner {
+    padding: 6px 12px 8px;
+    background: #f9f6ff;
+    border-bottom: 1px solid #ede8fb;
+    flex-shrink: 0;
+  }
+  .scope-label {
+    font-size: 10px; font-weight: 600; color: #9a86c0;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+  .scope-chips {
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center; justify-content: center; row-gap: 6px;
+  }
+  .scope-chip-last-group {
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .scope-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fff; border: 1px solid #d0bff0;
+    border-radius: 20px; padding: 4px 0 4px 12px;
+    font-size: 12px; color: #5a3fa0; font-weight: 500;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    position: relative;
+  }
+  .scope-chip:hover { border-color: #b73eb4; background: #fdf5ff; }
+  .scope-chip.default { color: #7a6fa0; border-style: dashed; cursor: pointer; padding: 5px 20px; }
+  .scope-chip.default:hover { border-color: #b73eb4; color: #b73eb4; }
+  .scope-chip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+  .scope-chip-x {
+    flex-shrink: 0; width: 14px; height: 14px;
+    background: #d0bff0; border-radius: 50%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: #5a3fa0; font-weight: 700; line-height: 1;
+    transition: background 0.15s;
+    margin-right: 7px;
+  }
+  .scope-chip-x { opacity: 0; transition: opacity 0.15s, background 0.15s; }
+  .scope-chip:hover .scope-chip-x { opacity: 1; }
+  .scope-chip-x:hover { background: #b73eb4; color: #fff; }
+  .scope-add-btn {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid #d0bff0; background: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #5a3fa0; flex-shrink: 0; transition: border-color 0.15s, background 0.15s;
+  }
+  .scope-add-btn:hover { border-color: #5a3fa0; background: #f0eaff; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /* Scope tree picker */
+  #scopeTreePanel { display: none !important; flex-direction: column; }
+  #scopeTreePanel.open { display: flex !important; }
+  .scope-banner { position: relative; }
+  .tree-node {
+    display: flex; align-items: center;
+    padding: 6px 8px; cursor: pointer; user-select: none;
+    font-size: 12px; color: #333; gap: 4px;
+    transition: background 0.1s;
+  }
+  .tree-node:hover { background: #f5f0ff; }
+  .tree-node.tree-file:hover { color: #3d2d80; }
+  .tree-toggle {
+    width: 14px; height: 14px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #9a86c0; font-size: 9px; border-radius: 2px;
+    transition: transform 0.15s;
+  }
+  .tree-toggle.open { transform: rotate(90deg); }
+  .tree-toggle.leaf { opacity: 0; pointer-events: none; }
+  .tree-icon { flex-shrink: 0; }
+  .tree-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tree-index { font-weight: 700; color: #3d2d80; flex-shrink: 0; margin-right: 2px; }
+  .tree-children { display: none; }
+  .tree-children.open { display: block; }
+  .tree-match .tree-name b { color: #5a3fa0; font-weight: 700; }
+  .tree-dimmed { opacity: 0.3; }
+  .tree-already { opacity: 0.4; cursor: default; }
+  .tree-already:hover { background: none; }
+
+  /* ── AI Summarizer ──────────────────────────────────────────────── */
+  .cv-toolbar-slot {
+    position: fixed; display: flex; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 15;
+  }
+  .viewer-btn {
+    pointer-events: all;
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 10px 3px 8px;
+    background: #fff; border: 1px solid transparent; border-radius: 0;
+    color: #264091; font-family: "DM Sans", -apple-system, sans-serif;
+    font-weight: 600; white-space: nowrap; cursor: pointer;
+    transition: border-color 0.15s; font-size: 13px;
+  }
+  .viewer-btn:hover { border-color: #4d9ff7; }
+  .summ-spark { flex-shrink: 0; }
+
+  .summary-pane {
+    position: fixed; overflow: hidden;
+    background: #fff; display: flex; flex-direction: column;
+    z-index: 10; display: none;
+  }
+  .summary-pane.open { display: flex; }
+
+  .pane-header {
+    background: #4d9ff7; color: #fff;
+    padding: 0 8px; flex-shrink: 0;
+    display: flex; align-items: center;
+  }
+  .pane-header-title {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.2px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .toggle-bar { padding: 6px 8px; border-bottom: 1px solid #e0e8ee; flex-shrink: 0; background: #f2f3f9; }
+  .toggle-group { display: flex; background: #f2f3f9; }
+  .toggle-btn {
+    flex: 1; padding: 4px 0; border: 1px solid #d4d4d4; border-radius: 0;
+    background: transparent; color: #5d676f;
+    font-family: "DM Sans", -apple-system, sans-serif; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: border-color 0.12s, color 0.12s, background 0.12s;
+  }
+  .toggle-btn.active { background: #4d9ff7; color: #fff; border-color: #4d9ff7; }
+  .toggle-btn:hover:not(.active) { border-color: #4d9ff7; color: #4d9ff7; }
+
+  .content-wrap { position: relative; flex: 1; overflow: hidden; }
+  .summ-wm-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 5;
+  }
+  .summary-content { height: 100%; overflow-y: auto; padding: 14px 16px 10px; user-select: none; -webkit-user-select: none; }
+  .loading-wrap { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #5d676f; height: 60%; position: relative; z-index: 1; }
+  .spinner { width: 14px; height: 14px; border: 2px solid #e0e8ee; border-top-color: #4d9ff7; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .summary-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #4d9ff7; margin-bottom: 5px; position: relative; z-index: 1; }
+  .summary-body { position: relative; z-index: 1; }
+  .summary-text p { margin-bottom: 9px; font-size: 13px; line-height: 1.65; color: #1a1a1a; }
+  .summary-text ul { padding-left: 16px; margin-bottom: 9px; }
+  .summary-text li { margin-bottom: 6px; font-size: 13px; line-height: 1.6; color: #1a1a1a; }
+  .summary-text strong { color: #000; font-weight: 600; }
+
+  .pane-footer { flex-shrink: 0; border-top: 1px solid #e0e8ee; background: #f2f3f9; overflow: hidden; }
+  .summ-disclaimer { padding: 4px 8px; font-size: 11px; color: #5d676f; border-bottom: 1px solid #e0e8ee; background: #f2f3f9; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .summ-disclaimer-link { font-size: 11px; color: #4d9ff7; cursor: pointer; }
+  .summ-disclaimer-link:hover { text-decoration: underline; }
+  /* summ row: 3-col grid — text left | thumbs center | copy right */
+  .summ-feedback-row {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; padding: 4px 8px;
+    border-bottom: 1px solid #e0e8ee; min-height: 30px;
+  }
+  .summ-feedback-text { font-size: 11px; color: #5d676f; white-space: nowrap; justify-self: start; }
+  .summ-feedback-text.thanks { color: #1a9e4a; }
+  .summ-feedback-text.removed { color: #888; }
+  .summ-feedback-btns { display: flex; gap: 4px; align-items: center; justify-self: center; }
+  .summ-copy-group { display: flex; align-items: center; gap: 4px; justify-self: end; }
+  .summ-copy-label { font-size: 11px; color: #1a9e4a; opacity: 0; transition: opacity 0.15s; white-space: nowrap; }
+  .summ-copy-label.show { opacity: 1; }
+  /* Fixed-width slot for summ feedback text */
+  .summ-feedback-slot { min-width: 148px; flex-shrink: 0; position: relative; font-size: 11px; height: 16px; }
+  .summ-feedback-label { position: absolute; left:0; top:0; color: #5d676f; white-space: nowrap; transition: opacity 0.15s; }
+  .summ-feedback-thanks { position: absolute; left:0; top:0; white-space: nowrap; opacity: 0; transition: opacity 0.15s; }
+  .summ-feedback-thanks.show { opacity: 1; }
+  .summ-feedback-slot:has(.summ-feedback-thanks.show) .summ-feedback-label { opacity: 0; }
+  .summ-feedback-btns { display: flex; gap: 4px; align-items: center; }
+  .summ-copy-right { margin-left: 8px; }
+  .summ-action-btn { background: none; border: none; cursor: pointer; padding: 2px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.15s, color 0.15s; color: #5d676f; }
+  .summ-action-btn:hover { background: rgba(77,159,247,0.1); }
+  .summ-action-btn.active-up { color: #1a9e4a; background: rgba(26,158,74,0.1); }
+  .summ-action-btn.active-down { color: #d0021b; background: rgba(208,2,27,0.1); }
+  .ask-btn {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    width: calc(100% - 14px); margin: 5px 7px 4px;
+    padding: 6px 8px; background: #4d9ff7; border: none; border-radius: 0;
+    color: #fff; font-family: "DM Sans", -apple-system, sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+  }
+  .ask-btn:hover { background: #3a8ee0; }
+
+  #paneScaler { transform-origin: top left; display: flex; flex-direction: column; }
+
+  .summ-dropdown {
+    position: fixed; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 210px;
+    padding: 8px 0; z-index: 99999; display: none;
+  }
+  .summ-dropdown.open { display: block; }
+  .summ-dropdown-title { font-size: 11px; color: #999; font-weight: 500; padding: 4px 14px 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
+  .summ-feedback-option { padding: 7px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .summ-feedback-option:hover { background: #f5f5f7; }
+  .summ-feedback-option input { accent-color: #4d9ff7; cursor: pointer; }
+  .summ-feedback-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 14px 4px; border-top: 1px solid #f0f0f0; margin-top: 4px; }
+  .summ-fb-cancel { background: #fff; border: 1.5px solid #e0e8ee; border-radius: 3px; padding: 4px 10px; font-size: 11.5px; color: #5d676f; cursor: pointer; }
+  .summ-fb-cancel:hover { border-color: #5d676f; }
+  .summ-fb-submit { background: #e53f3c; border: none; border-radius: 3px; padding: 4px 10px; font-size: 11.5px; color: #fff; font-weight: 600; cursor: pointer; }
+  .summ-fb-submit:hover { background: #c73330; }
+  .summ-fb-submit:disabled { background: #ccc; cursor: default; }
+  .summ-copy-btn { display: none; background: none; border: none; cursor: pointer; color: #5d676f; padding: 2px; border-radius: 50%; transition: background 0.15s; }
+  .summ-copy-btn:hover { background: rgba(77,159,247,0.1); color: #4d9ff7; }
+
+  .about-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 99999; align-items: center; justify-content: center; }
+  .about-overlay.open { display: flex; }
+  .about-modal { background: #fff; border-radius: 8px; width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,0.22); overflow: hidden; }
+  .about-modal-header { padding: 14px 16px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e0e8ee; }
+  .about-modal-title { font-size: 13px; font-weight: 700; background: linear-gradient(135deg, #b73eb4, #4B55D6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 6px; }
+  .about-modal-close { background: none; border: none; cursor: pointer; color: #5d676f; font-size: 16px; }
+  .about-modal-body { padding: 14px 16px; font-size: 12px; color: #333; line-height: 1.6; }
+  .about-modal-body p { margin-bottom: 10px; }
+  .about-modal-body p:last-child { margin-bottom: 0; }
+  .about-modal-footer { padding: 10px 16px 14px; text-align: right; border-top: 1px solid #e0e8ee; }
+  .about-ok-btn { background: #4d9ff7; border: none; border-radius: 3px; padding: 6px 18px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .about-ok-btn:hover { background: #3a8ee0; }
+  /* ─────────────────────────────────────────────────────────────────── */
+</style>
+</head>
+<body>
+
+
+
+<img id="bg" src="cv-closed.png" alt="" />
+
+<!-- ── AI Summarizer ─────────────────────────────────────────────── -->
+<div class="cv-toolbar-slot" id="toolbarSlot">
+  <button class="viewer-btn" id="summOpenBtn" onclick="openSummary()">
+    <svg class="summ-spark" width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sg-summ" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b73eb4"/><stop offset="100%" stop-color="#4B55D6"/></linearGradient></defs><path stroke="url(#sg-summ)" stroke-width="1.4" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke="url(#sg-summ)" stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
+    <span style="font-weight:700;background:linear-gradient(135deg,#b73eb4,#4B55D6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AI Summarizer</span>
+  </button>
+</div>
+
+<div class="summary-pane" id="summaryPane">
+  <div id="paneScaler">
+    <div class="pane-header" id="paneHeaderDiv">
+      <div class="pane-header-title">
+        <svg class="summ-spark" width="14" height="14" viewBox="0 0 24 24" fill="none"><path stroke="white" stroke-width="1.4" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke="white" stroke-width=".75" opacity="0.85" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
+        AI Summarizer
+      </div>
+      <button onclick="closeSummary()" style="background:none;border:none;color:rgba(255,255,255,0.85);cursor:pointer;font-size:13px;padding:0;line-height:1;margin-left:auto;">✕</button>
+    </div>
+    <div class="toggle-bar">
+      <div class="toggle-group">
+        <button class="toggle-btn" id="btn-brief" onclick="setLength('brief')">Brief</button>
+        <button class="toggle-btn active" id="btn-standard" onclick="setLength('standard')">Standard</button>
+        <button class="toggle-btn" id="btn-detailed" onclick="setLength('detailed')">Detailed</button>
+      </div>
+    </div>
+    <div class="content-wrap" id="summContentWrap">
+      <canvas class="summ-wm-canvas" id="summWmCanvas"></canvas>
+      <div class="summary-content" id="summaryContent">
+        <div id="summaryInner"></div>
+      </div>
+    </div>
+    <div class="pane-footer">
+      <div class="summ-disclaimer">
+        <span>AI may make mistakes</span><span>·</span>
+        <span class="summ-disclaimer-link" onclick="showAboutSummarizer()">About AI Summarizer</span>
+      </div>
+      <div class="summ-feedback-row">
+        <span class="summ-feedback-text" id="summFeedbackText">Was this helpful?</span>
+        <div class="summ-feedback-btns">
+          <button class="summ-action-btn" id="summThumbUp" title="Helpful">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+          </button>
+          <button class="summ-action-btn" id="summThumbDown" title="Not helpful">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
+          </button>
+        </div>
+        <div class="summ-copy-group">
+          <span class="summ-copy-label" id="summCopiedLabel">Copied.</span>
+          <button class="summ-copy-btn" title="Copy summary" onclick="copySmmarySummary()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="ask-btn" onclick="askAssistantAboutDoc()">
+        <svg class="summ-spark" width="14" height="14" viewBox="0 0 24 24" fill="none"><path stroke="white" stroke-width="1.4" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke="white" stroke-width=".75" opacity="0.85" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
+        Ask AI Assistant about this document
+      </button>
+    </div>
+  </div><!-- end paneScaler -->
+</div><!-- end summaryPane -->
+
+<div class="summ-dropdown" id="summFeedbackDropdown">
+  <div class="summ-dropdown-title">What was the problem?</div>
+  <label class="summ-feedback-option"><input type="radio" name="sfbproblem" value="incorrect"> Incorrect information</label>
+  <label class="summ-feedback-option"><input type="radio" name="sfbproblem" value="harmful"> Harmful content</label>
+  <label class="summ-feedback-option"><input type="radio" name="sfbproblem" value="other"> Other</label>
+  <textarea class="summ-feedback-comment" id="summFbComment" placeholder="Tell us more (optional)" maxlength="500"></textarea>
+  <div class="summ-feedback-actions">
+    <button class="summ-fb-cancel" id="summFbCancel">Cancel</button>
+    <button class="summ-fb-submit" id="summFbSubmit" disabled>Submit</button>
+  </div>
+</div>
+
+<!-- Summarizer thumbs UP comment dropdown -->
+<div class="summ-dropdown" id="summUpDropdown">
+  <div class="summ-dropdown-title">What was useful?</div>
+  <textarea class="summ-feedback-comment" id="summUpComment" placeholder="What was useful about this summary? (optional)" maxlength="500"></textarea>
+  <div class="summ-feedback-actions">
+    <button class="summ-fb-cancel" id="summUpCancel">Cancel</button>
+    <button class="summ-fb-submit" id="summUpSubmit">Submit</button>
+  </div>
+</div>
+
+<div class="about-overlay" id="aboutSummOverlay">
+  <div class="about-modal">
+    <div class="about-modal-header">
+      <div class="about-modal-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sg-summ" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b73eb4"/><stop offset="100%" stop-color="#4B55D6"/></linearGradient></defs><path stroke="url(#sg-summ)" stroke-width="1.4" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke="url(#sg-summ)" stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
+        About AI Summarizer
+      </div>
+      <button class="about-modal-close" onclick="closeAboutSummarizer()">✕</button>
+    </div>
+    <div class="about-modal-body">
+      <p>The <strong>AI Summarizer</strong> generates a concise summary of the currently open document using ShareVault's AI service.</p>
+      <p>Summaries are generated from the document's <strong>indexed text</strong>. Redacted content will appear redacted in summaries even for users with unredacted access.</p>
+      <p>Summary content is subject to the same <strong>watermarking and copy protection</strong> policies as the document itself.</p>
+      <p>AI-generated content may contain errors. Always verify important information against the original document.</p>
+      <p style="color:#5d676f;">Powered by Claude · <a href="https://www.anthropic.com/legal/privacy" style="color:#4d9ff7;" target="_blank">Privacy Policy</a> · <a href="https://www.sharevault.com" style="color:#4d9ff7;" target="_blank">About AI Policy</a></p>
+    </div>
+    <div class="about-modal-footer"><button class="about-ok-btn" onclick="closeAboutSummarizer()">OK</button></div>
+  </div>
+</div>
+<!-- ─────────────────────────────────────────────────────────────────── -->
+
+<button class="fab" id="fab" onclick="openDrawer()">
+  <div class="fab-tooltip">AI Assistant</div>
+  <svg width="36" height="36" viewBox="0 0 24 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 6C2 4.9 2.9 4 4 4h16c1.1 0 2 .9 2 2v11c0 1.1-.9 2-2 2H8l-6 4V6Z" fill="white" opacity="0.93"/>
+    <g transform="scale(0.52) translate(13 10.5)">
+      <path stroke="url(#sg)" stroke-width="1.1" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/>
+      <path stroke="url(#sg)" stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/>
+    </g>
+    <defs>
+      <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#b73eb4"/>
+        <stop offset="100%" stop-color="#4B55D6"/>
+      </linearGradient>
+    </defs>
+  </svg>
+</button>
+
+<div class="drawer" id="drawer">
+  <div class="resize-handle" id="resizeHandle"></div>
+
+  <div id="drawerScaler">
+  <div class="drawer-header">
+    <div class="drawer-title-wrap">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path stroke="white" stroke-width="1.4" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke="white" stroke-width=".75" opacity="0.85" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
+      <span class="drawer-title-text">AI Assistant</span>
+    </div>
+    <div class="header-actions">
+      <button class="hbtn active" id="btnLeft" onclick="dockLeft()" title="Dock left">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="10" rx="1" fill="rgba(255,255,255,0.9)"/><rect x="6" y="3" width="5" height="6" rx="1" fill="rgba(255,255,255,0.5)"/></svg>
+      </button>
+      <button class="hbtn" id="btnRight" onclick="dockRight()" title="Dock right">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="7" y="1" width="4" height="10" rx="1" fill="rgba(255,255,255,0.9)"/><rect x="1" y="3" width="5" height="6" rx="1" fill="rgba(255,255,255,0.5)"/></svg>
+      </button>
+      <button class="hbtn" id="btnMax" onclick="toggleMax()" title="Maximize">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="1" stroke="rgba(255,255,255,0.9)" stroke-width="1.2" fill="none"/><path d="M4 1.5v9M8 1.5v9" stroke="rgba(255,255,255,0.5)" stroke-width="0.8"/></svg>
+      </button>
+      <button class="hbtn hbtn-close" onclick="closeDrawer()" title="Close">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-banner">
+    <div class="chat-title-row">
+      <span class="chat-title" id="chatTitle" ondblclick="startRename()">New Chat</span>
+      <input class="chat-title-input" id="chatTitleInput"
+        onblur="finishRename()"
+        onkeydown="if(event.key==='Enter')finishRename();if(event.key==='Escape')cancelRename();" />
+      <button class="chat-kebab-btn" id="chatKebabBtn" onclick="toggleChatKebab(event)" title="Chat options">⋮</button>
+      <div class="chat-kebab-menu" id="chatKebabMenu">
+        <div class="kebab-item" onclick="startRename()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5l2 2-9 9H2.5v-2l9-9z" stroke="#444" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Rename
+        </div>
+        <div class="kebab-item danger" onclick="showDeleteConfirm()">
+          <span style="font-size:14px;font-weight:700;line-height:1;">✕</span>
+          Delete
+        </div>
+      </div>
+    </div>
+    <div class="confirm-bar" id="chatConfirmBar">
+      <span>Delete this chat? This cannot be undone.</span>
+      <div class="confirm-btns">
+        <button class="confirm-btn yes" onclick="doDeleteChat()">Delete</button>
+        <button class="confirm-btn no" onclick="hideDeleteConfirm()">Cancel</button>
+      </div>
+    </div>
+    <div class="privacy-text">Chat content is private · <a href="#" onclick="showTrackingNotice();return false;" style="color:#7a6fa0;">What we track</a></div>
+  </div>
+
+
+  <div class="scope-banner" id="scopeBanner" style="position:relative;">
+    <div class="scope-label">Asking about:</div>
+    <div class="scope-chips" id="scopeChips"><!-- populated by JS --></div>
+    <!-- Tree picker: positioned absolute below chips -->
+    <div id="scopeTreePanel" style="position:absolute;left:10px;right:10px;top:100%;background:#fff;border:1px solid #d0bff0;border-radius:8px;box-shadow:0 6px 20px rgba(90,63,160,0.15);z-index:500;max-height:320px;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px 5px;border-bottom:1px solid #ede8f8;flex-shrink:0;">
+        <span style="font-size:11px;font-weight:600;color:#5a3fa0;text-transform:uppercase;letter-spacing:0.04em;">Ask about…</span>
+        <button onclick="closeScopePicker()" style="background:none;border:none;cursor:pointer;color:#9a86c0;font-size:14px;padding:0;line-height:1;">✕</button>
+      </div>
+      <div style="padding:5px 10px;border-bottom:1px solid #f0ebf8;flex-shrink:0;display:flex;align-items:center;gap:6px;background:#faf8ff;">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:#9a86c0"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <input id="scopeTreeSearch" placeholder="Search files and folders…" autocomplete="off"
+          style="flex:1;border:none;outline:none;background:transparent;font-size:12px;color:#333;font-family:inherit;"/>
+        <button id="scopeTreeClear" onclick="clearScopeSearch()" style="display:none;background:none;border:none;cursor:pointer;color:#bbb;padding:0;font-size:13px;line-height:1;">✕</button>
+      </div>
+      <div id="scopeTreeBody" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
+    </div>
+  </div>
+
+
+
+  <div class="msgs-wrap" id="msgsWrap">
+    <canvas class="watermark-canvas" id="wmCanvas"></canvas>
+    <div class="msgs" id="msgs"></div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <textarea class="chat-inp" id="inp" placeholder="Ask anything about this ShareVault…" rows="1"></textarea>
+      <button class="send-btn" onclick="send()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 12V2M2 7l5-5 5 5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="input-toolbar" id="inputToolbar">
+      <button class="round-btn" id="plusBtn" onclick="toggleMenu('plusMenu',event)" title="New chat / Upload">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+      <button class="round-btn" id="histBtn" onclick="toggleMenu('histMenu',event)" title="Chat history">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="round-btn" id="suggestBtn" onclick="toggleMenu('suggestionsPanel',event)" title="Suggested questions">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 21h6M12 3a6 6 0 0 1 6 6c0 2.22-1.2 4.16-3 5.2V17H9v-2.8A6 6 0 0 1 6 9a6 6 0 0 1 6-6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <span class="model-label">Claude Sonnet 4.6</span>
+
+      <div class="dropdown-menu" id="plusMenu">
+        <div class="dropdown-header">Options</div>
+        <div class="dropdown-item new-chat" onclick="newChat();closeAllMenus();">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          New chat
+        </div>
+        <div class="dropdown-item" onclick="uploadFile()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 11V3M4 6l4-4 4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 13h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Upload file
+        </div>
+      </div>
+
+      <div class="dropdown-menu" id="histMenu" style="width:260px;">
+        <div class="dropdown-header">Recent chats</div>
+        <div class="hist-item" onclick="loadConvo('competitive')">
+          <span class="hist-item-name">Competitive positioning analysis</span>
+          <span class="hist-item-date">Today</span>
+        </div>
+        <div class="hist-item" onclick="loadConvo('financials')">
+          <span class="hist-item-name">Financials summary</span>
+          <span class="hist-item-date">Today</span>
+        </div>
+        <div class="hist-item" onclick="loadConvo('bod')">
+          <span class="hist-item-name">BOD minutes — key decisions</span>
+          <span class="hist-item-date">Yesterday</span>
+        </div>
+        <div class="hist-item" onclick="loadConvo('ip')">
+          <span class="hist-item-name">IP and patents</span>
+          <span class="hist-item-date">Yesterday</span>
+        </div>
+      </div>
+
+      <div class="suggestions-panel" id="suggestionsPanel">
+        <div class="suggestions-header">Suggested questions</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How does Tetraplex position itself against its main competitors?')">How does Tetraplex position itself against its main competitors?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'Summarize the key financial highlights from the 2024 annual report')">Summarize the key financial highlights from the 2024 annual report</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What do the BOD minutes say about major decisions in 2024?')">What do the BOD minutes say about major decisions in 2024?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'Are there any documents related to intellectual property?')">Are there any documents related to intellectual property?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What regulatory filings are included in this ShareVault?')">What regulatory filings are included in this ShareVault?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What marketing documents are available?')">What marketing documents are available?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What is the Certificate of Incorporation?')">What is the Certificate of Incorporation?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I search for documents?')">How do I search for documents?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I view or download files?')">How do I view or download files?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I reach ShareVault support?')">How do I reach ShareVault support?</div>
+      </div>
+    </div>
+    <div class="disclaimer">AI may make mistakes · <a href="#" onclick="showAINotice();return false;">About AI Assistant</a></div>
+  </div>
+  </div><!-- end drawerScaler -->
+</div><!-- end drawer -->
+
+<script>
+
+  // ── URL parameter policies ──────────────────────────────────
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+
+    // ?wm=FALSE disables watermark
+    var wmEnabled = params.get('wm') !== 'FALSE';
+    if (!wmEnabled) {
+      var wmStyle = document.createElement('style');
+      wmStyle.textContent = '.watermark-canvas { display: none !important; } .summ-wm-canvas { display: none !important; }';
+      document.head.appendChild(wmStyle);
+    }
+
+    // ?copy=TRUE enables copy (removes prevention, adds copy buttons)
+    var copyEnabled = params.get('copy') === 'TRUE';
+    if (copyEnabled) {
+      // Allow text selection on bubbles
+      var copyStyle = document.createElement('style');
+      copyStyle.textContent = '.bubble-ai, .bubble-user { user-select: text !important; -webkit-user-select: text !important; } .copy-btn { display: flex !important; } .summary-content { user-select: text !important; -webkit-user-select: text !important; } .summ-copy-btn { display: inline-flex !important; }';
+      document.head.appendChild(copyStyle);
+    }
+    window._copyEnabled = copyEnabled;
+    window._wmEnabled = wmEnabled;
+
+    // ?scope=INDEX pre-sets the "asking about" scope (for summarizer integration)
+    var scopeParam = params.get('scope');
+    if (scopeParam) {
+      window._initialScope = decodeURIComponent(scopeParam);
+      window._autoOpen = true; // open drawer when scope is set
+    }
+    if (params.get('open') === 'TRUE') {
+      window._autoOpen = true;
+    }
+    var currentDocParam = params.get('currentDoc');
+    if (currentDocParam) window._currentDoc = decodeURIComponent(currentDocParam);
+  })();
+  // ────────────────────────────────────────────────────────────
+
+  // Summarizer vars — initialized later, declared early to prevent reposition() crash
+  var SUMM_SRC = null, summPaneOpen = false, summCurrentLength = 'standard';
+
+  var maximized = false;
+  var prevDockState = 'left';
+  var currentTitle = 'New Chat';
+  var prevTitle = 'New Chat';
+  var supportState = null;
+  
+  var _FILE_ICON   = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="13" viewBox="0 0 11 14" style="flex-shrink:0;"><path fill="#5a3fa0" d="M0 0v14h11V5L6 0zm9.59 5H6V1.41zM1 1h4v5h5v7H1z"/></svg>';
+  var _FOLDER_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="12" viewBox="0 0 14 14" style="flex-shrink:0;"><path fill="#5a3fa0" d="M13.125 4.998H14v8.151c0 .47-.392.851-.876.851H.876A.86.86 0 0 1 0 13.149V4.998h.875c0 2.3-.001 8.154.001 8.154 0 0 12.249-.001 12.249-.003V4.667zM5.854.852C5.431.369 5.086 0 4.489 0H1.313C.588 0 0 .671 0 1.498V5l1.309-.001h11.382L14 5V2.998c0-.827-.586-1.498-1.31-1.498H7.111c-.365 0-.922-.265-1.18-.56zM13 2.998V4H1V1.498C1 1.224 1.192 1 1.429 1H4.54c.358 0 .478.264.731.559l.075.088c.414.482 1.178.852 1.763.852h5.465c.235 0 .426.223.426.499"/></svg>';
+  function sourceItemHtml(name, tooltip, isFolder, clickable) {
+    // Split "4.2.1 Filename.pdf" into index + rest
+    var match = name.match(/^([\d.]+)\s+(.*)$/);
+    var idxPart = match ? '<strong style="color:#3d2d80;">' + match[1] + '.</strong> ' + match[2] : name;
+    var ico = isFolder ? _FOLDER_ICON : _FILE_ICON;
+    var inner = clickable !== false
+      ? '<a href="#" onclick="return false;" title="' + tooltip + '">' + idxPart + '</a>'
+      : '<span style="color:#b73eb4;font-size:11px;">' + idxPart + '</span>';
+    return '<div class="bubble-source-item">' + ico + inner + '</div>';
+  }
+  function src(items) {
+    return '<div class="bubble-sources"><div class="bubble-sources-label">Sources:</div>' +
+    items.map(function(s) {
+      var tooltip = s.path || s.name || s;
+      var name = s.name || s;
+      return sourceItemHtml(name, tooltip, false, true);
+    }).join('') + '</div>';
+  }
+
+var conversations = {
+    competitive: {
+      title: 'Competitive positioning analysis',
+      messages: [
+        { role: 'user', text: 'How does Tetraplex position itself against its main competitors?' },
+        { role: 'ai', text: 'Based on the materials in this ShareVault, Tetraplex competes primarily against three players: DataStream Inc., Nexora Analytics, and legacy enterprise vendors like SAP and Oracle in the data processing space. Tetraplex\'s positioning centers on three differentiators. First, processing speed — their proprietary pipeline architecture processes data 4-8x faster than DataStream according to the independent benchmark study in this ShareVault. Second, ease of deployment — average time-to-value is documented at 6 weeks versus an industry average of 4-6 months for comparable enterprise solutions. Third, pricing — Tetraplex\'s consumption-based model is cited in several customer case studies as a key reason for switching from legacy vendors.', sources: [
+          { name: '3.2.1 CompetitiveAnalysis-2024.pdf', path: '3.2.1 Sales / Competitive Intelligence / CompetitiveAnalysis-2024.pdf' },
+          { name: '3.2.4 BenchmarkStudy-DataStream.pdf', path: '3.2.4 Sales / Competitive Intelligence / BenchmarkStudy-DataStream.pdf' },
+          { name: '5.1.2 CustomerCaseStudies-2024.pdf', path: '5.1.2 Marketing / Case Studies / CustomerCaseStudies-2024.pdf' }
+        ]},
+        { role: 'user', text: 'What are their weaknesses relative to competitors?' },
+        { role: 'ai', text: 'The ShareVault materials are candid about a few competitive gaps. The most significant is enterprise scalability — several customer references note performance degradation above 500TB data volumes, an area where SAP and Oracle maintain an advantage. Tetraplex also lacks a native mobile application, which DataStream launched in 2023. The sales deck in this ShareVault acknowledges limited presence in the financial services and healthcare verticals, where Nexora has established compliance certifications that Tetraplex is still pursuing. Finally, international support is limited to English and Spanish, constraining expansion in APAC and EMEA markets.', sources: [
+          { name: '3.2.1 CompetitiveAnalysis-2024.pdf', path: '3.2.1 Sales / Competitive Intelligence / CompetitiveAnalysis-2024.pdf' },
+          { name: '5.1.1 SalesDeck-Q4-2024.pdf', path: '5.1.1 Marketing / Sales Materials / SalesDeck-Q4-2024.pdf' }
+        ]},
+        { role: 'user', text: 'Is there any customer churn data related to competitive losses?' },
+        { role: 'ai', text: 'Yes — the customer success report for 2024 discloses 7 competitive losses during the year, representing $4.2M in ARR. Four were lost to DataStream, primarily mid-market accounts citing feature parity concerns. Two were lost to legacy vendors in regulated industries where compliance certification was a requirement. One large account, representing $1.8M ARR, switched to a proprietary in-house solution. The report notes that win rate against DataStream improved from 41% to 56% over the course of 2024, suggesting the competitive gap is narrowing. No churn was attributed to pricing.', sources: [
+          { name: '5.3.1 CustomerSuccessReport-2024.pdf', path: '5.3.1 Sales / Customer Success / CustomerSuccessReport-2024.pdf' }
+        ]},
+        { role: 'user', text: 'What\'s the win rate against Nexora?' },
+        { role: 'ai', text: 'The competitive intelligence section of this ShareVault puts the win rate against Nexora at 71% in 2024, up from 64% in 2023. Tetraplex tends to win when the evaluation criteria emphasizes speed and total cost of ownership, and loses when compliance certification and vertical-specific features are prioritized. The sales playbook includes a dedicated Nexora battle card with suggested responses to common objections, and notes that Nexora\'s pricing has increased significantly following their Series D raise in mid-2024, which has started to work in Tetraplex\'s favor in competitive deals.', sources: [
+          { name: '3.2.1 CompetitiveAnalysis-2024.pdf', path: '3.2.1 Sales / Competitive Intelligence / CompetitiveAnalysis-2024.pdf' },
+          { name: '5.1.3 SalesPlaybook-2024.pdf', path: '5.1.3 Marketing / Sales Materials / SalesPlaybook-2024.pdf' }
+        ]}
+      ]
+    },
+    financials: {
+      title: 'Financials summary',
+      messages: [
+        { role: 'user', text: 'Summarize the key financial highlights from the 2024 annual report' },
+        { role: 'ai', text: 'Tetraplex reported strong performance in 2024. Revenue grew 18% year-over-year to $142.3M, driven primarily by expansion in the enterprise segment which now represents 67% of total revenue. Gross margin improved to 71%, up from 68% in 2023, reflecting favorable product mix and operational efficiencies. EBITDA reached $28.4M, a 34% increase over the prior year. The company ended 2024 with $47.2M in cash and no long-term debt. ARR grew to $138M with net revenue retention of 118%, indicating strong upsell momentum within the existing customer base.', sources: [
+          { name: '2.1.1 AnnualReport-2024.pdf', path: '2.1.1 Financial / Annual Reports / AnnualReport-2024.pdf' },
+          { name: '2.1.2 AuditedFinancials-2024.pdf', path: '2.1.2 Financial / Annual Reports / AuditedFinancials-2024.pdf' }
+        ]},
+        { role: 'user', text: 'How does that compare to 2023?' },
+        { role: 'ai', text: 'The year-over-year comparison shows meaningful acceleration. Revenue grew from $120.6M to $142.3M — an 18% increase versus 12% growth in the prior period. Gross margin expanded 3 points from 68% to 71%. The most significant improvement was in EBITDA, which grew from $21.2M to $28.4M, reflecting operating leverage as the business scales. Cash position increased from $31.8M to $47.2M despite investing $8.4M in product development. The one area of slight concern is customer acquisition cost, which increased 11% due to expanded sales headcount.', sources: [
+          { name: '2.1.1 AnnualReport-2024.pdf', path: '2.1.1 Financial / Annual Reports / AnnualReport-2024.pdf' },
+          { name: '2.1.3 AnnualReport-2023.pdf', path: '2.1.3 Financial / Annual Reports / AnnualReport-2023.pdf' }
+        ]},
+        { role: 'user', text: 'Any red flags?' },
+        { role: 'ai', text: 'A few items worth noting. Customer concentration remains elevated — the top 10 customers represent 31% of ARR, with the largest single customer at 8.4%. The 2024 report also discloses a pending patent dispute with a competitor, though management characterizes it as unlikely to result in material liability. Sales and marketing expense grew faster than revenue at 24% YoY, which bears watching. Finally, the company has $12.3M in deferred revenue that will need to be earned out, though this is consistent with industry norms for annual contracts.', sources: [
+          { name: '2.1.1 AnnualReport-2024.pdf', path: '2.1.1 Financial / Annual Reports / AnnualReport-2024.pdf' },
+          { name: '4.2.3 LegalDisclosures-2024.pdf', path: '4.2.3 Legal / Compliance / LegalDisclosures-2024.pdf' }
+        ]}
+      ]
+    },
+    bod: { yesterday: true,
+      title: 'BOD minutes — key decisions',
+      messages: [
+        { role: 'user', text: 'What do the BOD minutes say about major decisions in 2024?' },
+        { role: 'ai', text: 'The Board of Directors minutes from 2024 reflect several significant decisions. In Q1, the board approved a $15M Series C extension at a $380M post-money valuation. In Q2, the board authorized the acquisition of a smaller competitor, Proxima Analytics, for $8.2M in cash. Q3 minutes reflect approval of a new equity incentive plan, increasing the option pool by 4.2%. The most notable Q4 decision was the board\'s resolution to explore strategic alternatives, including a potential sale of the company — which is the context for this Project Optima ShareVault.', sources: [
+          { name: '4.1.1 BODMinutes-Q1-2024.pdf', path: '4.1.1 Legal / Board Minutes / BODMinutes-Q1-2024.pdf' },
+          { name: '4.1.2 BODMinutes-Q2-2024.pdf', path: '4.1.2 Legal / Board Minutes / BODMinutes-Q2-2024.pdf' },
+          { name: '4.1.3 BODMinutes-Q3-2024.pdf', path: '4.1.3 Legal / Board Minutes / BODMinutes-Q3-2024.pdf' },
+          { name: '4.1.4 BODMinutes-Q4-2024.pdf', path: '4.1.4 Legal / Board Minutes / BODMinutes-Q4-2024.pdf' }
+        ]},
+        { role: 'user', text: 'Were there any board member changes?' },
+        { role: 'ai', text: 'Yes — the minutes reflect two changes to board composition in 2024. In March, Dr. Sarah Chen joined as an independent director, bringing enterprise SaaS operating experience. In September, founding board member Robert Alcott stepped down after 8 years of service. His seat was not immediately filled, leaving the board at 6 members: 2 founders, 2 investor representatives, and 2 independents.', sources: [
+          { name: '4.1.1 BODMinutes-Q1-2024.pdf', path: '4.1.1 Legal / Board Minutes / BODMinutes-Q1-2024.pdf' },
+          { name: '4.1.3 BODMinutes-Q3-2024.pdf', path: '4.1.3 Legal / Board Minutes / BODMinutes-Q3-2024.pdf' }
+        ]}
+      ]
+    },
+    ip: { yesterday: true,
+      title: 'IP and patents',
+      messages: [
+        { role: 'user', text: 'Are there any documents related to intellectual property?' },
+        { role: 'ai', text: 'Yes — this ShareVault contains several IP-related documents in the Legal / Intellectual Property folder. There are 14 granted US patents covering Tetraplex\'s core data processing and analytics technology, with expiration dates ranging from 2031 to 2039. Additionally, there are 6 pending patent applications. This ShareVault also includes trademark registrations for the Tetraplex brand in the US, EU, and UK, plus 3 pending international applications. There\'s a comprehensive IP assignment agreement covering all employee and contractor contributions, and a technology license agreement with a third-party data provider.', sources: [
+          { name: '4.3.1 PatentPortfolio-2024.pdf', path: '4.3.1 Legal / Intellectual Property / PatentPortfolio-2024.pdf' },
+          { name: '4.3.3 TrademarkRegistrations.pdf', path: '4.3.3 Legal / Intellectual Property / TrademarkRegistrations.pdf' },
+          { name: '4.3.5 IPAssignmentAgreement.pdf', path: '4.3.5 Legal / Intellectual Property / IPAssignmentAgreement.pdf' }
+        ]},
+        { role: 'user', text: 'What\'s the patent dispute about?' },
+        { role: 'ai', text: 'The disclosed patent dispute involves a claim by DataStream Inc. alleging that Tetraplex\'s real-time analytics pipeline infringes on two of their patents filed in 2019. Tetraplex filed a declaratory judgment action in Delaware in October 2024, seeking a finding of non-infringement. Outside counsel\'s opinion letter in this ShareVault characterizes the claim as having "limited merit" given prior art, but notes the litigation could take 18-24 months to resolve. Management has not accrued any liability for this matter in the 2024 financial statements.', sources: [
+          { name: '4.3.6 PatentDisputeOpinion-OutsideCounsel.pdf', path: '4.3.6 Legal / Intellectual Property / PatentDisputeOpinion-OutsideCounsel.pdf' },
+          { name: '4.2.3 LegalDisclosures-2024.pdf', path: '4.2.3 Legal / Compliance / LegalDisclosures-2024.pdf' }
+        ]}
+      ]
+    }
+  };
+
+  var cannedResponses = {
+  'How does Tetraplex position itself against its main competitors?': {
+  text: 'Based on the materials in this ShareVault, Tetraplex competes primarily against three players: DataStream Inc., Nexora Analytics, and legacy enterprise vendors like SAP and Oracle in the data processing space. Tetraplex\'s positioning centers on three differentiators. First, processing speed — their proprietary pipeline architecture processes data 4-8x faster than DataStream according to the independent benchmark study in this ShareVault. Second, ease of deployment — average time-to-value is documented at 6 weeks versus an industry average of 4-6 months for comparable enterprise solutions. Third, pricing — Tetraplex\'s consumption-based model is cited in several customer case studies as a key reason for switching from legacy vendors.',
+  sources: [
+    { name: '3.2.1 CompetitiveAnalysis-2024.pdf', path: '3.2.1 Sales / Competitive Intelligence / CompetitiveAnalysis-2024.pdf' },
+    { name: '3.2.4 BenchmarkStudy-DataStream.pdf', path: '3.2.4 Sales / Competitive Intelligence / BenchmarkStudy-DataStream.pdf' },
+    { name: '5.1.2 CustomerCaseStudies-2024.pdf', path: '5.1.2 Marketing / Case Studies / CustomerCaseStudies-2024.pdf' }
+  ]
+},
+'Summarize the key financial highlights from the 2024 annual report': {
+  text: 'Tetraplex reported strong performance in 2024. Revenue grew 18% year-over-year to $142.3M, driven primarily by expansion in the enterprise segment which now represents 67% of total revenue. Gross margin improved to 71%, up from 68% in 2023, reflecting favorable product mix and operational efficiencies. EBITDA reached $28.4M, a 34% increase over the prior year. The company ended 2024 with $47.2M in cash and no long-term debt. ARR grew to $138M with net revenue retention of 118%, indicating strong upsell momentum within the existing customer base.',
+  sources: [
+    { name: '2.1.1 AnnualReport-2024.pdf', path: '2.1.1 Financial / Annual Reports / AnnualReport-2024.pdf' },
+    { name: '2.1.2 AuditedFinancials-2024.pdf', path: '2.1.2 Financial / Annual Reports / AuditedFinancials-2024.pdf' }
+  ]
+},
+'What do the BOD minutes say about major decisions in 2024?': {
+  text: 'The Board of Directors minutes from 2024 reflect several significant decisions. In Q1, the board approved a $15M Series C extension at a $380M post-money valuation. In Q2, the board authorized the acquisition of a smaller competitor, Proxima Analytics, for $8.2M in cash. Q3 minutes reflect approval of a new equity incentive plan, increasing the option pool by 4.2%. The most notable Q4 decision was the board\'s resolution to explore strategic alternatives, including a potential sale of the company — which is the context for this Project Optima ShareVault.',
+  sources: [
+    { name: '4.1.1 BODMinutes-Q1-2024.pdf', path: '4.1.1 Legal / Board Minutes / BODMinutes-Q1-2024.pdf' },
+    { name: '4.1.2 BODMinutes-Q2-2024.pdf', path: '4.1.2 Legal / Board Minutes / BODMinutes-Q2-2024.pdf' },
+    { name: '4.1.3 BODMinutes-Q3-2024.pdf', path: '4.1.3 Legal / Board Minutes / BODMinutes-Q3-2024.pdf' },
+    { name: '4.1.4 BODMinutes-Q4-2024.pdf', path: '4.1.4 Legal / Board Minutes / BODMinutes-Q4-2024.pdf' }
+  ]
+},
+'Are there any documents related to intellectual property?': {
+  text: 'Yes — this ShareVault contains several IP-related documents in the Legal / Intellectual Property folder. There are 14 granted US patents covering Tetraplex\'s core data processing and analytics technology, with expiration dates ranging from 2031 to 2039. Additionally, there are 6 pending patent applications. This ShareVault also includes trademark registrations for the Tetraplex brand in the US, EU, and UK, plus 3 pending international applications. There\'s a comprehensive IP assignment agreement covering all employee and contractor contributions, and a technology license agreement with a third-party data provider.',
+  sources: [
+    { name: '4.3.1 PatentPortfolio-2024.pdf', path: '4.3.1 Legal / Intellectual Property / PatentPortfolio-2024.pdf' },
+    { name: '4.3.3 TrademarkRegistrations.pdf', path: '4.3.3 Legal / Intellectual Property / TrademarkRegistrations.pdf' },
+    { name: '4.3.5 IPAssignmentAgreement.pdf', path: '4.3.5 Legal / Intellectual Property / IPAssignmentAgreement.pdf' }
+  ]
+},
+  
+'How does Tetraplex position itself against its main competitors?': {
+  text: 'Based on the materials in this ShareVault, Tetraplex competes primarily against three players: DataStream Inc., Nexora Analytics, and legacy enterprise vendors like SAP and Oracle in the data processing space. Tetraplex\'s positioning centers on three differentiators. First, processing speed — their proprietary pipeline architecture processes data 4-8x faster than DataStream according to the independent benchmark study in this ShareVault. Second, ease of deployment — average time-to-value is documented at 6 weeks versus an industry average of 4-6 months for comparable enterprise solutions. Third, pricing — Tetraplex\'s consumption-based model is cited in several customer case studies as a key reason for switching from legacy vendors.',
+  sources: [
+    { name: '3.2.1 CompetitiveAnalysis-2024.pdf', path: '3.2.1 Sales / Competitive Intelligence / CompetitiveAnalysis-2024.pdf' },
+    { name: '3.2.4 BenchmarkStudy-DataStream.pdf', path: '3.2.4 Sales / Competitive Intelligence / BenchmarkStudy-DataStream.pdf' },
+    { name: '5.1.2 CustomerCaseStudies-2024.pdf', path: '5.1.2 Marketing / Case Studies / CustomerCaseStudies-2024.pdf' }
+  ]
+},
+'Summarize the key financial highlights from the 2024 annual report': {
+  text: 'Tetraplex reported strong performance in 2024. Revenue grew 18% year-over-year to $142.3M, driven primarily by expansion in the enterprise segment which now represents 67% of total revenue. Gross margin improved to 71%, up from 68% in 2023, reflecting favorable product mix and operational efficiencies. EBITDA reached $28.4M, a 34% increase over the prior year. The company ended 2024 with $47.2M in cash and no long-term debt. ARR grew to $138M with net revenue retention of 118%, indicating strong upsell momentum within the existing customer base.',
+  sources: [
+    { name: '2.1.1 AnnualReport-2024.pdf', path: '2.1.1 Financial / Annual Reports / AnnualReport-2024.pdf' },
+    { name: '2.1.2 AuditedFinancials-2024.pdf', path: '2.1.2 Financial / Annual Reports / AuditedFinancials-2024.pdf' }
+  ]
+},
+'What do the BOD minutes say about major decisions in 2024?': {
+  text: 'The Board of Directors minutes from 2024 reflect several significant decisions. In Q1, the board approved a $15M Series C extension at a $380M post-money valuation. In Q2, the board authorized the acquisition of a smaller competitor, Proxima Analytics, for $8.2M in cash. Q3 minutes reflect approval of a new equity incentive plan, increasing the option pool by 4.2%. The most notable Q4 decision was the board\'s resolution to explore strategic alternatives, including a potential sale of the company — which is the context for this Project Optima ShareVault.',
+  sources: [
+    { name: '4.1.1 BODMinutes-Q1-2024.pdf', path: '4.1.1 Legal / Board Minutes / BODMinutes-Q1-2024.pdf' },
+    { name: '4.1.2 BODMinutes-Q2-2024.pdf', path: '4.1.2 Legal / Board Minutes / BODMinutes-Q2-2024.pdf' },
+    { name: '4.1.3 BODMinutes-Q3-2024.pdf', path: '4.1.3 Legal / Board Minutes / BODMinutes-Q3-2024.pdf' },
+    { name: '4.1.4 BODMinutes-Q4-2024.pdf', path: '4.1.4 Legal / Board Minutes / BODMinutes-Q4-2024.pdf' }
+  ]
+},
+'Are there any documents related to intellectual property?': {
+  text: 'Yes — this ShareVault contains several IP-related documents in the Legal / Intellectual Property folder. There are 14 granted US patents covering Tetraplex\'s core data processing and analytics technology, with expiration dates ranging from 2031 to 2039. Additionally, there are 6 pending patent applications. This ShareVault also includes trademark registrations for the Tetraplex brand in the US, EU, and UK, plus 3 pending international applications. There\'s a comprehensive IP assignment agreement covering all employee and contractor contributions, and a technology license agreement with a third-party data provider.',
+  sources: [
+    { name: '4.3.1 PatentPortfolio-2024.pdf', path: '4.3.1 Legal / Intellectual Property / PatentPortfolio-2024.pdf' },
+    { name: '4.3.3 TrademarkRegistrations.pdf', path: '4.3.3 Legal / Intellectual Property / TrademarkRegistrations.pdf' },
+    { name: '4.3.5 IPAssignmentAgreement.pdf', path: '4.3.5 Legal / Intellectual Property / IPAssignmentAgreement.pdf' }
+  ]
+},
+    'What marketing documents are available?': {
+      text: 'The Marketing folder in this ShareVault contains a product overview deck, three customer case studies (Meridian Financial, Apex Manufacturing, and TechBridge Solutions), a competitive battle card set covering DataStream, Nexora, and Oracle, and a 2024 analyst briefing. There\'s also a brand guidelines document and two recorded product demo videos. The most recent document is a go-to-market strategy deck from Q4 2024 outlining Tetraplex\'s plans for the financial services vertical.',
+      sources: [
+        { name: '5.1.1 SalesDeck-Q4-2024.pdf', path: '5.1.1 Marketing / Sales Materials / SalesDeck-Q4-2024.pdf' },
+        { name: '5.1.2 CustomerCaseStudies-2024.pdf', path: '5.1.2 Marketing / Case Studies / CustomerCaseStudies-2024.pdf' },
+        { name: '5.1.3 SalesPlaybook-2024.pdf', path: '5.1.3 Marketing / Sales Materials / SalesPlaybook-2024.pdf' },
+        { name: '5.2.1 AnalystBriefing-2024.pdf', path: '5.2.1 Marketing / Analyst Relations / AnalystBriefing-2024.pdf' }
+      ]
+    },
+    'What is the Certificate of Incorporation?': {
+      text: 'The Certificate of Incorporation in this ShareVault shows Tetraplex Corporation was incorporated in Delaware on March 12, 2016. The company is authorized to issue 100,000,000 shares of common stock at $0.0001 par value, and 20,000,000 shares of preferred stock. The certificate has been amended three times — in 2018, 2021, and 2023 — primarily to increase authorized share counts in connection with funding rounds. The most recent amendment, filed January 2023, reflects the Series C preferred stock authorization.',
+      sources: [
+        { name: '4.3.2 CertificateOfIncorporation-Tetraplex.pdf', path: '4.3.2 Legal / Intellectual Property / CertificateOfIncorporation-Tetraplex.pdf' },
+        { name: '4.3.4 CertificateOfAmendment-2023.pdf', path: '4.3.4 Legal / Intellectual Property / CertificateOfAmendment-2023.pdf' }
+      ]
+    },
+    'How do I search for documents?': {
+      text: 'You can search documents in this ShareVault using the search bar at the top of the Documents page. Type any keyword and results will appear instantly across all documents you have access to. You can filter results by folder, file type, and date. Full-text search is supported — meaning the search looks inside document content, not just file names. For best results, use specific terms like company names, clause types, or financial metrics. You can also use the folder tree on the left to browse documents by category.\n\n<a href="https://www.sharevault.net/help/search" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Searching documents</a>',
+      sources: []
+    },
+    'How do I view or download files?': {
+      text: 'To view a file, simply click on it in the Documents list and it will open in the secure document viewer. Your administrator has configured this ShareVault with the "Secure Save & Print" policy, which means you can save and print documents but copying text is restricted. To download a file, click the download icon to the right of the filename in the document list, or use the download button in the viewer toolbar. Note that all downloaded files will be watermarked with your name, email, and the date and time of download.\n\n<a href="https://www.sharevault.net/help/viewing-documents" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Viewing documents</a> &nbsp; <a href="https://www.sharevault.net/help/batch-download" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Batch download</a>',
+      sources: []
+    },
+    'How do I reach ShareVault support?': {
+      text: 'I can connect you with ShareVault support right now. Would you prefer a <b>callback</b>, <b>text message</b> or <b>email</b> response?',
+      sources: [],
+      supportFlow: true
+    }
+  };
+
+  function showAINotice() {
+    alert('AI Assistant may make mistakes. Please verify important information.\n\nYour data is never used for AI training.\n\nShareVault AI Policy');
+  }
+
+  function showTrackingNotice() {
+    alert('The content of your questions and AI responses is never logged or visible to anyone else.\n\nShareVault AI Assistant logs usage metadata for governance purposes, including:\n* Number of words in your queries and responses.\n* Response times.\n* Document citations.\n* AI-generated topic labels.');
+  }
+
+  function drawWatermark() {
+    var wrap = document.getElementById('msgsWrap');
+    var canvas = document.getElementById('wmCanvas');
+    var W = wrap.offsetWidth; var H = wrap.offsetHeight;
+    if (!W || !H) return;
+    canvas.width = W; canvas.height = H;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    var lines = [
+      { text: 'STRICTLY CONFIDENTIAL', bold: true },
+      { text: 'CoreX Corporation', bold: true },
+      { text: 'Opened by jsmith@corex.com', bold: true },
+      { text: 'on Mar 30, 2026 at 5:31:35 PM', bold: true },
+      { text: 'IP: 198.51.42.17', bold: true }
+    ];
+    var naturalAngle = Math.atan2(H, W);
+    var angleRad = Math.min(naturalAngle, 55 * Math.PI / 180);
+    var cosA = Math.cos(angleRad); var sinA = Math.sin(angleRad);
+    var lineSpacing = 1.2; var nLines = lines.length;
+    var testSize = 100; var maxTextW = 0;
+    lines.forEach(function(l) {
+      ctx.font = (l.bold ? 'bold ' : '') + testSize + 'px Arial';
+      var m = ctx.measureText(l.text).width;
+      if (m > maxTextW) maxTextW = m;
+    });
+    var blockH100 = testSize * lineSpacing * nLines;
+    var scale = Math.min((W * 0.96) / (maxTextW * cosA + blockH100 * sinA), (H * 0.96) / (maxTextW * sinA + blockH100 * cosA));
+    var fontSize = Math.max(8, Math.floor(testSize * scale));
+    var lineH = fontSize * lineSpacing;
+    var blockH = lineH * nLines;
+    var scaledTextW = maxTextW * (fontSize / testSize);
+    var tileVertH = (scaledTextW * sinA + blockH * cosA) * 0.75;
+    var numTiles = Math.max(1, Math.floor(H / tileVertH));
+    var startY = (H - (numTiles - 1) * tileVertH) / 2;
+    for (var t = 0; t < numTiles; t++) {
+      ctx.save();
+      ctx.translate(W / 2, startY + t * tileVertH);
+      ctx.rotate(-angleRad);
+      ctx.globalAlpha = 0.30; ctx.fillStyle = '#4B55D6';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      lines.forEach(function(line, i) {
+        ctx.font = (line.bold ? 'bold ' : '') + fontSize + 'px Arial';
+        ctx.fillText(line.text, 0, (i - (nLines - 1) / 2) * lineH);
+      });
+      ctx.restore();
+    }
+  }
+
+  new ResizeObserver(function() { setTimeout(drawWatermark, 30); }).observe(document.getElementById('msgsWrap'));
+
+  // ── Background letterbox + FAB positioning ─────────────────────────
+  var SRC_W = 2000, SRC_H = 1249;
+
+  function getBounds() {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var imgRatio = SRC_W / SRC_H, vpRatio = vw / vh;
+    var imgW, imgH, ox, oy;
+    if (vpRatio > imgRatio) {
+      imgH = vh; imgW = vh * imgRatio; ox = (vw - imgW) / 2; oy = 0;
+    } else {
+      imgW = vw; imgH = vw / imgRatio; ox = 0; oy = (vh - imgH) / 2;
+    }
+    return { imgW: imgW, imgH: imgH, ox: ox, oy: oy, scale: imgW / SRC_W };
+  }
+
+  var DESIGN_DRAWER_W = 400; // drawer width at zoom=1.0
+  var REF_SCALE = 1728 / SRC_W; // zoom=1.0 at Mac fullscreen (~1728px)
+
+  function reposition() {
+    var b = getBounds();
+    var sc = b.scale;
+
+    // Background
+    var bg = document.getElementById('bg');
+    bg.style.left   = b.ox + 'px';
+    bg.style.top    = b.oy + 'px';
+    bg.style.width  = b.imgW + 'px';
+    bg.style.height = b.imgH + 'px';
+
+    // FAB — scale with image, anchor to image bottom-left
+    var zoom = sc / REF_SCALE;
+    var fabDesign = 56; // design size at zoom=1
+    var fabSize = Math.round(fabDesign * zoom);
+    var fab = document.getElementById('fab');
+    fab.style.width  = fabSize + 'px';
+    fab.style.height = fabSize + 'px';
+    fab.style.left   = (b.ox + Math.round(10 * zoom)) + 'px';
+    fab.style.bottom = (window.innerHeight - (b.oy + b.imgH) + Math.round(24 * zoom)) + 'px';
+    // Scale the SVG icon inside the FAB
+    var fabSvg = fab.querySelector('svg');
+    if (fabSvg) {
+      var svgSize = Math.round(36 * zoom);
+      fabSvg.style.width  = svgSize + 'px';
+      fabSvg.style.height = svgSize + 'px';
+    }
+
+    // Drawer scaling — clamp zoom to ≥1.0 so content never shrinks below design size
+    zoom = Math.max(1.0, zoom);
+    var drawerW = Math.round(DESIGN_DRAWER_W * zoom);
+    var drawer = document.getElementById('drawer');
+    drawer.style.width = drawerW + 'px';
+    // Anchor drawer to letterbox edges, not viewport edges
+    if (drawer.classList.contains('docked-right')) {
+      drawer.style.left  = '';
+      drawer.style.right = (window.innerWidth - (b.ox + b.imgW)) + 'px';
+    } else {
+      drawer.style.right = '';
+      drawer.style.left  = b.ox + 'px';
+    }
+
+    var SRC_HEADER_H = 68;  // tweak to move drawer top edge
+    var SRC_FOOTER_H = 23.5;  // tweak to expose footer bar
+    var drawerTop    = Math.round(b.oy + SRC_HEADER_H * sc);
+    var footerReserve = Math.round((window.innerHeight - (b.oy + b.imgH)) + SRC_FOOTER_H * sc);
+    var drawerH      = window.innerHeight - drawerTop - Math.max(0, footerReserve);
+    drawer.style.top    = drawerTop + 'px';
+    drawer.style.height = drawerH + 'px';
+    var scalerH = drawerH / zoom;
+    var scaler = document.getElementById('drawerScaler');
+    scaler.style.width     = DESIGN_DRAWER_W + 'px';
+    scaler.style.height    = scalerH + 'px';
+    scaler.style.zoom      = zoom;
+    scaler.style.transform = '';
+
+    // flex:1 on .msgs-wrap handles height distribution with CSS zoom
+
+    // ── Summarizer toolbar slot & pane ──────────────────────────────
+    var ts = document.getElementById('toolbarSlot');
+    if (ts && SUMM_SRC) {
+      ts.style.left   = (b.ox + SUMM_SRC.toolbarLeft  * sc) + 'px';
+      ts.style.top    = (b.oy + SUMM_SRC.toolbarTop   * sc) + 'px';
+      ts.style.right  = (window.innerWidth - (b.ox + SUMM_SRC.toolbarRight * sc)) + 'px';
+      ts.style.height = ((SUMM_SRC.toolbarBot - SUMM_SRC.toolbarTop) * sc) + 'px';
+    }
+    var summPane = document.getElementById('summaryPane');
+    if (summPane && summPaneOpen) {
+      var pL = b.ox + SUMM_SRC.paneLeft  * sc;
+      var pR = b.ox + SUMM_SRC.paneRight * sc;
+      var pW = pR - pL;
+      var pT = b.oy + SUMM_SRC.tabTop    * sc;
+      var hdrH = (SUMM_SRC.tabBottom - SUMM_SRC.tabTop) * sc;
+      var pH = b.oy + SUMM_SRC.docBottom * sc - pT;
+      summPane.style.left   = pL + 'px';
+      summPane.style.top    = pT + 'px';
+      summPane.style.width  = pW + 'px';
+      summPane.style.height = pH + 'px';
+      var hdr = document.getElementById('paneHeaderDiv');
+      if (hdr) hdr.style.height = hdrH + 'px';
+      var paneZoom = Math.max(1.0, zoom);
+      var scaler = document.getElementById('paneScaler');
+      if (scaler) {
+        scaler.style.width  = (pW  / paneZoom) + 'px';
+        scaler.style.height = (pH / paneZoom) + 'px';
+        scaler.style.transform = 'scale(' + paneZoom + ')';
+        scaler.style.transformOrigin = 'top left';
+      }
+    }
+    // ────────────────────────────────────────────────────────────────
+  }
+
+  window.addEventListener('resize', reposition);
+  window.addEventListener('load', reposition);
+  reposition();
+  // ────────────────────────────────────────────────────────────────────
+
+
+
+  function openDrawer() { document.getElementById('drawer').classList.add('open'); document.getElementById('fab').style.display = 'none'; setTimeout(drawWatermark, 50); }
+  function closeDrawer() {
+    var d = document.getElementById('drawer'); d.classList.remove('open');
+    document.getElementById('fab').style.display = 'flex';
+    if (maximized) { d.classList.remove('maximized'); maximized = false; document.getElementById('btnMax').classList.remove('active'); restoreDockHighlight(); }
+    reposition();
+    closeAllMenus();
+  }
+  function dockLeft() {
+    var d = document.getElementById('drawer');
+    var b = getBounds(); var zoom = b.scale / REF_SCALE;
+    var savedW = d.offsetWidth; // preserve current width
+    if (maximized) { d.classList.remove('maximized'); maximized = false; document.getElementById('btnMax').classList.remove('active'); savedW = 0; }
+    d.classList.remove('docked-right');
+    reposition();
+    if (savedW) { d.style.width = savedW + 'px'; document.getElementById('drawerScaler').style.width = (savedW / zoom) + 'px'; }
+    prevDockState = 'left'; document.getElementById('btnLeft').classList.add('active'); document.getElementById('btnRight').classList.remove('active');
+    setTimeout(drawWatermark, 50);
+  }
+  function dockRight() {
+    var d = document.getElementById('drawer');
+    var b = getBounds(); var zoom = b.scale / REF_SCALE;
+    var savedW = d.offsetWidth;
+    if (maximized) { d.classList.remove('maximized'); maximized = false; document.getElementById('btnMax').classList.remove('active'); savedW = 0; }
+    d.classList.add('docked-right');
+    reposition();
+    if (savedW) { d.style.width = savedW + 'px'; document.getElementById('drawerScaler').style.width = (savedW / zoom) + 'px'; }
+    prevDockState = 'right'; document.getElementById('btnRight').classList.add('active'); document.getElementById('btnLeft').classList.remove('active');
+    setTimeout(drawWatermark, 50);
+  }
+  function toggleMax() {
+    var d = document.getElementById('drawer'); maximized = !maximized;
+    if (maximized) {
+      d.classList.add('maximized');
+      document.getElementById('btnMax').classList.add('active');
+      document.getElementById('btnLeft').classList.remove('active');
+      document.getElementById('btnRight').classList.remove('active');
+      // Set drawer + scaler to full image width
+      var b = getBounds();
+      var zoom = b.scale / REF_SCALE;
+      d.style.width = b.imgW + 'px';
+      document.getElementById('drawerScaler').style.width = (b.imgW / zoom) + 'px';
+    } else {
+      d.classList.remove('maximized');
+      document.getElementById('btnMax').classList.remove('active');
+      restoreDockHighlight();
+      // Restore to default zoom-adjusted width
+      reposition();
+    }
+    setTimeout(drawWatermark, 50);
+  }
+  function restoreDockHighlight() {
+    document.getElementById('btnLeft').classList.toggle('active', prevDockState === 'left');
+    document.getElementById('btnRight').classList.toggle('active', prevDockState === 'right');
+  }
+  function closeAllMenus() {
+    ['plusMenu','histMenu'].forEach(function(id){ document.getElementById(id).classList.remove('open'); });
+    ['plusBtn','histBtn'].forEach(function(id){ document.getElementById(id).classList.remove('active'); });
+    document.getElementById('chatKebabMenu').classList.remove('open');
+    document.getElementById('suggestionsPanel').classList.remove('open');
+    if (document.getElementById('suggestBtn')) document.getElementById('suggestBtn').classList.remove('active');
+    document.querySelectorAll('.hist-confirm-row').forEach(function(r){ r.classList.remove('show'); });
+    document.querySelectorAll('.feedback-dropdown').forEach(function(d){ d.classList.remove('open'); });
+    document.querySelectorAll('.bubble-actions.dropdown-open').forEach(function(a){ a.classList.remove('dropdown-open'); });
+  }
+  function toggleMenu(id, e) {
+    e.stopPropagation();
+    var isOpen = document.getElementById(id).classList.contains('open');
+    closeAllMenus();
+    if (!isOpen) {
+      document.getElementById(id).classList.add('open');
+      var btnMap = { 'plusMenu': 'plusBtn', 'histMenu': 'histBtn', 'suggestionsPanel': 'suggestBtn' };
+      if (btnMap[id]) document.getElementById(btnMap[id]).classList.add('active');
+    }
+  }
+  function toggleChatKebab(e) {
+    e.stopPropagation();
+    var m = document.getElementById('chatKebabMenu');
+    var isOpen = m.classList.contains('open');
+    closeAllMenus();
+    if (!isOpen) m.classList.add('open');
+  }
+  document.addEventListener('click', closeAllMenus);
+  document.addEventListener('click', function(e) {
+    var panel = document.getElementById('scopeTreePanel');
+    if (!panel || !panel.classList.contains('open')) return;
+    var banner = document.getElementById('scopeBanner');
+    if (banner && banner.contains(e.target)) return; // click inside banner — handled by chips
+    panel.classList.remove('open');
+  });
+
+  function startRename() {
+    closeAllMenus();
+    var title = document.getElementById('chatTitle');
+    var input = document.getElementById('chatTitleInput');
+    prevTitle = title.textContent;
+    input.value = prevTitle;
+    title.style.display = 'none';
+    input.style.display = 'block';
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+  function finishRename() {
+    var title = document.getElementById('chatTitle');
+    var input = document.getElementById('chatTitleInput');
+    var val = input.value.trim();
+    title.textContent = val || prevTitle;
+    currentTitle = title.textContent;
+    input.style.display = 'none';
+    title.style.display = '';
+  }
+  function cancelRename() {
+    var title = document.getElementById('chatTitle');
+    var input = document.getElementById('chatTitleInput');
+    title.textContent = prevTitle;
+    input.style.display = 'none';
+    title.style.display = '';
+  }
+  function showDeleteConfirm() { closeAllMenus(); document.getElementById('chatConfirmBar').classList.add('show'); }
+  function hideDeleteConfirm() { document.getElementById('chatConfirmBar').classList.remove('show'); }
+  function doDeleteChat() { hideDeleteConfirm(); newChat(); }
+
+  function showHistConfirm(e, id) {
+    e.stopPropagation();
+    document.querySelectorAll('.hist-confirm-row').forEach(function(r){ r.classList.remove('show'); });
+    document.getElementById(id).classList.add('show');
+  }
+  function hideHistConfirm(e, id) { e.stopPropagation(); document.getElementById(id).classList.remove('show'); }
+  function doHistDelete(e, itemId, confirmId) {
+    e.stopPropagation();
+    var item = document.getElementById(itemId);
+    var conf = document.getElementById(confirmId);
+    if (item) item.remove();
+    if (conf) conf.remove();
+  }
+
+  function copyBubble(btn) {
+    var wrap = btn.closest('.msg-wrap-ai');
+    var t = wrap ? wrap.querySelector('.bubble-ai') : null;
+    if (!t) return;
+    navigator.clipboard.writeText(t.innerText).then(function() {
+      var actions = btn.closest('.bubble-actions');
+      var msgEl = actions ? actions.querySelector('.bubble-feedback-msg') : null;
+      if (msgEl) showFeedbackMsg(msgEl, 'Copied.', 'thanks');
+    });
+  }
+
+  function showFeedbackMsg(el, text, type) {
+    if (!el) return;
+    if (el._fbTimer) { clearTimeout(el._fbTimer); el._fbTimer = null; }
+    // Force class reset cleanly
+    el.className = 'bubble-feedback-msg';
+    void el.offsetWidth; // trigger reflow so transition restarts
+    el.textContent = text;
+    el.className = 'bubble-feedback-msg show ' + (type || 'thanks');
+    el._fbTimer = setTimeout(function() { el.classList.remove('show'); el._fbTimer = null; }, 2000);
+  }
+
+  function addAiMessage(text, isLatest, sources, noFeedback) {
+    var wrap = document.createElement('div');
+    wrap.className = 'msg-wrap-ai';
+    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    var uid = 'fb' + Date.now() + Math.floor(Math.random()*10000);
+    var actionsClass = (isLatest ? 'bubble-actions' : 'bubble-actions hover-only') + (noFeedback ? ' no-thumbs' : '');
+    var sourcesHtml = (sources && sources.length) ? src(sources) : '';
+    var thumbsHtml = noFeedback ? '' :
+      '<button class="action-btn" title="Helpful">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>' +
+      '</button>' +
+      '<button class="action-btn" title="Not helpful">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>' +
+      '</button>' +
+      '';
+    wrap.innerHTML =
+      '<div class="msg-label">AI Assistant</div>' +
+      '<div class="msg-row ai' + (isLatest ? ' latest' : '') + '">' +
+        '<div style="display:inline-flex;flex-direction:column;min-width:0;">' +
+          '<div class="bubble-ai">' + text + sourcesHtml + '</div>' +
+          '<div class="' + actionsClass + '" data-uid="' + uid + '">' +
+            thumbsHtml +
+            '<span class="bubble-feedback-msg" id="' + uid + 'thanks"></span>' +
+            (noFeedback ? '' : '<button class="action-btn copy-btn" title="Copy" onclick="copyBubble(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg></button>') +
+          '</div>' +
+        '</div>' +
+        '<span class="msg-ts">' + time + '</span>' +
+      '</div>' +
+      '<div class="feedback-dropdown" id="' + uid + 'up">' +
+        '<div class="feedback-dropdown-title">What was useful?</div>' +
+        '<textarea class="feedback-comment" id="' + uid + 'upcomment" placeholder="What was useful about this response? (optional)" maxlength="500"></textarea>' +
+        '<div class="feedback-actions">' +
+          '<button class="confirm-btn no" id="' + uid + 'upcancel">Cancel</button>' +
+          '<button class="confirm-btn yes" id="' + uid + 'upsubmit">Submit</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="feedback-dropdown" id="' + uid + '">' +
+        '<div class="feedback-dropdown-title">What was the problem?</div>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="incorrect"> Incorrect information</label>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="harmful"> Harmful content</label>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="other"> Other</label>' +
+        '<textarea class="feedback-comment" id="' + uid + 'comment" placeholder="Tell us more (optional)" maxlength="500"></textarea>' +
+        '<div class="feedback-actions">' +
+          '<button class="confirm-btn no" id="' + uid + 'cancel">Cancel</button>' +
+          '<button class="confirm-btn yes" id="' + uid + 'submit" disabled>Submit</button>' +
+        '</div>' +
+      '</div>';
+
+    var actions = wrap.querySelector('[data-uid="' + uid + '"]');
+    var upBtn = actions ? actions.querySelectorAll('.action-btn')[0] : null;
+    var downBtn = actions ? actions.querySelectorAll('.action-btn')[1] : null;
+    var dropdown = wrap.querySelector('#' + uid);
+    var submitBtn = wrap.querySelector('#' + uid + 'submit');
+    var cancelBtn = wrap.querySelector('#' + uid + 'cancel');
+    var thanks = wrap.querySelector('#' + uid + 'thanks');
+
+    if (dropdown) dropdown.querySelectorAll('input[type=radio]').forEach(function(radio) {
+      radio.addEventListener('change', function() { if (submitBtn) submitBtn.disabled = false; });
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', function(e) { e.stopPropagation(); if (dropdown) dropdown.classList.remove('open'); });
+    if (submitBtn) submitBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (submitBtn.disabled) return;
+      if (dropdown) dropdown.classList.remove('open');
+      if (upBtn) upBtn.classList.remove('active-up');
+      if (downBtn) downBtn.classList.add('active-down');
+      if (thanks) { thanks.textContent = 'Thanks for your feedback!'; thanks.classList.add('show'); setTimeout(function() { thanks.classList.remove('show'); }, 2000); }
+    });
+    var upDropdown = wrap.querySelector('#' + uid + 'up');
+    var upCancelBtn = wrap.querySelector('#' + uid + 'upcancel');
+    var upSubmitBtn = wrap.querySelector('#' + uid + 'upsubmit');
+    if (upCancelBtn) upCancelBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (upDropdown) upDropdown.classList.remove('open');
+      upBtn.classList.remove('active-up');
+    });
+    if (upSubmitBtn) upSubmitBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (upDropdown) upDropdown.classList.remove('open');
+      showFeedbackMsg(thanks, 'Thanks for your feedback!', 'thanks');
+    });
+    if (upBtn) upBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isActive = upBtn.classList.contains('active-up');
+      upBtn.classList.toggle('active-up', !isActive);
+      downBtn.classList.remove('active-down');
+      dropdown.classList.remove('open');
+      if (!isActive) {
+        // Open thumbs-up comment dropdown
+        document.querySelectorAll('.feedback-dropdown').forEach(function(d){ d.classList.remove('open'); });
+        document.querySelectorAll('.bubble-actions.dropdown-open').forEach(function(a){ a.classList.remove('dropdown-open'); });
+        if (upDropdown) {
+          if (upDropdown.parentNode !== document.body) {
+            document.body.appendChild(upDropdown);
+            upDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+          }
+          var rect = upBtn.getBoundingClientRect();
+          var dropH = 140;
+          var top = rect.top - dropH - 4;
+          if (top < 8) top = rect.bottom + 4;
+          var left = Math.max(8, Math.min(rect.left, window.innerWidth - 218));
+          upDropdown.style.top = top + 'px';
+          upDropdown.style.left = left + 'px';
+          upDropdown.classList.add('open');
+          if (actions) actions.classList.add('dropdown-open');
+        }
+      } else {
+        showFeedbackMsg(thanks, 'Feedback canceled.', 'canceled');
+      }
+    });
+    if (downBtn) downBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (downBtn.classList.contains('active-down')) {
+        downBtn.classList.remove('active-down');
+        if (dropdown) dropdown.querySelectorAll('input[type=radio]').forEach(function(r){ r.checked = false; });
+        if (submitBtn) submitBtn.disabled = true;
+        if (dropdown) dropdown.classList.remove('open');
+        showFeedbackMsg(thanks, 'Feedback canceled.', 'canceled');
+        return;
+      }
+      upBtn.classList.remove('active-up');
+      var isOpen = dropdown.classList.contains('open');
+      document.querySelectorAll('.feedback-dropdown').forEach(function(d){ d.classList.remove('open'); });
+    document.querySelectorAll('.bubble-actions.dropdown-open').forEach(function(a){ a.classList.remove('dropdown-open'); });
+      if (!isOpen) {
+        if (dropdown.parentNode !== document.body) {
+          document.body.appendChild(dropdown);
+          dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+        }
+        var rect = downBtn.getBoundingClientRect();
+        var dropH = 255;
+        var top = rect.top - dropH - 4;
+        if (top < 8) top = rect.bottom + 4;
+        var left = Math.max(8, Math.min(rect.left, window.innerWidth - 218));
+        dropdown.style.top = top + 'px';
+        dropdown.style.left = left + 'px';
+        dropdown.classList.add('open');
+        if (actions) actions.classList.add('dropdown-open');
+      }
+    });
+    return wrap;
+  }
+
+  function formatMsgTime(date) {
+    return (date || new Date()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function formatDividerDate(date) {
+    var now = new Date();
+    var today    = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var yesterday = new Date(today - 86400000);
+    var msgDay   = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    var diffDays = Math.round((today - msgDay) / 86400000);
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][date.getDay()];
+    var mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][date.getMonth()];
+    var sameYear = date.getFullYear() === now.getFullYear();
+    return mo + ' ' + date.getDate() + (sameYear ? '' : ', ' + date.getFullYear());
+  }
+
+  var _lastMsgDate = null; // tracks last rendered message date for dividers
+
+  function makeDateDivider(date) {
+    var div = document.createElement('div');
+    div.className = 'date-divider';
+    div.innerHTML = '<span>' + formatDividerDate(date) + '</span>';
+    return div;
+  }
+
+  function checkDateDivider(msgs, date) {
+    var msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    if (!_lastMsgDate || _lastMsgDate !== msgDay) {
+      _lastMsgDate = msgDay;
+      msgs.appendChild(makeDateDivider(date));
+    }
+  }
+  function addUserMessage(text) {
+    var wrap = document.createElement('div');
+    wrap.className = 'msg-wrap-user';
+    var ts = formatMsgTime(new Date());
+    wrap.innerHTML =
+      '<div class="msg-label msg-label-right">You</div>' +
+      '<div class="msg-row usr latest">' +
+        '<span class="msg-ts">' + ts + '</span>' +
+        '<div class="bubble-user">' + text + '</div>' +
+      '</div>';
+    return wrap;
+  }
+
+  function demoteLatest(msgs) {
+    msgs.querySelectorAll('.bubble-actions:not(.hover-only)').forEach(function(el) {
+      el.classList.add('hover-only');
+    });
+    msgs.querySelectorAll('.msg-row.latest').forEach(function(el) {
+      el.classList.remove('latest');
+    });
+  }
+
+  function newChat() {
+    currentScopes = [];
+    if (typeof renderScopeChips === 'function') renderScopeChips();
+    supportState = null;
+    _lastMsgDate = null;
+    var msgs = document.getElementById('msgs');
+    msgs.innerHTML = '';
+    checkDateDivider(msgs, new Date());
+    var greeting = addAiMessage('Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.', true, [], true);
+    msgs.appendChild(greeting);
+    document.getElementById('chatTitle').textContent = 'New Chat';
+    document.getElementById('chatTitle').style.display = '';
+    document.getElementById('chatTitleInput').style.display = 'none';
+    document.getElementById('chatConfirmBar').classList.remove('show');
+    currentTitle = 'New Chat';
+    closeAllMenus();
+  }
+
+  function uploadFile() { alert('File upload coming soon.'); closeAllMenus(); }
+
+  function loadConvo(key, histId) {
+    if (event && event.target && (event.target.classList.contains('hist-delete-btn') || event.target.closest('.hist-confirm-row'))) return;
+    supportState = null;
+    // Clear scope — production would restore the conversation's saved scope
+    currentScopes = [];
+    renderScopeChips();
+    _lastMsgDate = null;
+    var convo = conversations[key];
+    if (!convo) return;
+    var msgs = document.getElementById('msgs');
+    msgs.innerHTML = '';
+    var convoDate = convo.yesterday ? new Date(Date.now() - 86400000) : new Date();
+    checkDateDivider(msgs, convoDate);
+    msgs.appendChild(addAiMessage('Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.', false, [], true));
+    for (var i = 0; i < convo.messages.length; i++) {
+      var m = convo.messages[i];
+      var isLatest = (i === convo.messages.length - 1) && m.role === 'ai';
+      if (m.role === 'user') {
+        msgs.appendChild(addUserMessage(m.text));
+      } else {
+        msgs.appendChild(addAiMessage(m.text, isLatest, m.sources || []));
+      }
+    }
+    document.getElementById('chatTitle').textContent = convo.title;
+    document.getElementById('chatTitle').style.display = '';
+    document.getElementById('chatTitleInput').style.display = 'none';
+    document.getElementById('chatConfirmBar').classList.remove('show');
+    currentTitle = convo.title;
+    msgs.scrollTop = msgs.scrollHeight;
+    closeAllMenus();
+  }
+  
+  function askSuggestion(e, text) {
+    e.stopPropagation();
+    closeAllMenus();
+    newChat();  // fresh chat, clears scope and title
+    supportState = null;
+    var msgs = document.getElementById('msgs');
+    msgs.innerHTML = '';
+    msgs.appendChild(addAiMessage('Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.', false, [], true));
+    document.getElementById('chatTitle').textContent = 'New Chat';
+    currentTitle = 'New Chat';
+    document.getElementById('chatConfirmBar').classList.remove('show');
+    document.getElementById('inp').value = text;
+    send();
+  }
+
+  function handleSupportFlow(text) {
+    var msgs = document.getElementById('msgs');
+    var lower = text.toLowerCase();
+    if (supportState === 'asked') {
+      if (lower.indexOf('callback') !== -1 || lower.indexOf('call') !== -1 || lower.indexOf('phone') !== -1) {
+        supportState = 'callback';
+        demoteLatest(msgs);
+        checkDateDivider(msgs, new Date());
+        msgs.appendChild(addUserMessage(text));
+        setTimeout(function() {
+          demoteLatest(msgs);
+          msgs.appendChild(addAiMessage('We have <b>+1 (415) 555-0172</b> on file for your account. Should I use that number, or would you like to provide a different one?', true, []));
+          msgs.scrollTop = msgs.scrollHeight;
+        }, 600);
+        return true;
+      } else if (lower.indexOf('email') !== -1) {
+        supportState = 'email';
+        demoteLatest(msgs);
+        checkDateDivider(msgs, new Date());
+        msgs.appendChild(addUserMessage(text));
+        setTimeout(function() {
+          demoteLatest(msgs);
+          msgs.appendChild(addAiMessage('We have <b>jsmith@corex.com</b> on file for your account. Should I use that address, or would you like to provide a different one?', true, []));
+          msgs.scrollTop = msgs.scrollHeight;
+        }, 600);
+        return true;
+      }
+    } else if (supportState === 'callback') {
+      demoteLatest(msgs);
+      msgs.appendChild(addUserMessage(text));
+      var phone = (lower.indexOf('yes') !== -1 || lower.indexOf('fine') !== -1 || lower.indexOf('that') !== -1 || lower.indexOf('ok') !== -1) ? '+1 (415) 555-0172' : text;
+      supportState = null;
+      setTimeout(function() {
+        demoteLatest(msgs);
+        msgs.appendChild(addAiMessage('Done — I\'ve notified ShareVault support that John Smith at CoreX Corporation is requesting a callback at <b>' + phone + '</b>. Someone will reach out within 15 minutes during business hours (6am–6pm PT). Is there anything else I can help you with?', true, []));
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 600);
+      return true;
+    } else if (supportState === 'email') {
+      demoteLatest(msgs);
+      msgs.appendChild(addUserMessage(text));
+      var email = (lower.indexOf('yes') !== -1 || lower.indexOf('fine') !== -1 || lower.indexOf('that') !== -1 || lower.indexOf('ok') !== -1) ? 'jsmith@corex.com' : text;
+      supportState = null;
+      setTimeout(function() {
+        demoteLatest(msgs);
+        msgs.appendChild(addAiMessage('Done — I\'ve sent a support request to the ShareVault team on your behalf. You\'ll receive a response at <b>' + email + '</b> within 30 minutes. Is there anything else I can help you with?', true, []));
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 600);
+      return true;
+    }
+    return false;
+  }
+
+  function send() {
+    var inp = document.getElementById('inp');
+    var text = inp.value.trim(); if (!text) return;
+    inp.value = '';
+    inp.style.height = 'auto'; // reset height after send
+    var msgs = document.getElementById('msgs');
+
+    if (supportState && handleSupportFlow(text)) return;
+
+    demoteLatest(msgs);
+    checkDateDivider(msgs, new Date());
+    msgs.appendChild(addUserMessage(text));
+    msgs.scrollTop = msgs.scrollHeight;
+
+    if (currentTitle === 'New Chat') {
+      var words = text.split(' ').slice(0, 5).join(' ');
+      document.getElementById('chatTitle').textContent = words;
+      currentTitle = words;
+    }
+
+    var canned = cannedResponses[text];
+    if (canned) {
+      setTimeout(function() {
+        demoteLatest(msgs);
+        if (canned.supportFlow) {
+          supportState = 'asked';
+          msgs.appendChild(addAiMessage(canned.text, true, []));
+        } else {
+          msgs.appendChild(addAiMessage(canned.text, true, canned.sources || []));
+        }
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 600);
+    } else {
+      setTimeout(function() {
+        demoteLatest(msgs);
+        msgs.appendChild(addAiMessage('Searching the ShareVault…', true, []));
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 600);
+    }
+  }
+
+  if (!window._copyEnabled) { document.getElementById('msgs').addEventListener('copy', function(e) { e.preventDefault(); }); }
+
+  var isResizing = false, startX, startW;
+  document.getElementById('resizeHandle').addEventListener('mousedown', function(e) {
+    isResizing = true; startX = e.clientX; startW = document.getElementById('drawer').offsetWidth;
+    document.body.style.cursor = 'ew-resize'; document.body.style.userSelect = 'none';
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!isResizing || maximized) return;
+    var b = getBounds();
+    var zoom = b.scale / REF_SCALE;
+    var d = document.getElementById('drawer');
+    var dx = d.classList.contains('docked-right') ? startX - e.clientX : e.clientX - startX;
+    var newW = Math.max(Math.round(320 * zoom), Math.min(b.imgW * 0.75, startW + dx));
+    d.style.width = newW + 'px';
+    // Update scaler width to match (design pixels = newW / zoom)
+    var scaler = document.getElementById('drawerScaler');
+    scaler.style.width = (newW / zoom) + 'px';
+    drawWatermark();
+  });
+  document.addEventListener('mouseup', function() {
+    if (isResizing) { isResizing = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+  });
+
+
+
+  // ── Scope tree picker ─────────────────────────────────────────────────
+  var scopeTreeData = [
+    {i:'1',n:'Corporate Records',t:'f',c:[
+      {i:'1.1',n:'Annual Shareholder Reports',t:'f',c:[
+        {i:'1.1.1',n:'Tetraplex Annual Report 2022.pdf',t:'file'},
+        {i:'1.1.2',n:'Tetraplex Annual Report 2023.pdf',t:'file'},
+        {i:'1.1.3',n:'Tetraplex Annual Report 2024.pdf',t:'file'},
+        {i:'1.1.4',n:'Tetraplex Annual Report 2025.pdf',t:'file'}]},
+      {i:'1.2',n:'Articles of Incorporation & Bylaws',t:'f',c:[
+        {i:'1.2.1',n:'Bylaws - Tetraplex.docx',t:'file'},
+        {i:'1.2.2',n:'Certificate-of-Incorporation - Tetraplex.docx',t:'file'},
+        {i:'1.2.4',n:'UWC-of-the-BOD-Organizational-Resolutions.docx',t:'file'}]},
+      {i:'1.3',n:'BOD Meeting Minutes',t:'f',c:[
+        {i:'1.3.1',n:'2023',t:'f',c:[
+          {i:'1.3.1.1',n:'BOD Minutes Q1 2023.doc',t:'file'},
+          {i:'1.3.1.2',n:'BOD Minutes Q2 2023.doc',t:'file'},
+          {i:'1.3.1.3',n:'BOD Minutes Q3 2023.doc',t:'file'},
+          {i:'1.3.1.4',n:'BOD Minutes Q4 2023.doc',t:'file'}]},
+        {i:'1.3.2',n:'2024',t:'f',c:[
+          {i:'1.3.2.1',n:'BOD Minutes Q1 2024.doc',t:'file'},
+          {i:'1.3.2.2',n:'BOD Minutes Q2 2024.doc',t:'file'},
+          {i:'1.3.2.3',n:'BOD Minutes Q3 2024.doc',t:'file'},
+          {i:'1.3.2.4',n:'BOD Minutes Q4 2024.doc',t:'file'}]},
+        {i:'1.3.3',n:'2025',t:'f',c:[
+          {i:'1.3.3.1',n:'BOD Minutes Q1 2025.doc',t:'file'},
+          {i:'1.3.3.2',n:'BOD Minutes Q2 2025.doc',t:'file'},
+          {i:'1.3.3.3',n:'BOD Minutes Q3 2025.doc',t:'file'}]}]},
+      {i:'1.4',n:'Shareholders',t:'f',c:[
+        {i:'1.4.1',n:'Cap Table - Tetraplex.xlsx',t:'file'},
+        {i:'1.4.2',n:'Tetraplex Stock Certificate.tiff',t:'file'}]}]},
+    {i:'2',n:'Engineering',t:'f',c:[
+      {i:'2.1',n:'Drawings',t:'f',c:[
+        {i:'2.1.1',n:'GRIPPER_ASSEMBLY_NEW.dwg',t:'file'},
+        {i:'2.1.2',n:'robot_handling_cell.dwg',t:'file'}]},
+      {i:'2.2',n:'Project plans',t:'f',c:[
+        {i:'2.2.1',n:'Accenture-Project-Plan-Template.xlsx',t:'file'},
+        {i:'2.2.2',n:'Project-Plan-example.mpp',t:'file'}]},
+      {i:'2.3',n:'Testing',t:'f',c:[
+        {i:'2.3.1',n:'Client-Forms-Request-for-Analysis-Conductivity.xlsx',t:'file'},
+        {i:'2.3.2',n:'FlameSpeed_2017.xlsx',t:'file'},
+        {i:'2.3.3',n:'journal.pgen.1006541.s013.xlsx',t:'file'},
+        {i:'2.3.4',n:'New Lab File Names Chemistry 3-2017.xlsx',t:'file'},
+        {i:'2.3.5',n:'Tensile testing.xlsx',t:'file'}]},
+      {i:'2.4',n:'IT',t:'f',c:[
+        {i:'2.4.1',n:'Cloud cutover plan.xlsx',t:'file'},
+        {i:'2.4.2',n:'Cloud Migration Plan.xlsx',t:'file'},
+        {i:'2.4.3',n:'Cloud-Risk-Assessment-v1-3.xls',t:'file'},
+        {i:'2.4.4',n:'Oscorp IT Training.pptx',t:'file'},
+        {i:'2.4.5',n:'Statement of Work for Cloud Migration.docx',t:'file'}]},
+      {i:'2.5',n:'Next Gen Prototype',t:'f',c:[
+        {i:'2.5.1',n:'3d-box3.dwg',t:'file'},{i:'2.5.2',n:'3d-box4.dwg',t:'file'},
+        {i:'2.5.3',n:'3D-plan1.DWG',t:'file'},{i:'2.5.4',n:'3dplan2.DWG',t:'file'},
+        {i:'2.5.5',n:'3d-rev.dwg',t:'file'},{i:'2.5.6',n:'96kg4836.dwg',t:'file'},
+        {i:'2.5.7',n:'alleghany14.dwg',t:'file'},{i:'2.5.8',n:'BED1.dwg',t:'file'},
+        {i:'2.5.9',n:'columbus14.dwg',t:'file'},{i:'2.5.10',n:'E-plans.dxf',t:'file'},
+        {i:'2.5.11',n:'Flange2D.dwg',t:'file'},{i:'2.5.12',n:'Flange3D.dwg',t:'file'},
+        {i:'2.5.13',n:'flange3D with viewports.dwg',t:'file'},{i:'2.5.14',n:'fork-3d-a.dwg',t:'file'},
+        {i:'2.5.15',n:'guitara.dwg',t:'file'},{i:'2.5.16',n:'guitarb.dwg',t:'file'},
+        {i:'2.5.17',n:'guitarc.dwg',t:'file'},{i:'2.5.18',n:'guitard.dwg',t:'file'},
+        {i:'2.5.19',n:'Living1.dwg',t:'file'},{i:'2.5.20',n:'spring.dwg',t:'file'},
+        {i:'2.5.21',n:'spring-valve.dwg',t:'file'}]},
+      {i:'2.6',n:'Process Diagrams',t:'f',c:[
+        {i:'2.6.1',n:'Antenna',t:'f',c:[
+          {i:'2.6.1.1',n:'Antenna.SLDASM',t:'file'},{i:'2.6.1.2',n:'Antenna.SLDPRT',t:'file'},{i:'2.6.1.3',n:'Limiter.SLDPRT',t:'file'}]},
+        {i:'2.6.2',n:'Clamp',t:'f',c:[
+          {i:'2.6.2.1',n:'Base.SLDPRT',t:'file'},{i:'2.6.2.2',n:'Clamp.SLDASM',t:'file'},{i:'2.6.2.3',n:'Clamp.SLDPRT',t:'file'},{i:'2.6.2.4',n:'Limiter.SLDPRT',t:'file'}]},
+        {i:'2.6.3',n:'Door',t:'f',c:[
+          {i:'2.6.3.1',n:'Door.SLDASM',t:'file'},{i:'2.6.3.2',n:'Door.SLDPRT',t:'file'},{i:'2.6.3.3',n:'Limiter.SLDPRT',t:'file'}]},
+        {i:'2.6.4',n:'Joystick',t:'f',c:[
+          {i:'2.6.4.1',n:'Base.SLDPRT',t:'file'},{i:'2.6.4.2',n:'Joystick.SLDASM',t:'file'},{i:'2.6.4.3',n:'Limiter.SLDPRT',t:'file'},{i:'2.6.4.4',n:'Stick.SLDPRT',t:'file'}]}]},
+      {i:'2.7',n:'Resource Files',t:'f',c:[
+        {i:'2.7.1',n:'FNBC Demo',t:'f',c:[
+          {i:'2.7.1.1',n:'B13_Programs_3807_3808.pdf',t:'file'},{i:'2.7.1.2',n:'CA Mtg Disclosures.pdf',t:'file'},
+          {i:'2.7.1.3',n:'Electronic Communication Disclosure.pdf',t:'file'},{i:'2.7.1.4',n:'fed_truth_in_lending.pdf',t:'file'},
+          {i:'2.7.1.5',n:'Mortgage Loan Disclosure Statement.pdf',t:'file'},{i:'2.7.1.6',n:'Mtg Disclosures.pdf',t:'file'}]}]}]},
+    {i:'3',n:'Environmental',t:'f',c:[
+      {i:'3.1',n:'comments-lng-lb-12-2005.pdf',t:'file'},
+      {i:'3.2',n:'EIR_2001.pdf',t:'file'},
+      {i:'3.3',n:'Revised Irrigation Reliability_081806.pdf',t:'file'}]},
+    {i:'4',n:'Financials',t:'f',c:[
+      {i:'4.1',n:'Consolidated Financials - 2026 YTD',t:'f',c:[{i:'4.1.1',n:'TETRAPLEX Consolidated Financials - 2017 YTD.xlsx',t:'file'}]},
+      {i:'4.2',n:'Consolidated Financials - 2025',t:'f',c:[{i:'4.2.1',n:'TETRAPLEX Consolidated Financials - 2016.xlsx',t:'file'}]},
+      {i:'4.3',n:'Consolidated Financials - 2024',t:'f',c:[{i:'4.3.1',n:'TETRAPLEX Consolidated Financials - 2015.xlsx',t:'file'}]},
+      {i:'4.4',n:'Consolidated Financials - 2023',t:'f',c:[{i:'4.4.1',n:'TETRAPLEX Consolidated Financials - 2014.xlsx',t:'file'}]},
+      {i:'4.5',n:'Consolidated Financials - 2022',t:'f',c:[{i:'4.5.1',n:'TETRAPLEX Consolidated Financials - 2020.xlsx',t:'file'}]}]},
+    {i:'5',n:'Human Resources',t:'f',c:[
+      {i:'5.1',n:'Benefits',t:'f',c:[{i:'5.1.1',n:'Benefits_Brochure_new.pdf',t:'file'},{i:'5.1.2',n:'Your Dental Care Benefit Choices.pdf',t:'file'}]},
+      {i:'5.2',n:'Employee Agreements',t:'f',c:[
+        {i:'5.2.1',n:'EMPLOYEE NON-COMPETE AGREEMENT Arnold Chabot.doc',t:'file'},
+        {i:'5.2.2',n:'EMPLOYEE NON-COMPETE AGREEMENT Kim Fong.doc',t:'file'},
+        {i:'5.2.3',n:'EMPLOYEE NON-COMPETE AGREEMENT Patrice Leroy.doc',t:'file'},
+        {i:'5.2.4',n:'EMPLOYMENT AGREEMENT - Arnold Chabot.doc',t:'file'},
+        {i:'5.2.5',n:'EMPLOYMENT AGREEMENT - Kim Fong.doc',t:'file'},
+        {i:'5.2.6',n:'EMPLOYMENT AGREEMENT - Patrice Leroy.doc',t:'file'}]},
+      {i:'5.4',n:'Org Charts',t:'f',c:[{i:'5.4.1',n:'Tetraplex Org Chart 2017.ppt',t:'file'}]},
+      {i:'5.5',n:'Resumes',t:'f',c:[
+        {i:'5.5.1',n:'Albert Lopez.doc',t:'file'},{i:'5.5.2',n:'Bill Ross.doc',t:'file'},
+        {i:'5.5.3',n:'Harrison Baker.doc',t:'file'},{i:'5.5.4',n:'JAMES ANZALDUA.doc',t:'file'},
+        {i:'5.5.5',n:'John Ryan.doc',t:'file'},{i:'5.5.6',n:'MikePalmer.doc',t:'file'}]}]},
+    {i:'6',n:'Indebtedness',t:'f',c:[
+      {i:'6.1',n:'debt_ instruments.xls',t:'file'},{i:'6.2',n:'Debt-Schedule.xlsx',t:'file'},
+      {i:'6.3',n:'LOC 00-812.pdf',t:'file'},{i:'6.4',n:'Promissory Note 0608StaffApp.pdf',t:'file'},
+      {i:'6.5',n:'Schedule-of-Debts.xlsx',t:'file'}]},
+    {i:'7',n:'IP',t:'f',c:[
+      {i:'7.1',n:'Intellectual Property Review.ppt',t:'file'},{i:'7.2',n:'Invention Disclosure And Patent Assignment Form.docx',t:'file'},
+      {i:'7.3',n:'NDA_approved.doc',t:'file'},{i:'7.4',n:'NDA.doc',t:'file'},
+      {i:'7.5',n:'NDA Oscorp-Alchemax.doc',t:'file'},{i:'7.6',n:'Patent List.xlsx',t:'file'}]},
+    {i:'8',n:'IT',t:'f',c:[
+      {i:'8.1',n:'Cyber Security Risk Assessment Audit-2017.pdf',t:'file'},{i:'8.2',n:'FY17 IT Budget.xlsx',t:'file'},
+      {i:'8.3',n:'IT Assets.xls',t:'file'},{i:'8.4',n:'IT Policies and Procedures Manual.pdf',t:'file'},
+      {i:'8.5',n:'IT User Survey.pdf',t:'file'}]},
+    {i:'9',n:'Marketing',t:'f',c:[
+      {i:'9.1',n:'Advertising',t:'f',c:[
+        {i:'9.1.1',n:'Oscorp Ad 1.jpg',t:'file'},{i:'9.1.2',n:'Oscorp Ad 2.jpg',t:'file'},{i:'9.1.3',n:'Oscorp Ad 3.jpg',t:'file'}]},
+      {i:'9.2',n:'Collateral',t:'f',c:[
+        {i:'9.2.1',n:'Brochures',t:'f',c:[
+          {i:'9.2.1.1',n:'BSoft_govt 2.pdf',t:'file'},{i:'9.2.1.2',n:'gips.pdf',t:'file'},
+          {i:'9.2.1.3',n:'infosec_brochure.pdf',t:'file'},{i:'9.2.1.4',n:'jda.pdf',t:'file'},
+          {i:'9.2.1.5',n:'metrigraphics.pdf',t:'file'},{i:'9.2.1.6',n:'monotype_corp.pdf',t:'file'},
+          {i:'9.2.1.7',n:'monotype.pdf',t:'file'},{i:'9.2.1.8',n:'pinpoint.pdf',t:'file'},
+          {i:'9.2.1.9',n:'SDA_brochure.pdf',t:'file'},{i:'9.2.1.10',n:'sprint3.pdf',t:'file'},
+          {i:'9.2.1.11',n:'workzone.pdf',t:'file'}]}]},
+      {i:'9.3',n:'Events',t:'f',c:[
+        {i:'9.3.1',n:'Trade shows',t:'f',c:[
+          {i:'9.3.1.1',n:'OSCORP Booth Concept.png',t:'file'},
+          {i:'9.3.1.2',n:'section-1-tradeshow-budget-worksheet.xlsx',t:'file'},
+          {i:'9.3.1.3',n:'Tradeshow_Planning.pdf',t:'file'}]}]},
+      {i:'9.4',n:'PR',t:'f',c:[
+        {i:'9.4.1',n:'Creating-the-Perfect-PR-Plan.pdf',t:'file'},
+        {i:'9.4.2',n:'PR Schedule 2011-Final Biweekly.xls',t:'file'}]}]},
+    {i:'10',n:'Miscellaneous',t:'f',c:[
+      {i:'10.1',n:'Oscorp Due Diligence Questions',t:'f',c:[
+        {i:'10.1.1',n:'List of Questions for Oscorp.xlsx',t:'file'}]}]},
+    {i:'11',n:'QBRs',t:'f',c:[{i:'11.1',n:'Oscorp QBR Q4-2018.pptx',t:'file'}]},
+    {i:'12',n:'Regulatory',t:'f',c:[
+      {i:'12.1',n:'510k Questionnaire.pdf',t:'file'},{i:'12.2',n:'510(k) Summary.pdf',t:'file'},
+      {i:'12.3',n:'CE Declaration of Conformity.pdf',t:'file'},{i:'12.4',n:'CE Declaration of Conformity-redacted.pdf',t:'file'},
+      {i:'12.5',n:'PMA-aav0001-01-vol1.pdf',t:'file'},{i:'12.6',n:'Quality Eval AQ738.doc',t:'file'}]},
+    {i:'13',n:'Taxes',t:'f',c:[
+      {i:'13.1',n:'2023',t:'f',c:[{i:'13.1.1',n:'form 1040sc - 2014.pdf',t:'file'},{i:'13.1.2',n:'form 1120 - 2014.pdf',t:'file'},{i:'13.1.3',n:'form 1120w - 2014.pdf',t:'file'}]},
+      {i:'13.2',n:'2024',t:'f',c:[{i:'13.2.1',n:'form 1040sc - 2016.pdf',t:'file'},{i:'13.2.2',n:'form 1120 - 2016.pdf',t:'file'},{i:'13.2.3',n:'form 1120w - 2016.pdf',t:'file'}]},
+      {i:'13.3',n:'2025',t:'f',c:[{i:'13.3.1',n:'form 1040sc - 2015.pdf',t:'file'},{i:'13.3.2',n:'form 1120 - 2015.pdf',t:'file'},{i:'13.3.3',n:'form 1120w - 2015.pdf',t:'file'}]}]},
+    {i:'14',n:'Sales',t:'f',c:[
+      {i:'14.1',n:'Appraisal Form.doc',t:'file'},{i:'14.2',n:'Commission Summary.doc',t:'file'},
+      {i:'14.3',n:'Contract for Sale of Goods.doc',t:'file'},{i:'14.4',n:'Customer Return Report.doc',t:'file'},
+      {i:'14.5',n:'Layaway Record.doc',t:'file'},{i:'14.6',n:'Nonservice Price Quote.doc',t:'file'},
+      {i:'14.7',n:'Order Form.doc',t:'file'},{i:'14.8',n:'Product Sales Projection.doc',t:'file'},
+      {i:'14.9',n:'Prospecting Sheet.doc',t:'file'},{i:'14.10',n:'Purchase Order.doc',t:'file'},
+      {i:'14.11',n:'Return Authorization.doc',t:'file'},{i:'14.12',n:'Sales Follow Up.doc',t:'file'},
+      {i:'14.13',n:'Sales Order Form.doc',t:'file'},{i:'14.14',n:'Sales Receipt.doc',t:'file'},
+      {i:'14.15',n:'Sales Rep Evaluation Checklist.doc',t:'file'},{i:'14.16',n:'Service Business Price Quote.doc',t:'file'},
+      {i:'14.17',n:'Telephone Sales Order.doc',t:'file'},{i:'14.18',n:'Vendor Evaluation.doc',t:'file'}]}
+  ];
+
+  var scopeTreeExpanded = {}; // tracks which nodes are expanded by index
+  var scopeSearchActive = false;
+
+  function openScopePicker(e) {
+    var panel = document.getElementById('scopeTreePanel');
+    // Position panel centered on click point, clamped within banner
+    if (e) {
+      var banner = document.getElementById('scopeBanner');
+      var br = banner.getBoundingClientRect();
+      var clickX = (e.clientX - br.left) / (parseFloat(panel.style.zoom || getComputedStyle(panel.parentElement).zoom) || 1);
+      var panelW = Math.min(480, br.width - 20);
+      var left = Math.max(10, Math.min(clickX - panelW/2, br.width - panelW - 10));
+      panel.style.left = left + 'px';
+      panel.style.right = 'auto';
+      panel.style.width = panelW + 'px';
+    }
+    panel.classList.add('open');
+    scopeTreeExpanded = {};
+    document.getElementById('scopeTreeSearch').value = '';
+    document.getElementById('scopeTreeClear').style.display = 'none';
+    scopeSearchActive = false;
+    renderScopeTree(scopeTreeData, null);
+    setTimeout(function(){ document.getElementById('scopeTreeSearch').focus(); }, 50);
+  }
+
+  function closeScopePicker() {
+    document.getElementById('scopeTreePanel').classList.remove('open');
+  }
+
+  function clearScopeSearch() {
+    document.getElementById('scopeTreeSearch').value = '';
+    document.getElementById('scopeTreeClear').style.display = 'none';
+    scopeSearchActive = false;
+    scopeTreeExpanded = {};
+    renderScopeTree(scopeTreeData, null);
+    document.getElementById('scopeTreeSearch').focus();
+  }
+
+  function normStr(s) { return s.replace(/[-\u2013\u2014]/g,'-').toLowerCase(); }
+  function isIndexQuery(q) { return /^\d[\d.]*$/.test(q.trim()); }
+  function stripDots(s) { return s.replace(/\.+$/,''); } // remove trailing dots
+
+  // Direct match: node itself matches the query
+  function matchesNode(node, q) {
+    if (!q) return true;
+    var nq = stripDots(normStr(q));
+    var ni = normStr(node.i);
+    if (isIndexQuery(q)) {
+      // Index query: full-path prefix match from start only
+      return ni === nq || ni.startsWith(nq + '.');
+    }
+    // Name query: partial match anywhere in name
+    return normStr(node.n).includes(normStr(q));
+  }
+
+  // Returns true if node or any descendant matches query
+  function nodeMatches(node, q) {
+    if (matchesNode(node, q)) return true;
+    if (node.c) {
+      for (var i=0; i<node.c.length; i++) { if (nodeMatches(node.c[i], q)) return true; }
+    }
+    return false;
+  }
+
+  // Pink highlight: node is AT or ABOVE the query level only (ancestor or exact match)
+  function isIndexHighlight(nodeIndex, q) {
+    if (!q || !isIndexQuery(q)) return false;
+    var nq = stripDots(normStr(q));
+    var ni = normStr(nodeIndex);
+    // Ancestor: node="1", q="1.3.4" → "1.3.4".startsWith("1.")
+    if (nq.startsWith(ni + '.')) return true;
+    // Exact match
+    if (ni === nq) return true;
+    return false;
+  }
+
+  function highlightMatch(text, q) {
+    if (!q) return text;
+    var nq = normStr(q);
+    var nt = normStr(text);
+    var idx = nt.indexOf(nq);
+    if (idx === -1) return text;
+    return text.slice(0,idx) + '<b>' + text.slice(idx,idx+q.length) + '</b>' + text.slice(idx+q.length);
+  }
+
+  function renderScopeTree(nodes, q) {
+    var body = document.getElementById('scopeTreeBody');
+    body.innerHTML = '';
+    // "Currently viewing" shortcut if URL param present and no search active
+    if (!q && window._currentDoc) {
+      (function() {
+        function findNode(ns, idx) {
+          for (var i=0; i<ns.length; i++) {
+            if (ns[i].i === idx) return ns[i];
+            if (ns[i].c) { var f = findNode(ns[i].c, idx); if (f) return f; }
+          }
+          return null;
+        }
+        var node = findNode(scopeTreeData, window._currentDoc);
+        if (node) {
+          var already = currentScopes.some(function(s){ return s.path === getPath(node); });
+          var hdr = document.createElement('div');
+          hdr.style.cssText = 'padding:4px 10px 2px;font-size:10px;font-weight:600;color:#9a86c0;text-transform:uppercase;letter-spacing:0.05em;';
+          hdr.textContent = 'Currently viewing';
+          body.appendChild(hdr);
+          var row = document.createElement('div');
+          row.className = 'tree-node tree-file' + (already ? ' tree-already' : '');
+          row.style.paddingLeft = '8px';
+          row.title = node.i + '.  ' + node.n;
+          row.innerHTML = '<span class="tree-toggle leaf">&#9654;</span>' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="14" viewBox="0 0 11 14"><path fill="#5a3fa0" d="M0 0v14h11V5L6 0zm9.59 5H6V1.41zM1 1h4v5h5v7H1z"/></svg>' +
+            '<span class="tree-index" style="color:#5a3fa0;">' + node.i.split('.').pop() + '.</span>' +
+            '<span class="tree-name">' + node.n + '</span>';
+          if (!already) row.onclick = function() { addScope({index:node.i, name:node.n, path:getPath(node), type:node.t==='f'?'folder':'file', fullIndex:node.i}); };
+          body.appendChild(row);
+          var sep = document.createElement('div');
+          sep.style.cssText = 'margin:4px 10px;border-top:1px solid #f0ebf8;';
+          body.appendChild(sep);
+        }
+      })();
+    }
+    nodes.forEach(function(node) {
+      var el = buildTreeNode(node, 0, q);
+      if (el) body.appendChild(el);
+    });
+  }
+
+  function buildTreeNode(node, depth, q) {
+    var isFolder = node.t === 'f';
+    var matches = matchesNode(node, q);
+    var childMatches = isFolder && node.c && node.c.some(function(c){ return nodeMatches(c, q); });
+    var visible = !q || matches || childMatches;
+    if (!visible) return null;
+
+    var wrapper = document.createElement('div');
+
+    var row = document.createElement('div');
+    row.className = 'tree-node' + (isFolder ? ' tree-folder' : ' tree-file') + (currentScopes.some(function(s){ return s.path === getPath(node); }) ? ' tree-already' : '');
+    row.style.paddingLeft = (8 + depth * 14) + 'px';
+    row.title = node.i + '  ' + node.n + (node._path ? '  \u2192  ' + node._path : '');
+
+    // Toggle
+    var toggle = document.createElement('span');
+    toggle.className = 'tree-toggle' + (isFolder ? '' : ' leaf');
+    var isExpanded = !!scopeTreeExpanded[node.i];  // only expand what setExpandedForQuery explicitly set
+    toggle.innerHTML = '&#9654;'; // ▶
+    if (isExpanded) toggle.classList.add('open');
+
+    // Icon
+    var icon = document.createElement('span');
+    icon.className = 'tree-icon';
+    icon.innerHTML = isFolder
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><path fill="#5a3fa0" d="M13.125 4.998H14v8.151c0 .47-.392.851-.876.851H.876A.86.86 0 0 1 0 13.149V4.998h.875c0 2.3-.001 8.154.001 8.154 0 0 12.249-.001 12.249-.003V4.667zM5.854.852C5.431.369 5.086 0 4.489 0H1.313C.588 0 0 .671 0 1.498V5l1.309-.001h11.382L14 5V2.998c0-.827-.586-1.498-1.31-1.498H7.111c-.365 0-.922-.265-1.18-.56zM13 2.998V4H1V1.498C1 1.224 1.192 1 1.429 1H4.54c.358 0 .478.264.731.559l.075.088c.414.482 1.178.852 1.763.852h5.465c.235 0 .426.223.426.499"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="14" viewBox="0 0 11 14"><path d="M0 0v14h11V5L6 0zm9.59 5H6V1.41zM1 1h4v5h5v7H1z" fill="#5a3fa0"/></svg>';
+
+    // Index + name
+    var indexSpan = document.createElement('span');
+    indexSpan.className = 'tree-index';
+    var segs = node.i.split('.');
+    indexSpan.textContent = segs[segs.length-1] + '.';  // show only last segment
+
+    // Pink index if node is on the path of an index query
+    var isIdxMatch = q && isIndexHighlight(node.i, q);
+    var isNameMatch = q && !isIndexQuery(q) && normStr(node.n).includes(normStr(q));
+    if (isIdxMatch) indexSpan.style.color = '#b73eb4';
+
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'tree-name';
+    if (q && isNameMatch) {
+      nameSpan.innerHTML = highlightMatch(node.n, q);
+    } else {
+      nameSpan.textContent = node.n;
+    }
+
+    row.appendChild(toggle);
+    row.appendChild(icon);
+    row.appendChild(indexSpan);
+    row.appendChild(nameSpan);
+    wrapper.appendChild(row);
+
+    // Children
+    var childWrap = null;
+    if (isFolder && node.c) {
+      childWrap = document.createElement('div');
+      childWrap.className = 'tree-children' + (isExpanded ? ' open' : '');
+      node.c.forEach(function(child) {
+        var childEl = buildTreeNode(child, depth+1, q);
+        if (childEl) childWrap.appendChild(childEl);
+      });
+      wrapper.appendChild(childWrap);
+
+      toggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var nowOpen = !scopeTreeExpanded[node.i];
+        scopeTreeExpanded[node.i] = nowOpen;
+        toggle.classList.toggle('open', nowOpen);
+        childWrap.classList.toggle('open', nowOpen);
+      });
+      row.addEventListener('click', function() {
+        if (row.classList.contains('tree-already')) return;
+        addScope({index:node.i, name:node.n, path:getPath(node), type:'folder', fullIndex:node.i});
+      });
+    } else {
+      row.addEventListener('click', function() {
+        if (row.classList.contains('tree-already')) return;
+        addScope({index:node.i, name:node.n, path:getPath(node), type:'file', fullIndex:node.i});
+      });
+    }
+
+    return wrapper;
+  }
+
+  function getPath(node) { return node.i + ' ' + node.n; }
+
+  // Wire up search input
+  document.addEventListener('DOMContentLoaded', function() {
+    // Auto-grow textarea
+    var chatInp = document.getElementById('inp');
+    if (chatInp) {
+      chatInp.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+      });
+      chatInp.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+      });
+    }
+    var inp = document.getElementById('scopeTreeSearch');
+    var clr = document.getElementById('scopeTreeClear');
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+      var q = inp.value.trim();
+      clr.style.display = q ? 'inline-block' : 'none';
+      scopeSearchActive = !!q;
+      if (q) {
+        // Auto-expand nodes with matches
+        scopeTreeExpanded = {};
+        setExpandedForQuery(scopeTreeData, q);
+      } else {
+        scopeTreeExpanded = {};
+      }
+      renderScopeTree(scopeTreeData, q || null);
+    });
+  });
+
+  function setExpandedForQuery(nodes, q) {
+    var nq = stripDots(normStr(q));
+    nodes.forEach(function(node) {
+      if (node.c) {
+        var ni = normStr(node.i);
+        // Only expand if query goes deeper than this node (query starts with node.i + '.')
+        if (isIndexQuery(q) ? nq.startsWith(ni + '.') : node.c.some(function(c){ return nodeMatches(c, q); })) {
+          scopeTreeExpanded[node.i] = true;
+        }
+        setExpandedForQuery(node.c, q);
+      }
+    });
+  }
+  // ────────────────────────────────────────────────────────────────────
+
+  // ── Scope / "Asking about" banner ────────────────────────────────────
+  var currentScopes = []; // empty = full ShareVault (default)
+
+  function renderScopeChips() {
+    var container = document.getElementById('scopeChips');
+    container.innerHTML = '';
+    if (currentScopes.length === 0) {
+      var chip = document.createElement('div');
+      chip.className = 'scope-chip default';
+      chip.title = 'Click to ask about a specific file or folder';
+      chip.onclick = function(e){ openScopePicker(e); };
+      chip.innerHTML = '<span class="scope-chip-text">Anything in this ShareVault</span>';
+      container.appendChild(chip);
+    } else {
+      // Render all non-last chips normally
+      for (var i = 0; i < currentScopes.length - 1; i++) {
+        var s = currentScopes[i];
+        var chip = document.createElement('div');
+        chip.className = 'scope-chip';
+        chip.title = s.path;
+        chip.onclick = function(e){ openScopePicker(e); };
+        chip.innerHTML =
+          '<span class="scope-chip-text"><span style="font-weight:700;color:#3d2d80;">' + s.index + '.</span> ' + s.name + '</span>' +
+          '<button class="scope-chip-x" title="Remove" onclick="removeScope(event,' + i + ')">✕</button>';
+        container.appendChild(chip);
+      }
+      // Last chip + ( + ) button as a single non-breaking flex unit
+      var last = currentScopes[currentScopes.length - 1];
+      var lastIdx = currentScopes.length - 1;
+      var wrapper = document.createElement('div');
+      wrapper.style.cssText = 'display:flex;align-items:center;gap:5px;flex-wrap:nowrap;';
+      var lastChip = document.createElement('div');
+      lastChip.className = 'scope-chip';
+      lastChip.title = last.path;
+      lastChip.onclick = function(e){ openScopePicker(e); };
+      lastChip.innerHTML =
+        '<span class="scope-chip-text"><span style="font-weight:700;color:#3d2d80;">' + last.index + '</span> ' + last.name + '</span>' +
+        '<button class="scope-chip-x" title="Remove" onclick="removeScope(event,' + lastIdx + ')">✕</button>';
+      var addBtn = document.createElement('button');
+      addBtn.className = 'scope-add-btn';
+      addBtn.title = 'Add another file or folder';
+      addBtn.onclick = function(e) { e.stopPropagation(); openScopePicker(e); };
+      addBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+      wrapper.appendChild(lastChip);
+      wrapper.appendChild(addBtn);
+      container.appendChild(wrapper);
+    }
+  }
+
+  function addScope(scope) {
+    // Don't add duplicates
+    var already = currentScopes.some(function(s) { return s.path === scope.path; });
+    if (!already) {
+      currentScopes.push(scope);
+      renderScopeChips();
+      // System message
+      addSystemMsg(askingAboutHtml(currentScopes));
+    }
+    closeScopePicker();
+  }
+
+  function removeScope(e, idx) {
+    e.stopPropagation();
+    currentScopes.splice(idx, 1);
+    renderScopeChips();
+    addSystemMsg(askingAboutHtml(currentScopes));
+  }
+
+
+  function askingAboutIntro(scopes) {
+    var files   = scopes.filter(function(s){ return s.type !== 'folder'; });
+    var folders = scopes.filter(function(s){ return s.type === 'folder'; });
+    var f = files.length, d = folders.length;
+    var noun = (f > 0 && d > 0)
+      ? (f===1?'file':'files') + ' and ' + (d===1?'folder':'folders')
+      : (f > 0 ? (f===1?'file':'files') : (d===1?'folder':'folders'));
+    return 'Ask me about the following ' + noun + ':';
+  }
+  function askingAboutHtml(scopes) {
+    if (scopes.length === 0) return 'Ask me anything about this ShareVault.';
+    var items = scopes.map(function(s) {
+      var idx = (s.fullIndex || s.index).replace(/\.+$/, '');
+      return sourceItemHtml(idx + ' ' + s.name, s.path, s.type === 'folder', true);
+    }).join('');
+    return askingAboutIntro(scopes) + '<div class="bubble-sources" style="margin-top:6px;">' + items + '</div>';
+  }
+
+  function addSystemMsg(text) {
+    var msgs = document.getElementById('msgs');
+    // Demote previous latest to hover-only
+    msgs.querySelectorAll('.bubble-actions:not(.hover-only)').forEach(function(el) {
+      el.classList.add('hover-only');
+    });
+    var wrap = document.createElement('div');
+    wrap.className = 'msg-wrap-ai';
+    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    wrap.innerHTML =
+      '<div class="msg-label">AI Assistant</div>' +
+      '<div class="msg-row ai">' +
+        '<div class="bubble-ai">' + text + '</div>' +
+        '<span class="msg-ts">' + time + '</span>' +
+      '</div>';
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // Expose for use from summarizer integration later
+  function setScopeFromSummarizer(scope) {
+    currentScopes = [scope];
+    renderScopeChips();
+  }
+  // ────────────────────────────────────────────────────────────────────
+
+
+  // ── AI Summarizer ─────────────────────────────────────────────────
+  var IMG_OPEN   = 'cv-open.png';
+  var IMG_CLOSED = 'cv-closed.png';
+  // Initialize summarizer vars (declared early above)
+  SUMM_SRC = {
+    tabTop: 220, tabBottom: 258,
+    paneLeft: 1521, paneRight: 1990, docBottom: 1214,
+    toolbarTop: 174, toolbarBot: 219,
+    toolbarLeft: 520, toolbarRight: 2035,
+  };
+  summCurrentLength = 'standard';
+  var _summMsgTimer = null;
+
+  var SUMMARIES = {
+    brief: { label: 'Brief Summary', html: '<p>The Bylaws of Tetraplex Corporation (Delaware) establish foundational governance rules covering stockholder meeting procedures, board composition and authority, officer roles, stock transfer rules, and indemnification rights for directors and officers. The Board holds broad authority to manage corporate affairs and may amend the Bylaws subject to stockholder rights. Last amended November 4, 2023.</p>' },
+    standard: { label: 'Standard Summary', html: '<p><strong>Tetraplex Corporation</strong> is a Delaware corporation. These Bylaws, last amended November 4, 2023, govern internal management across eight articles.</p><ul><li><strong>Offices (Art. I):</strong> Registered in Wilmington, DE; Corporation Trust Company is registered agent.</li><li><strong>Stockholder Meetings (Art. II):</strong> Annual meetings set by Board; special meetings by Board or CEO only. Quorum: majority of outstanding voting shares.</li><li><strong>Board of Directors (Art. III):</strong> 1–11 directors, elected annually. Committees: Audit, Compensation, Nominating &amp; Governance.</li><li><strong>Officers (Art. IV):</strong> CEO, President, VP(s), Secretary, Treasurer required. Elected annually; removable with or without cause.</li><li><strong>Indemnification (Art. VI):</strong> Full indemnification of directors and officers under Delaware law.</li></ul>' },
+    detailed: { label: 'Detailed Summary', html: '<p><strong>Tetraplex Corporation</strong> — Delaware corporation. Bylaws originally adopted January 22, 2017; last amended November 4, 2023.</p><p><strong>Art. I — Offices:</strong> Registered at 1209 Orange Street, Wilmington DE 19801. Additional offices permitted anywhere.</p><p><strong>Art. II — Stockholder Meetings:</strong> Annual meetings per Board resolution. Special meetings by Board or CEO only. Notice 10–60 days in advance. Quorum: majority of outstanding shares. Proxies valid 3 years.</p><p><strong>Art. III — Board of Directors:</strong> 1–11 directors; need not be stockholders. Elected annually. Special meetings: 24h electronic notice. Board may act by unanimous written consent. Committees: Audit, Compensation, Nominating &amp; Corporate Governance.</p><p><strong>Art. IV — Officers:</strong> Required: CEO, President, VP(s), Secretary, Treasurer. Elected annually. CEO supervises all business. All removable with or without cause.</p><p><strong>Art. VI — Indemnification:</strong> Full indemnification under Delaware law. Expense advancement required, subject to repayment undertaking.</p><p><strong>Art. VIII — Amendments:</strong> By majority stockholder vote or by Board if authorized by Certificate of Incorporation.</p>' }
+  };
+
+  // Current document being summarized (used for "Ask AI Assistant" button)
+  var CURRENT_DOC = { index: '1.2.1', name: 'Bylaws - Tetraplex.docx', path: '1.2.1 Bylaws - Tetraplex.docx', type: 'file' };
+
+  function openSummary() {
+    var drawer = document.getElementById('drawer');
+    var savedW = drawer ? drawer.offsetWidth : 0;
+    document.getElementById('bg').src = IMG_OPEN;
+    document.getElementById('summaryPane').classList.add('open');
+    document.getElementById('summOpenBtn').style.display = 'none';
+    summPaneOpen = true;
+    resetSummFeedback();
+    showSummLoading();
+    reposition();
+    if (savedW && drawer) {
+      var b = getBounds(), zoom = Math.max(1.0, b.scale / REF_SCALE);
+      drawer.style.width = savedW + 'px';
+      document.getElementById('drawerScaler').style.width = (savedW / zoom) + 'px';
+    }
+    setTimeout(function() { renderSummary(summCurrentLength); }, 1100);
+  }
+  function closeSummary() {
+    var drawer = document.getElementById('drawer');
+    var savedW = drawer ? drawer.offsetWidth : 0;
+    document.getElementById('bg').src = IMG_CLOSED;
+    document.getElementById('summaryPane').classList.remove('open');
+    document.getElementById('summOpenBtn').style.display = '';
+    summPaneOpen = false;
+    closeSummDropdown();
+    resetSummFeedback();
+    reposition();
+    if (savedW && drawer) {
+      var b = getBounds(), zoom = Math.max(1.0, b.scale / REF_SCALE);
+      drawer.style.width = savedW + 'px';
+      document.getElementById('drawerScaler').style.width = (savedW / zoom) + 'px';
+    }
+  }
+  function setLength(len) {
+    if (len === summCurrentLength) return;
+    summCurrentLength = len;
+    ['brief','standard','detailed'].forEach(function(l) {
+      document.getElementById('btn-'+l).classList.toggle('active', l === len);
+    });
+    if (summPaneOpen) { showSummLoading(); setTimeout(function() { renderSummary(len); }, 900); }
+  }
+  function showSummLoading() {
+    document.getElementById('summaryInner').innerHTML = '<div class="loading-wrap"><div class="spinner"></div> Generating summary…</div>';
+    setTimeout(drawSummWatermark, 50);
+  }
+  function renderSummary(len) {
+    var s = SUMMARIES[len];
+    document.getElementById('summaryInner').innerHTML = '<div class="summary-label">' + s.label + '</div><div class="summary-body"><div class="summary-text">' + s.html + '</div></div>';
+    setTimeout(drawSummWatermark, 50);
+  }
+  function resetSummFeedback() {
+    document.getElementById('summThumbUp').classList.remove('active-up');
+    document.getElementById('summThumbDown').classList.remove('active-down');
+    if (_summMsgTimer) { clearTimeout(_summMsgTimer); _summMsgTimer = null; }
+    var t = document.getElementById('summFeedbackText'); if(t){ t.textContent = 'Was this helpful?'; t.className = 'summ-feedback-text'; }
+  }
+  function _showSummMsg(spanId) {
+    if (_summMsgTimer) clearTimeout(_summMsgTimer);
+    var t = document.getElementById('summFeedbackText');
+    if (t) { t.textContent = spanId === 'summFeedbackThanks' ? 'Thanks for your feedback!' : 'Feedback removed.'; t.className = 'summ-feedback-text ' + (spanId === 'summFeedbackThanks' ? 'thanks' : 'removed'); }
+    _summMsgTimer = setTimeout(function() {
+      var t = document.getElementById('summFeedbackText');
+      if (t) { t.textContent = 'Was this helpful?'; t.className = 'summ-feedback-text'; }
+      _summMsgTimer = null;
+    }, 2000);
+  }
+  function closeSummDropdown() { document.getElementById('summFeedbackDropdown').classList.remove('open'); }
+  function copySmmarySummary() {
+    var el = document.getElementById('summaryInner');
+    if (!el) return;
+    navigator.clipboard.writeText(el.innerText).then(function() {
+      var lbl = document.getElementById('summCopiedLabel');
+      if (!lbl) return;
+      lbl.classList.add('show');
+      setTimeout(function() { lbl.classList.remove('show'); }, 2000);
+    });
+  }
+  function showAboutSummarizer() { document.getElementById('aboutSummOverlay').classList.add('open'); }
+  function closeAboutSummarizer() { document.getElementById('aboutSummOverlay').classList.remove('open'); }
+
+  document.getElementById('summUpCancel').addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('summUpDropdown').classList.remove('open'); document.getElementById('summThumbUp').classList.remove('active-up'); });
+  document.getElementById('summUpSubmit').addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('summUpDropdown').classList.remove('open'); _showSummMsg('summFeedbackThanks'); });
+  document.getElementById('summThumbUp').addEventListener('click', function(e) {
+    e.stopPropagation();
+    var isActive = this.classList.contains('active-up');
+    this.classList.toggle('active-up', !isActive);
+    document.getElementById('summThumbDown').classList.remove('active-down');
+    closeSummDropdown();
+    document.getElementById('summUpDropdown').classList.remove('open');
+    if (!isActive) {
+      var dd = document.getElementById('summUpDropdown');
+      if (dd.parentNode !== document.body) { document.body.appendChild(dd); dd.addEventListener('click', function(ev){ ev.stopPropagation(); }); }
+      var rect = this.getBoundingClientRect();
+      var top = rect.top - 144; if (top < 8) top = rect.bottom + 4;
+      dd.style.top = top + 'px';
+      dd.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 218)) + 'px';
+      dd.classList.add('open');
+    } else { _showSummMsg('summFeedbackRemoved'); }
+  });
+  document.getElementById('summThumbDown').addEventListener('click', function(e) {
+    e.stopPropagation();
+    var dd = document.getElementById('summFeedbackDropdown');
+    if (this.classList.contains('active-down')) {
+      this.classList.remove('active-down');
+      dd.querySelectorAll('input[type=radio]').forEach(function(r){ r.checked = false; });
+      document.getElementById('summFbSubmit').disabled = true;
+      closeSummDropdown(); _showSummMsg('summFeedbackRemoved'); return;
+    }
+    document.getElementById('summThumbUp').classList.remove('active-up');
+    var isOpen = dd.classList.contains('open');
+    closeSummDropdown();
+    if (!isOpen) {
+      if (dd.parentNode !== document.body) {
+        document.body.appendChild(dd);
+        dd.addEventListener('click', function(ev){ ev.stopPropagation(); });
+      }
+      var rect = this.getBoundingClientRect(), dropH = 190;
+      var top = rect.top - dropH - 4; if (top < 8) top = rect.bottom + 4;
+      dd.style.top = top + 'px';
+      dd.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 218)) + 'px';
+      dd.classList.add('open');
+    }
+  });
+  document.getElementById('summFbCancel').addEventListener('click', function(e){ e.stopPropagation(); closeSummDropdown(); });
+  document.getElementById('summFbSubmit').addEventListener('click', function(e) {
+    e.stopPropagation(); if (this.disabled) return;
+    closeSummDropdown();
+    document.getElementById('summThumbUp').classList.remove('active-up');
+    document.getElementById('summThumbDown').classList.add('active-down');
+    _showSummMsg('summFeedbackThanks');
+  });
+  document.querySelectorAll('input[name="sfbproblem"]').forEach(function(r) {
+    r.addEventListener('click', function(e){ e.stopPropagation(); });
+    r.addEventListener('change', function(){ document.getElementById('summFbSubmit').disabled = false; });
+  });
+  document.getElementById('aboutSummOverlay').addEventListener('click', function(e){ if (e.target===this) closeAboutSummarizer(); });
+
+  // "Ask AI Assistant about this document" button
+  function askAssistantAboutDoc() {
+    openDrawer();
+    setTimeout(function() {
+      // Reset chat state (no greeting — scope message IS the opener)
+      currentScopes = [];
+      supportState = null;
+      var msgs = document.getElementById('msgs');
+      msgs.innerHTML = '';
+      document.getElementById('chatTitle').textContent = 'New Chat';
+      document.getElementById('chatTitle').style.display = '';
+      document.getElementById('chatTitleInput').style.display = 'none';
+      document.getElementById('chatConfirmBar').classList.remove('show');
+      currentTitle = 'New Chat';
+      closeAllMenus();
+      renderScopeChips();
+      addScope(CURRENT_DOC);  // "Ask me about [doc]" is the first message
+    }, 150);
+  }
+
+  // Summarizer watermark
+  function drawSummWatermark() {
+    var wrap = document.getElementById('summContentWrap');
+    var canvas = document.getElementById('summWmCanvas');
+    if (!canvas || !wrap) return;
+    var W = wrap.offsetWidth, H = wrap.offsetHeight;
+    if (!W || !H) return;
+    canvas.width = W; canvas.height = H;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    var lines = [
+      { text: 'STRICTLY CONFIDENTIAL', bold: true },
+      { text: 'Tetraplex Corporation', bold: true },
+      { text: 'Opened by jbadger@me.com', bold: true },
+      { text: 'on Apr 6, 2026 at 2:51:51 PM', bold: true },
+      { text: 'IP: 173.231.59.9', bold: true }
+    ];
+    var naturalAngle = Math.atan2(H, W);
+    var angleRad = Math.min(naturalAngle, 55 * Math.PI / 180);
+    var cosA = Math.cos(angleRad), sinA = Math.sin(angleRad);
+    var lineSpacing = 1.2, nLines = lines.length, testSize = 100, maxTextW = 0;
+    lines.forEach(function(l) {
+      ctx.font = (l.bold ? 'bold ' : '') + testSize + 'px Arial';
+      var m = ctx.measureText(l.text).width; if (m > maxTextW) maxTextW = m;
+    });
+    var blockH100 = testSize * lineSpacing * nLines;
+    var scale = Math.min((W*0.96)/(maxTextW*cosA+blockH100*sinA), (H*0.96)/(maxTextW*sinA+blockH100*cosA));
+    var fontSize = Math.max(8, Math.floor(testSize * scale));
+    var lineH = fontSize * lineSpacing, blockH = lineH * nLines;
+    var scaledTextW = maxTextW * (fontSize / testSize);
+    var tileVertH = (scaledTextW * sinA + blockH * cosA) * 0.75;
+    var numTiles = Math.max(1, Math.floor(H / tileVertH));
+    var startY = (H - (numTiles - 1) * tileVertH) / 2;
+    for (var t = 0; t < numTiles; t++) {
+      ctx.save(); ctx.translate(W/2, startY + t*tileVertH); ctx.rotate(-angleRad);
+      ctx.globalAlpha = 0.22; ctx.fillStyle = '#4B55D6';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      lines.forEach(function(line, i) {
+        ctx.font = (line.bold?'bold ':'')+fontSize+'px Arial';
+        ctx.fillText(line.text, 0, (i-(nLines-1)/2)*lineH);
+      });
+      ctx.restore();
+    }
+  }
+  new ResizeObserver(function(){ setTimeout(drawSummWatermark, 30); }).observe(document.getElementById('summContentWrap'));
+  // ─────────────────────────────────────────────────────────────────────
+
+  newChat();
+  // Auto-open drawer if ?open=TRUE or ?scope= is set
+  if (window._autoOpen) {
+    setTimeout(function() { openDrawer(); }, 100);
+  }
+  // Apply URL scope parameter if present
+  if (window._initialScope) {
+    (function() {
+      var q = window._initialScope;
+      function findNode(nodes, idx) {
+        for (var i=0; i<nodes.length; i++) {
+          if (nodes[i].i === idx) return nodes[i];
+          if (nodes[i].c) { var f = findNode(nodes[i].c, idx); if (f) return f; }
+        }
+        return null;
+      }
+      var node = findNode(scopeTreeData, q);
+      if (node) {
+        addScope({index: node.i, name: node.n, path: getPath(node), type: node.t === 'f' ? 'folder' : 'file', fullIndex: node.i});
+      }
+    })();
+  }
+  renderScopeChips();
+</script>
+</body>
+</html>
