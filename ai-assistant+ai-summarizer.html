@@ -1563,6 +1563,7 @@ var conversations = {
   }
 
   function newChat() {
+    document.getElementById('inp').placeholder = 'Ask a question…';
     currentScopes = [];
     if (typeof renderScopeChips === 'function') renderScopeChips();
     supportState = null;
@@ -1721,6 +1722,7 @@ var conversations = {
         msgs.scrollTop = msgs.scrollHeight;
       }, 600);
     }
+    document.getElementById('inp').placeholder = 'Reply…';
   }
 
   if (!window._copyEnabled) { document.getElementById('msgs').addEventListener('copy', function(e) { e.preventDefault(); }); }
