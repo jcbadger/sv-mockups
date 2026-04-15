@@ -168,7 +168,7 @@
   }
 
   /* Timestamps: inline flex sibling, hidden by default, shown on hover */
-  .msg-row { display: flex; align-items: center; gap: 6px; }
+  .msg-row { display: flex; align-items: flex-start; gap: 6px; }
   .msg-row.ai  { justify-content: flex-start; }
   .msg-row.usr { justify-content: flex-end; }
   .msg-ts { align-self: center; }
@@ -230,7 +230,7 @@
 
   .input-area { border-top: 1px solid #eee; flex-shrink: 0; position: relative; z-index: 10; background: #fff; }
   .input-row { padding: 10px 12px 6px; display: flex; gap: 7px; align-items: center; }
-  .chat-inp { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; font-size: 14px; outline: none; font-family: inherit; resize: none; line-height: 1.4; max-height: 120px; overflow-y: auto; display: block; }
+  .chat-inp { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; font-size: 14px; outline: none; font-family: inherit; resize: none; line-height: 1.4; max-height: 240px; overflow-y: auto; display: block; }
   .chat-inp:focus { border-color: #b73eb4; }
   .input-row { align-items: flex-end; }  /* align send btn to bottom when textarea grows */
   .send-btn { background: linear-gradient(135deg, #b73eb4, #4B55D6); border: none; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -613,6 +613,31 @@
     <div class="about-modal-footer"><button class="about-ok-btn" onclick="closeAboutSummarizer()">OK</button></div>
   </div>
 </div>
+
+<div class="about-overlay" id="aboutAIOverlay">
+  <div class="about-modal">
+    <div class="about-modal-header">
+      <div class="about-modal-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sg-ai" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b73eb4"/><stop offset="100%" stop-color="#4B55D6"/></linearGradient></defs><path stroke="url(#sg-ai)" stroke-width="1.4" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/></svg>
+        About ShareVault AI Assistant
+      </div>
+      <button class="about-modal-close" onclick="closeAboutAI()">✕</button>
+    </div>
+    <div class="about-modal-body">
+      <p><strong>ShareVault AI Assistant</strong> answers user questions about the documents in this ShareVault using a generative AI model (Claude 4.6 in this ShareVault).</p>
+      <p>Chat content is private — your questions and AI responses are never visible to other users or administrators. <a href="#" onclick="showTrackingNotice();return false;" style="color:#b73eb4;">What we track</a></p>
+      <p style="color:#5d676f;"></p>
+      <p>Redacted content will be excluded in responses even for users with permission to view redacted documents.</p>
+      <p>AI-generated responses may contain errors. Always verify important information against the original documents.</p>
+      <p>ShareVault logs usage metadata for governance purposes — including response times, document citations, and AI-generated topic labels — but never the content of your questions or responses.</p>
+    </div>
+    <div class="about-modal-footer" style="display:flex;align-items:center;justify-content:space-between;">
+      <a href="https://www.sharevault.com" style="color:#4d9ff7;font-size:12px;text-decoration:none;" target="_blank">ShareVault AI Policy</a>
+      <button class="about-ok-btn" onclick="closeAboutAI()">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─────────────────────────────────────────────────────────────────── -->
 
 <button class="fab" id="fab" onclick="openDrawer()">
@@ -729,6 +754,9 @@
       <button class="round-btn" id="suggestBtn" onclick="toggleMenu('suggestionsPanel',event)" title="Suggested questions">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 21h6M12 3a6 6 0 0 1 6 6c0 2.22-1.2 4.16-3 5.2V17H9v-2.8A6 6 0 0 1 6 9a6 6 0 0 1 6-6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
+      <button class="round-btn" id="howtoBtn" onclick="toggleMenu('howtoPanel',event)" title="How to use ShareVault">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 6c0-1 .67-1.5 1.5-1.5s1.5.67 1.5 1.5c0 .67-.33 1.17-1 1.5-.5.25-.5.5-.5 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="11.5" r=".75" fill="currentColor"/></svg>
+      </button>
 
       <span class="model-label">Claude Sonnet 4.6</span>
 
@@ -744,35 +772,75 @@
         </div>
       </div>
 
-      <div class="dropdown-menu" id="histMenu" style="width:260px;">
-        <div class="dropdown-header">Recent chats</div>
-        <div class="hist-item" onclick="loadConvo('competitive')">
-          <span class="hist-item-name">Competitive positioning analysis</span>
-          <span class="hist-item-date">Today</span>
-        </div>
-        <div class="hist-item" onclick="loadConvo('financials')">
-          <span class="hist-item-name">Financials summary</span>
-          <span class="hist-item-date">Today</span>
-        </div>
-        <div class="hist-item" onclick="loadConvo('bod')">
-          <span class="hist-item-name">BOD minutes — key decisions</span>
-          <span class="hist-item-date">Yesterday</span>
-        </div>
-        <div class="hist-item" onclick="loadConvo('ip')">
-          <span class="hist-item-name">IP and patents</span>
-          <span class="hist-item-date">Yesterday</span>
-        </div>
-      </div>
+	<div class="dropdown-menu" id="histMenu" style="width:260px;">
+	  <div class="dropdown-header" style="display:flex;align-items:center;justify-content:space-between;">
+		<span>Recent chats</span>
+		<span onclick="newChat();closeAllMenus();" style="color:#b73eb4;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:0.01em;">+ New</span>
+	  </div>
+	  <div class="hist-item" id="hist-competitive" onclick="loadConvo('competitive')">
+		<span class="hist-item-name">Competitive positioning analysis</span>
+		<span class="hist-item-date">Today</span>
+		<button class="hist-delete-btn" onclick="showHistConfirm(event,'hist-competitive-confirm')">✕</button>
+	  </div>
+	  <div class="hist-confirm-row" id="hist-competitive-confirm">
+		<span>Delete this chat?</span>
+		<div style="display:flex;gap:5px;">
+		  <button class="confirm-btn yes" onclick="doHistDelete(event,'hist-competitive','hist-competitive-confirm')">Delete</button>
+		  <button class="confirm-btn no" onclick="hideHistConfirm(event,'hist-competitive-confirm')">Cancel</button>
+		</div>
+	  </div>
+	  <div class="hist-item" id="hist-financials" onclick="loadConvo('financials')">
+		<span class="hist-item-name">Financials summary</span>
+		<span class="hist-item-date">Today</span>
+		<button class="hist-delete-btn" onclick="showHistConfirm(event,'hist-financials-confirm')">✕</button>
+	  </div>
+	  <div class="hist-confirm-row" id="hist-financials-confirm">
+		<span>Delete this chat?</span>
+		<div style="display:flex;gap:5px;">
+		  <button class="confirm-btn yes" onclick="doHistDelete(event,'hist-financials','hist-financials-confirm')">Delete</button>
+		  <button class="confirm-btn no" onclick="hideHistConfirm(event,'hist-financials-confirm')">Cancel</button>
+		</div>
+	  </div>
+	  <div class="hist-item" id="hist-bod" onclick="loadConvo('bod')">
+		<span class="hist-item-name">BOD minutes — key decisions</span>
+		<span class="hist-item-date">Yesterday</span>
+		<button class="hist-delete-btn" onclick="showHistConfirm(event,'hist-bod-confirm')">✕</button>
+	  </div>
+	  <div class="hist-confirm-row" id="hist-bod-confirm">
+		<span>Delete this chat?</span>
+		<div style="display:flex;gap:5px;">
+		  <button class="confirm-btn yes" onclick="doHistDelete(event,'hist-bod','hist-bod-confirm')">Delete</button>
+		  <button class="confirm-btn no" onclick="hideHistConfirm(event,'hist-bod-confirm')">Cancel</button>
+		</div>
+	  </div>
+	  <div class="hist-item" id="hist-ip" onclick="loadConvo('ip')">
+		<span class="hist-item-name">IP and patents</span>
+		<span class="hist-item-date">Yesterday</span>
+		<button class="hist-delete-btn" onclick="showHistConfirm(event,'hist-ip-confirm')">✕</button>
+	  </div>
+	  <div class="hist-confirm-row" id="hist-ip-confirm">
+		<span>Delete this chat?</span>
+		<div style="display:flex;gap:5px;">
+		  <button class="confirm-btn yes" onclick="doHistDelete(event,'hist-ip','hist-ip-confirm')">Delete</button>
+		  <button class="confirm-btn no" onclick="hideHistConfirm(event,'hist-ip-confirm')">Cancel</button>
+		</div>
+	  </div>
+	</div>
 
       <div class="suggestions-panel" id="suggestionsPanel">
-        <div class="suggestions-header">Suggested questions</div>
+        <div class="suggestions-header">What's in this ShareVault?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'How does Tetraplex position itself against its main competitors?')">How does Tetraplex position itself against its main competitors?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'Summarize the key financial highlights from the 2024 annual report')">Summarize the key financial highlights from the 2024 annual report</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'What do the BOD minutes say about major decisions in 2024?')">What do the BOD minutes say about major decisions in 2024?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'Are there any documents related to intellectual property?')">Are there any documents related to intellectual property?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'What regulatory filings are included in this ShareVault?')">What regulatory filings are included in this ShareVault?</div>
-        <div class="suggestion-item" onclick="askSuggestion(event, 'What marketing documents are available?')">What marketing documents are available?</div>
-        <div class="suggestion-item" onclick="askSuggestion(event, 'What is the Certificate of Incorporation?')">What is the Certificate of Incorporation?</div>
+		<div class="suggestion-item" onclick="askSuggestion(event, 'What are the key terms in the employment agreements?')">What are the key terms in the employment agreements?</div>
+		<div class="suggestion-item" onclick="askSuggestion(event, 'What does the cap table show about ownership structure?')">What does the cap table show about ownership structure?</div>
+		<div class="suggestion-item" onclick="askSuggestion(event, 'What are the key financial risks disclosed in this ShareVault?')">What are the key financial risks disclosed in this ShareVault?</div>
+      </div>
+
+      <div class="suggestions-panel" id="howtoPanel">
+        <div class="suggestions-header">How do I use ShareVault?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'How do I search for documents?')">How do I search for documents?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'How do I view or download files?')">How do I view or download files?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'How do I reach ShareVault support?')">How do I reach ShareVault support?</div>
@@ -782,6 +850,7 @@
   </div>
   </div><!-- end drawerScaler -->
 </div><!-- end drawer -->
+
 
 <script>
 
@@ -966,73 +1035,45 @@ var conversations = {
     { name: '4.3.5 IPAssignmentAgreement.pdf', path: '4.3.5 Legal / Intellectual Property / IPAssignmentAgreement.pdf' }
   ]
 },
-  
-'How does Tetraplex position itself against its main competitors?': {
-  text: 'Based on the materials in this ShareVault, Tetraplex competes primarily against three players: DataStream Inc., Nexora Analytics, and legacy enterprise vendors like SAP and Oracle in the data processing space. Tetraplex\'s positioning centers on three differentiators. First, processing speed — their proprietary pipeline architecture processes data 4-8x faster than DataStream according to the independent benchmark study in this ShareVault. Second, ease of deployment — average time-to-value is documented at 6 weeks versus an industry average of 4-6 months for comparable enterprise solutions. Third, pricing — Tetraplex\'s consumption-based model is cited in several customer case studies as a key reason for switching from legacy vendors.',
-  sources: [
-    { name: '3.2.1 CompetitiveAnalysis-2024.pdf', path: '3.2.1 Sales / Competitive Intelligence / CompetitiveAnalysis-2024.pdf' },
-    { name: '3.2.4 BenchmarkStudy-DataStream.pdf', path: '3.2.4 Sales / Competitive Intelligence / BenchmarkStudy-DataStream.pdf' },
-    { name: '5.1.2 CustomerCaseStudies-2024.pdf', path: '5.1.2 Marketing / Case Studies / CustomerCaseStudies-2024.pdf' }
-  ]
-},
-'Summarize the key financial highlights from the 2024 annual report': {
-  text: 'Tetraplex reported strong performance in 2024. Revenue grew 18% year-over-year to $142.3M, driven primarily by expansion in the enterprise segment which now represents 67% of total revenue. Gross margin improved to 71%, up from 68% in 2023, reflecting favorable product mix and operational efficiencies. EBITDA reached $28.4M, a 34% increase over the prior year. The company ended 2024 with $47.2M in cash and no long-term debt. ARR grew to $138M with net revenue retention of 118%, indicating strong upsell momentum within the existing customer base.',
-  sources: [
-    { name: '2.1.1 AnnualReport-2024.pdf', path: '2.1.1 Financial / Annual Reports / AnnualReport-2024.pdf' },
-    { name: '2.1.2 AuditedFinancials-2024.pdf', path: '2.1.2 Financial / Annual Reports / AuditedFinancials-2024.pdf' }
-  ]
-},
-'What do the BOD minutes say about major decisions in 2024?': {
-  text: 'The Board of Directors minutes from 2024 reflect several significant decisions. In Q1, the board approved a $15M Series C extension at a $380M post-money valuation. In Q2, the board authorized the acquisition of a smaller competitor, Proxima Analytics, for $8.2M in cash. Q3 minutes reflect approval of a new equity incentive plan, increasing the option pool by 4.2%. The most notable Q4 decision was the board\'s resolution to explore strategic alternatives, including a potential sale of the company — which is the context for this Project Optima ShareVault.',
-  sources: [
-    { name: '4.1.1 BODMinutes-Q1-2024.pdf', path: '4.1.1 Legal / Board Minutes / BODMinutes-Q1-2024.pdf' },
-    { name: '4.1.2 BODMinutes-Q2-2024.pdf', path: '4.1.2 Legal / Board Minutes / BODMinutes-Q2-2024.pdf' },
-    { name: '4.1.3 BODMinutes-Q3-2024.pdf', path: '4.1.3 Legal / Board Minutes / BODMinutes-Q3-2024.pdf' },
-    { name: '4.1.4 BODMinutes-Q4-2024.pdf', path: '4.1.4 Legal / Board Minutes / BODMinutes-Q4-2024.pdf' }
-  ]
-},
-'Are there any documents related to intellectual property?': {
-  text: 'Yes — this ShareVault contains several IP-related documents in the Legal / Intellectual Property folder. There are 14 granted US patents covering Tetraplex\'s core data processing and analytics technology, with expiration dates ranging from 2031 to 2039. Additionally, there are 6 pending patent applications. This ShareVault also includes trademark registrations for the Tetraplex brand in the US, EU, and UK, plus 3 pending international applications. There\'s a comprehensive IP assignment agreement covering all employee and contractor contributions, and a technology license agreement with a third-party data provider.',
-  sources: [
-    { name: '4.3.1 PatentPortfolio-2024.pdf', path: '4.3.1 Legal / Intellectual Property / PatentPortfolio-2024.pdf' },
-    { name: '4.3.3 TrademarkRegistrations.pdf', path: '4.3.3 Legal / Intellectual Property / TrademarkRegistrations.pdf' },
-    { name: '4.3.5 IPAssignmentAgreement.pdf', path: '4.3.5 Legal / Intellectual Property / IPAssignmentAgreement.pdf' }
-  ]
-},
-    'What marketing documents are available?': {
-      text: 'The Marketing folder in this ShareVault contains a product overview deck, three customer case studies (Meridian Financial, Apex Manufacturing, and TechBridge Solutions), a competitive battle card set covering DataStream, Nexora, and Oracle, and a 2024 analyst briefing. There\'s also a brand guidelines document and two recorded product demo videos. The most recent document is a go-to-market strategy deck from Q4 2024 outlining Tetraplex\'s plans for the financial services vertical.',
-      sources: [
-        { name: '5.1.1 SalesDeck-Q4-2024.pdf', path: '5.1.1 Marketing / Sales Materials / SalesDeck-Q4-2024.pdf' },
-        { name: '5.1.2 CustomerCaseStudies-2024.pdf', path: '5.1.2 Marketing / Case Studies / CustomerCaseStudies-2024.pdf' },
-        { name: '5.1.3 SalesPlaybook-2024.pdf', path: '5.1.3 Marketing / Sales Materials / SalesPlaybook-2024.pdf' },
-        { name: '5.2.1 AnalystBriefing-2024.pdf', path: '5.2.1 Marketing / Analyst Relations / AnalystBriefing-2024.pdf' }
-      ]
-    },
-    'What is the Certificate of Incorporation?': {
-      text: 'The Certificate of Incorporation in this ShareVault shows Tetraplex Corporation was incorporated in Delaware on March 12, 2016. The company is authorized to issue 100,000,000 shares of common stock at $0.0001 par value, and 20,000,000 shares of preferred stock. The certificate has been amended three times — in 2018, 2021, and 2023 — primarily to increase authorized share counts in connection with funding rounds. The most recent amendment, filed January 2023, reflects the Series C preferred stock authorization.',
-      sources: [
-        { name: '4.3.2 CertificateOfIncorporation-Tetraplex.pdf', path: '4.3.2 Legal / Intellectual Property / CertificateOfIncorporation-Tetraplex.pdf' },
-        { name: '4.3.4 CertificateOfAmendment-2023.pdf', path: '4.3.4 Legal / Intellectual Property / CertificateOfAmendment-2023.pdf' }
-      ]
-    },
-    'How do I search for documents?': {
-      text: 'You can search documents in this ShareVault using the search bar at the top of the Documents page. Type any keyword and results will appear instantly across all documents you have access to. You can filter results by folder, file type, and date. Full-text search is supported — meaning the search looks inside document content, not just file names. For best results, use specific terms like company names, clause types, or financial metrics. You can also use the folder tree on the left to browse documents by category.\n\n<a href="https://www.sharevault.net/help/search" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Searching documents</a>',
+'How do I search for documents?': {
+      text: 'You can search documents in this ShareVault using the search bar at the top of the Documents page. Type any keyword and results will appear instantly across all documents you have access to. You can filter results by folder, file type, and date. Full-text search is supported — meaning the search looks inside document content, not just file names. For best results, use specific terms like company names, clause types, or financial metrics. You can also use the folder tree on the left to browse documents by category.<br><a href="https://www.sharevault.net/help/search" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Searching documents</a>',
       sources: []
     },
-    'How do I view or download files?': {
-      text: 'To view a file, simply click on it in the Documents list and it will open in the secure document viewer. Your administrator has configured this ShareVault with the "Secure Save & Print" policy, which means you can save and print documents but copying text is restricted. To download a file, click the download icon to the right of the filename in the document list, or use the download button in the viewer toolbar. Note that all downloaded files will be watermarked with your name, email, and the date and time of download.\n\n<a href="https://www.sharevault.net/help/viewing-documents" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Viewing documents</a> &nbsp; <a href="https://www.sharevault.net/help/batch-download" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Batch download</a>',
+'How do I view or download files?': {
+      text: 'To view a file, simply click on it in the Documents list and it will open in the secure document viewer. Your administrator has configured this ShareVault with the "Secure Save & Print" policy, which means you can save and print documents but copying text is restricted.<br>To download a file, click the download icon to the right of the filename in the document list, or use the download button in the viewer toolbar. Note that all downloaded files will be watermarked with your name, email, and the date and time of download.<br><a href="https://www.sharevault.net/help/viewing-documents" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Viewing documents</a><br><a href="https://www.sharevault.net/help/batch-download" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Batch download</a>',
       sources: []
     },
-    'How do I reach ShareVault support?': {
+'How do I reach ShareVault support?': {
       text: 'I can connect you with ShareVault support right now. Would you prefer a <b>callback</b>, <b>text message</b> or <b>email</b> response?',
       sources: [],
       supportFlow: true
-    }
+    },
+	'What are the key terms in the employment agreements?': {
+	  text: 'The employment agreements in this ShareVault cover three executives: Arnold Chabot, Kim Fong, and Patrice Leroy. Key terms include at-will employment with 90-day notice for termination without cause, base salary plus performance bonus tied to annual targets, standard confidentiality and IP assignment obligations, and non-compete restrictions for 12 months post-employment within the data processing software industry. Each agreement also includes a companion Non-Compete Agreement that extends restrictions to solicitation of customers and employees.',
+	  sources: [
+		{ name: '5.2.4 EMPLOYMENT AGREEMENT - Arnold Chabot.doc', path: '5 Human Resources / 5.2 Employee Agreements / EMPLOYMENT AGREEMENT - Arnold Chabot.doc' },
+		{ name: '5.2.5 EMPLOYMENT AGREEMENT - Kim Fong.doc', path: '5 Human Resources / 5.2 Employee Agreements / EMPLOYMENT AGREEMENT - Kim Fong.doc' },
+		{ name: '5.2.6 EMPLOYMENT AGREEMENT - Patrice Leroy.doc', path: '5 Human Resources / 5.2 Employee Agreements / EMPLOYMENT AGREEMENT - Patrice Leroy.doc' }
+	  ]
+	},
+	'What does the cap table show about ownership structure?': {
+	  text: 'The cap table for Tetraplex shows total authorized shares of 120,000,000 — 100,000,000 common and 20,000,000 preferred. Founders collectively hold approximately 41% on a fully diluted basis. Institutional investors hold approximately 38%, with the Series C preferred holders representing the largest single investor block at 18%. The employee option pool represents approximately 14% fully diluted, with roughly 60% of the pool granted and vesting on a 4-year schedule with a 1-year cliff. The remaining 7% is held by early advisors and angel investors.',
+	  sources: [
+		{ name: '1.4.1 Cap Table - Tetraplex.xlsx', path: '1 Corporate Records / 1.4 Shareholders / Cap Table - Tetraplex.xlsx' }
+	  ]
+	},
+	'What are the key financial risks disclosed in this ShareVault?': {
+	  text: 'The materials in this ShareVault disclose several financial risks worth noting. Customer concentration is the most significant — the top 10 customers represent 31% of ARR with one customer at 8.4%. The pending patent dispute with DataStream Inc. represents contingent legal liability, though outside counsel characterizes the risk as limited. Sales and marketing expense is growing faster than revenue at 24% YoY. The company carries $12.3M in deferred revenue that must be earned out. Finally, international expansion is constrained by limited language support, capping addressable market in APAC and EMEA.',
+	  sources: [
+		{ name: '2.1.1 AnnualReport-2024.pdf', path: '2.1.1 Financial / Annual Reports / AnnualReport-2024.pdf' },
+		{ name: '4.2.3 LegalDisclosures-2024.pdf', path: '4.2.3 Legal / Compliance / LegalDisclosures-2024.pdf' },
+		{ name: '4.3.6 PatentDisputeOpinion-OutsideCounsel.pdf', path: '4.3.6 Legal / Intellectual Property / PatentDisputeOpinion-OutsideCounsel.pdf' }
+	  ]
+	}
   };
 
-  function showAINotice() {
-    alert('AI Assistant may make mistakes. Please verify important information.\n\nYour data is never used for AI training.\n\nShareVault AI Policy');
-  }
+  function showAINotice() { document.getElementById('aboutAIOverlay').classList.add('open'); }
+  function closeAboutAI() { document.getElementById('aboutAIOverlay').classList.remove('open'); }
 
   function showTrackingNotice() {
     alert('The content of your questions and AI responses is never logged or visible to anyone else.\n\nShareVault AI Assistant logs usage metadata for governance purposes, including:\n* Number of words in your queries and responses.\n* Response times.\n* Document citations.\n* AI-generated topic labels.');
@@ -1265,7 +1306,9 @@ var conversations = {
     ['plusBtn','histBtn'].forEach(function(id){ document.getElementById(id).classList.remove('active'); });
     document.getElementById('chatKebabMenu').classList.remove('open');
     document.getElementById('suggestionsPanel').classList.remove('open');
+    document.getElementById('howtoPanel').classList.remove('open');
     if (document.getElementById('suggestBtn')) document.getElementById('suggestBtn').classList.remove('active');
+    if (document.getElementById('howtoBtn')) document.getElementById('howtoBtn').classList.remove('active');
     document.querySelectorAll('.hist-confirm-row').forEach(function(r){ r.classList.remove('show'); });
     document.querySelectorAll('.feedback-dropdown').forEach(function(d){ d.classList.remove('open'); });
     document.querySelectorAll('.bubble-actions.dropdown-open').forEach(function(a){ a.classList.remove('dropdown-open'); });
@@ -1276,7 +1319,7 @@ var conversations = {
     closeAllMenus();
     if (!isOpen) {
       document.getElementById(id).classList.add('open');
-      var btnMap = { 'plusMenu': 'plusBtn', 'histMenu': 'histBtn', 'suggestionsPanel': 'suggestBtn' };
+      var btnMap = { 'plusMenu': 'plusBtn', 'histMenu': 'histBtn', 'suggestionsPanel': 'suggestBtn', 'howtoPanel': 'howtoBtn' };
       if (btnMap[id]) document.getElementById(btnMap[id]).classList.add('active');
     }
   }
@@ -1366,7 +1409,7 @@ var conversations = {
   function addAiMessage(text, isLatest, sources, noFeedback) {
     var wrap = document.createElement('div');
     wrap.className = 'msg-wrap-ai';
-    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    var time = new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true});
     var uid = 'fb' + Date.now() + Math.floor(Math.random()*10000);
     var actionsClass = (isLatest ? 'bubble-actions' : 'bubble-actions hover-only') + (noFeedback ? ' no-thumbs' : '');
     var sourcesHtml = (sources && sources.length) ? src(sources) : '';
@@ -1381,22 +1424,24 @@ var conversations = {
     wrap.innerHTML =
       '<div class="msg-label">AI Assistant</div>' +
       '<div class="msg-row ai' + (isLatest ? ' latest' : '') + '">' +
-        '<div style="display:inline-flex;flex-direction:column;min-width:0;">' +
-          '<div class="bubble-ai">' + text + sourcesHtml + '</div>' +
-          '<div class="' + actionsClass + '" data-uid="' + uid + '">' +
-            thumbsHtml +
-            '<span class="bubble-feedback-msg" id="' + uid + 'thanks"></span>' +
-            (noFeedback ? '' : '<button class="action-btn copy-btn" title="Copy" onclick="copyBubble(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg></button>') +
-          '</div>' +
-        '</div>' +
-        '<span class="msg-ts">' + time + '</span>' +
+	  '<div style="display:inline-flex;flex-direction:column;min-width:0;">' +
+	    '<div style="display:flex;align-items:center;gap:6px;">' +
+		  '<div class="bubble-ai">' + text + sourcesHtml + '</div>' +
+		  '<span class="msg-ts">' + time + '</span>' +
+	    '</div>' +
+	    '<div class="' + actionsClass + '" data-uid="' + uid + '">' +
+		  thumbsHtml +
+		  '<span class="bubble-feedback-msg" id="' + uid + 'thanks"></span>' +
+		  (noFeedback ? '' : '<button class="action-btn copy-btn" title="Copy" onclick="copyBubble(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg></button>') +
+	    '</div>' +
+	  '</div>' +
       '</div>' +
       '<div class="feedback-dropdown" id="' + uid + 'up">' +
         '<div class="feedback-dropdown-title">What was useful?</div>' +
         '<textarea class="feedback-comment" id="' + uid + 'upcomment" placeholder="What was useful about this response? (optional)" maxlength="500"></textarea>' +
         '<div class="feedback-actions">' +
           '<button class="confirm-btn no" id="' + uid + 'upcancel">Cancel</button>' +
-          '<button class="confirm-btn yes" id="' + uid + 'upsubmit">Submit</button>' +
+          '<button  style="background:#1a9e4a;" class="confirm-btn yes" id="' + uid + 'upsubmit">Submit</button>' +
         '</div>' +
       '</div>' +
       '<div class="feedback-dropdown" id="' + uid + '">' +
@@ -1503,6 +1548,13 @@ var conversations = {
         if (actions) actions.classList.add('dropdown-open');
       }
     });
+    setTimeout(function() {
+	  var ts = wrap.querySelector('.msg-ts');
+	  var actionsDiv = wrap.querySelector('[data-uid="' + uid + '"]');
+	  if (ts && actionsDiv) {
+		actionsDiv.style.paddingRight = ts.offsetWidth + 6 + 'px';
+	  }
+	}, 0);
     return wrap;
   }
 
@@ -2130,7 +2182,7 @@ var conversations = {
       });
       chatInp.addEventListener('input', function() {
         this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        this.style.height = Math.min(this.scrollHeight, 240) + 'px';
       });
     }
     var inp = document.getElementById('scopeTreeSearch');
@@ -2261,7 +2313,7 @@ var conversations = {
     });
     var wrap = document.createElement('div');
     wrap.className = 'msg-wrap-ai';
-    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    var time = new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true});
     wrap.innerHTML =
       '<div class="msg-label">AI Assistant</div>' +
       '<div class="msg-row ai">' +
@@ -2458,6 +2510,8 @@ var conversations = {
       addScope(CURRENT_DOC);  // "Ask me about [doc]" is the first message
     }, 150);
   }
+  
+  document.getElementById('aboutAIOverlay').addEventListener('click', function(e){ if (e.target===this) closeAboutAI(); });
 
   // Summarizer watermark
   function drawSummWatermark() {
