@@ -29,7 +29,9 @@
     display: flex; flex-direction: column;
     transform: translateX(-100%); visibility: hidden;
     transition: transform 0.25s ease, visibility 0s linear 0.25s;
-    z-index: 200; box-shadow: 4px 0 20px rgba(0,0,0,0.12), 0 -6px 16px rgba(0,0,0,0.18);
+    z-index: 200;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.12), 0 -6px 16px rgba(0,0,0,0.18);
+    will-change: width;
   }
   .drawer.open { transform: translateX(0); visibility: visible; transition: transform 0.25s ease, visibility 0s linear 0s; }
   .drawer.docked-right { left: auto; right: 0; border-right: none; border-left: 1px solid #e0e0e0; transform: translateX(100%); box-shadow: -4px 0 20px rgba(0,0,0,0.12); }
@@ -734,7 +736,8 @@
     <!-- Tree picker: positioned absolute below chips -->
     <div id="scopeTreePanel" style="position:absolute;left:10px;right:10px;top:100%;background:#fff;border:1px solid #d0bff0;border-radius:8px;box-shadow:0 6px 20px rgba(90,63,160,0.15);z-index:500;max-height:320px;overflow:hidden;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px 5px;border-bottom:1px solid #ede8f8;flex-shrink:0;">
-        <span style="font-size:11px;font-weight:600;color:#5a3fa0;text-transform:uppercase;letter-spacing:0.04em;">Ask about…</span>
+        <span style="font-size:11px;font-weight:600;color:#5a3fa0;">Select file(s) or folder(s) to focus on:
+</span>
         <button onclick="closeScopePicker()" style="background:none;border:none;cursor:pointer;color:#9a86c0;font-size:14px;padding:0;line-height:1;">✕</button>
       </div>
       <div style="padding:5px 10px;border-bottom:1px solid #f0ebf8;flex-shrink:0;display:flex;align-items:center;gap:6px;background:#faf8ff;">
@@ -1798,27 +1801,41 @@ function showTrackingNotice() {
 
   if (!window._copyEnabled) { document.getElementById('msgs').addEventListener('copy', function(e) { e.preventDefault(); }); }
 
-  var isResizing = false, startX, startW;
-  document.getElementById('resizeHandle').addEventListener('mousedown', function(e) {
-    isResizing = true; startX = e.clientX; startW = document.getElementById('drawer').offsetWidth;
-    document.body.style.cursor = 'ew-resize'; document.body.style.userSelect = 'none';
-  });
-  document.addEventListener('mousemove', function(e) {
-    if (!isResizing || maximized) return;
-    var b = getBounds();
-    var zoom = b.scale / REF_SCALE;
-    var d = document.getElementById('drawer');
-    var dx = d.classList.contains('docked-right') ? startX - e.clientX : e.clientX - startX;
-    var newW = Math.max(Math.round(320 * zoom), Math.min(b.imgW * 0.75, startW + dx));
-    d.style.width = newW + 'px';
-    // Update scaler width to match (design pixels = newW / zoom)
-    var scaler = document.getElementById('drawerScaler');
-    scaler.style.width = (newW / zoom) + 'px';
-    drawWatermark();
-  });
-  document.addEventListener('mouseup', function() {
-    if (isResizing) { isResizing = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
-  });
+var isResizing = false, startX, startW;
+
+document.getElementById('resizeHandle').addEventListener('mousedown', function(e) {
+  isResizing = true;
+  startX = e.clientX;
+  startW = document.getElementById('drawer').offsetWidth;
+  document.body.style.cursor = 'ew-resize';
+  document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!isResizing || maximized) return;
+  var b = getBounds();
+  var zoom = b.scale / REF_SCALE;
+  var d = document.getElementById('drawer');
+  var dx = d.classList.contains('docked-right') ? startX - e.clientX : e.clientX - startX;
+  var minW = Math.round(320 * zoom);
+  var maxW = Math.round(b.imgW * 0.75);
+  var newW = Math.max(minW, Math.min(maxW, startW + dx));
+  d.style.width = newW + 'px';
+  var scaler = document.getElementById('drawerScaler');
+  scaler.style.width = (newW / Math.max(1.0, zoom)) + 'px';
+  // Reset scope picker inline styles so it stretches to fill the resized banner
+  var panel = document.getElementById('scopeTreePanel');
+  if (panel) { panel.style.left = '10px'; panel.style.right = '10px'; panel.style.width = ''; }
+  drawWatermark();
+});
+
+document.addEventListener('mouseup', function() {
+  if (isResizing) { isResizing = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+});
+
+document.getElementById('scopeTreePanel').addEventListener('mousedown', function(e) {
+  e.stopPropagation();
+});
 
 
 
