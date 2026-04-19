@@ -225,8 +225,26 @@
   .feedback-dropdown-title { font-size: 11px; color: #999; font-weight: 500; padding: 4px 14px 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
   .feedback-option { padding: 7px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
   .feedback-option:hover { background: #f5f5f7; }
-  .feedback-option input { accent-color: #b73eb4; cursor: pointer; }
-  .feedback-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 14px 4px; border-top: 1px solid #f0f0f0; margin-top: 4px; }
+  .feedback-option input { accent-color: #b73eb4; cursor: pointer; }  
+  .feedback-buttons { display: flex; justify-content: flex-end; gap: 8px;}
+  .feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 0 14px 10px;
+}
+
+.feedback-disclosure {
+  font-size: 11px;
+  color: #999;
+  line-height: 1.5;
+  font-style: italic;
+  padding: 6px 14px 4px 14px;
+  border-top: 1px solid #f0f0f0;
+  margin: 6px 0 0;
+}
 
   .input-area { border-top: 1px solid #eee; flex-shrink: 0; position: relative; z-index: 10; background: #fff; }
   .input-row { padding: 10px 12px 6px; display: flex; gap: 7px; align-items: center; }
@@ -566,7 +584,7 @@
       </div>
       <button class="ask-btn" onclick="askAssistantAboutDoc()">
         <svg class="summ-spark" width="14" height="14" viewBox="0 0 24 24" fill="none"><path stroke="white" stroke-width="1.4" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke="white" stroke-width=".75" opacity="0.85" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
-        Ask AI Assistant about this document
+        Ask AI Assistant About This Document
       </button>
     </div>
   </div><!-- end paneScaler -->
@@ -608,7 +626,7 @@
       <p>Summaries are generated from the document's <strong>indexed text</strong>. Redacted content will appear redacted in summaries even for users with unredacted access.</p>
       <p>Summary content is subject to the same <strong>watermarking and copy protection</strong> policies as the document itself.</p>
       <p>AI-generated content may contain errors. Always verify important information against the original document.</p>
-      <p style="color:#5d676f;">Powered by Claude · <a href="https://www.anthropic.com/legal/privacy" style="color:#4d9ff7;" target="_blank">Privacy Policy</a> · <a href="https://www.sharevault.com" style="color:#4d9ff7;" target="_blank">About AI Policy</a></p>
+      <p style="color:#5d676f;"><a href="https://sharevault-pdfs.s3.us-west-2.amazonaws.com/policy/ShareVault+Trusted+AI+Management+Policy+-+Summary.pdf" style="color:#4d9ff7;" target="_blank">ShareVault AI Policy</a></p>
     </div>
     <div class="about-modal-footer"><button class="about-ok-btn" onclick="closeAboutSummarizer()">OK</button></div>
   </div>
@@ -623,16 +641,15 @@
       </div>
       <button class="about-modal-close" onclick="closeAboutAI()">✕</button>
     </div>
-    <div class="about-modal-body">
-      <p><strong>ShareVault AI Assistant</strong> answers user questions about the documents in this ShareVault using a generative AI model (Claude 4.6 in this ShareVault).</p>
-      <p>Chat content is private — your questions and AI responses are never visible to other users or administrators. <a href="#" onclick="showTrackingNotice();return false;" style="color:#b73eb4;">What we track</a></p>
-      <p style="color:#5d676f;"></p>
-      <p>Redacted content will be excluded in responses even for users with permission to view redacted documents.</p>
-      <p>AI-generated responses may contain errors. Always verify important information against the original documents.</p>
-      <p>ShareVault logs usage metadata for governance purposes — including response times, document citations, and AI-generated topic labels — but never the content of your questions or responses.</p>
-    </div>
+	<div class="about-modal-body">
+	  <p><strong>ShareVault AI Assistant</strong> can help you not only with questions about how to use ShareVault, but also — if enabled by your administrator — with questions about the documents in this ShareVault using a generative AI model (Claude Sonnet 4.6 in this ShareVault).</p>
+	  <p>Chat content is private — your questions and AI responses are never visible to other users or administrators. <a href="#" onclick="showTrackingNotice();return false;" style="color:#b73eb4;">What we track</a></p>
+	  <p>When answering document questions, redacted content will be excluded from responses even for users with permission to view redacted documents.</p>
+	  <p>AI-generated responses may contain errors. Always verify important information against the original documents.</p>
+	  <p>ShareVault logs usage metadata for governance purposes — including response times, document citations, and AI-generated topic labels — but never the content of your questions or responses.</p>
+	</div>
     <div class="about-modal-footer" style="display:flex;align-items:center;justify-content:space-between;">
-      <a href="https://www.sharevault.com" style="color:#4d9ff7;font-size:12px;text-decoration:none;" target="_blank">ShareVault AI Policy</a>
+      <a href="https://sharevault-pdfs.s3.us-west-2.amazonaws.com/policy/ShareVault+Trusted+AI+Management+Policy+-+Summary.pdf" style="color:#4d9ff7;font-size:12px;text-decoration:none;" target="_blank">ShareVault AI Policy</a>
       <button class="about-ok-btn" onclick="closeAboutAI()">OK</button>
     </div>
   </div>
@@ -1075,9 +1092,9 @@ var conversations = {
   function showAINotice() { document.getElementById('aboutAIOverlay').classList.add('open'); }
   function closeAboutAI() { document.getElementById('aboutAIOverlay').classList.remove('open'); }
 
-  function showTrackingNotice() {
-    alert('The content of your questions and AI responses is never logged or visible to anyone else.\n\nShareVault AI Assistant logs usage metadata for governance purposes, including:\n* Number of words in your queries and responses.\n* Response times.\n* Document citations.\n* AI-generated topic labels.');
-  }
+function showTrackingNotice() {
+  alert('The content of your questions and AI responses is never logged or visible to anyone else.\n\nOnly limited usage information is logged for governance purposes, including:\n* AI-generated query topics.\n* The file(s) or folders(s) (if selected) you choose to ask about.\n* Feedback you submit (via thumbs-up or thumbs-down), including any comments you provide.\n* Document citations in the AI responses.\n* Number of words in queries and responses.\n* Response times.');
+}
 
   function drawWatermark() {
     var wrap = document.getElementById('msgsWrap');
@@ -1436,25 +1453,27 @@ var conversations = {
 	    '</div>' +
 	  '</div>' +
       '</div>' +
-      '<div class="feedback-dropdown" id="' + uid + 'up">' +
-        '<div class="feedback-dropdown-title">What was useful?</div>' +
-        '<textarea class="feedback-comment" id="' + uid + 'upcomment" placeholder="What was useful about this response? (optional)" maxlength="500"></textarea>' +
-        '<div class="feedback-actions">' +
-          '<button class="confirm-btn no" id="' + uid + 'upcancel">Cancel</button>' +
-          '<button  style="background:#1a9e4a;" class="confirm-btn yes" id="' + uid + 'upsubmit">Submit</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="feedback-dropdown" id="' + uid + '">' +
-        '<div class="feedback-dropdown-title">What was the problem?</div>' +
-        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="incorrect"> Incorrect information</label>' +
-        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="harmful"> Harmful content</label>' +
-        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="other"> Other</label>' +
-        '<textarea class="feedback-comment" id="' + uid + 'comment" placeholder="Tell us more (optional)" maxlength="500"></textarea>' +
-        '<div class="feedback-actions">' +
-          '<button class="confirm-btn no" id="' + uid + 'cancel">Cancel</button>' +
-          '<button class="confirm-btn yes" id="' + uid + 'submit" disabled>Submit</button>' +
-        '</div>' +
-      '</div>';
+	'<div class="feedback-dropdown" id="' + uid + 'up">' +
+	  '<div class="feedback-dropdown-title">What was useful?</div>' +
+	  '<textarea class="feedback-comment" id="' + uid + 'upcomment" placeholder="What was useful about this response? (optional)" maxlength="500"></textarea>' +
+	  '<div class="feedback-disclosure">Your feedback, including this question and response, will be sent to ShareVault to help improve AI Assistant. This information is not visible to your administrator.</div>' +
+	  '<div class="feedback-actions">' +
+		'<button class="confirm-btn no" id="' + uid + 'upcancel">Cancel</button>' +
+		'<button style="background:#1a9e4a;" class="confirm-btn yes" id="' + uid + 'upsubmit">Submit</button>' +
+	  '</div>' +
+	'</div>' +
+	'<div class="feedback-dropdown" id="' + uid + '">' +
+	  '<div class="feedback-dropdown-title">What was the problem?</div>' +
+	  '<label class="feedback-option"><input type="radio" name="' + uid + '" value="incorrect"> Incorrect information</label>' +
+	  '<label class="feedback-option"><input type="radio" name="' + uid + '" value="harmful"> Harmful content</label>' +
+	  '<label class="feedback-option"><input type="radio" name="' + uid + '" value="other"> Other</label>' +
+	  '<textarea class="feedback-comment" id="' + uid + 'comment" placeholder="Tell us more (optional)" maxlength="500"></textarea>' +
+	  '<div class="feedback-disclosure">Your feedback, including this question and response, will be sent to ShareVault to help improve AI Assistant. This information is not visible to your administrator.</div>' +
+	  '<div class="feedback-actions">' +
+		'<button class="confirm-btn no" id="' + uid + 'cancel">Cancel</button>' +
+		'<button class="confirm-btn yes" id="' + uid + 'submit" disabled>Submit</button>' +
+	  '</div>' +
+	'</div>';
 
     var actions = wrap.querySelector('[data-uid="' + uid + '"]');
     var upBtn = actions ? actions.querySelectorAll('.action-btn')[0] : null;
@@ -1648,7 +1667,7 @@ var conversations = {
     msgs.innerHTML = '';
     var convoDate = convo.yesterday ? new Date(Date.now() - 86400000) : new Date();
     checkDateDivider(msgs, convoDate);
-    msgs.appendChild(addAiMessage('Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.', false, [], true));
+    msgs.appendChild(addAiMessage('Hi John! Ask me anything about the documents in the "Project Optima" ShareVault, or about how to use ShareVault.', false, [], true));
     for (var i = 0; i < convo.messages.length; i++) {
       var m = convo.messages[i];
       var isLatest = (i === convo.messages.length - 1) && m.role === 'ai';
