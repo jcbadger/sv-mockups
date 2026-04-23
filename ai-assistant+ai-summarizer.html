@@ -29,9 +29,7 @@
     display: flex; flex-direction: column;
     transform: translateX(-100%); visibility: hidden;
     transition: transform 0.25s ease, visibility 0s linear 0.25s;
-    z-index: 200;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.12), 0 -6px 16px rgba(0,0,0,0.18);
-    will-change: width;
+    z-index: 200; box-shadow: 4px 0 20px rgba(0,0,0,0.12), 0 -6px 16px rgba(0,0,0,0.18);
   }
   .drawer.open { transform: translateX(0); visibility: visible; transition: transform 0.25s ease, visibility 0s linear 0s; }
   .drawer.docked-right { left: auto; right: 0; border-right: none; border-left: 1px solid #e0e0e0; transform: translateX(100%); box-shadow: -4px 0 20px rgba(0,0,0,0.12); }
@@ -170,7 +168,7 @@
   }
 
   /* Timestamps: inline flex sibling, hidden by default, shown on hover */
-  .msg-row { display: flex; align-items: flex-start; gap: 6px; }
+  .msg-row { display: flex; align-items: center; gap: 6px; }
   .msg-row.ai  { justify-content: flex-start; }
   .msg-row.usr { justify-content: flex-end; }
   .msg-ts { align-self: center; }
@@ -185,6 +183,7 @@
   .bubble-actions.no-thumbs { justify-content: flex-end; }
   .bubble-feedback-msg.show { opacity: 1; }
   .bubble-feedback-msg.thanks { color: #1a9e4a !important; }
+  .bubble-feedback-msg.negative { color: #d0021b !important; }
   .bubble-feedback-msg.canceled { color: #888 !important; }
   .action-btn {
     background: none; border: none; cursor: pointer;
@@ -216,7 +215,7 @@
     font-size: 12px; font-family: inherit; resize: none; outline: none;
     color: #333; line-height: 1.4; height: 56px;
   }
-  .summ-feedback-comment:focus { border-color: #4d9ff7; }
+  .summ-feedback-comment:focus { border-color: #b73eb4; }
   .feedback-dropdown {
     position: fixed;
     background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
@@ -227,30 +226,16 @@
   .feedback-dropdown-title { font-size: 11px; color: #999; font-weight: 500; padding: 4px 14px 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
   .feedback-option { padding: 7px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
   .feedback-option:hover { background: #f5f5f7; }
-  .feedback-option input { accent-color: #b73eb4; cursor: pointer; }  
-  .feedback-buttons { display: flex; justify-content: flex-end; gap: 8px;}
-  .feedback-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 0 14px 10px;
-}
-
-.feedback-disclosure {
-  font-size: 11px;
-  color: #999;
-  line-height: 1.5;
-  font-style: italic;
-  padding: 6px 14px 4px 14px;
-  border-top: 1px solid #f0f0f0;
-  margin: 6px 0 0;
-}
+  .feedback-option input { accent-color: #b73eb4; cursor: pointer; }
+  .feedback-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 14px 4px; border-top: 1px solid #f0f0f0; margin-top: 4px; }
+  .feedback-disclosure {
+    font-size: 11px; color: #999; line-height: 1.5; font-style: italic;
+    padding: 6px 14px 4px; border-top: 1px solid #f0f0f0; margin: 6px 0 0;
+  }
 
   .input-area { border-top: 1px solid #eee; flex-shrink: 0; position: relative; z-index: 10; background: #fff; }
   .input-row { padding: 10px 12px 6px; display: flex; gap: 7px; align-items: center; }
-  .chat-inp { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; font-size: 14px; outline: none; font-family: inherit; resize: none; line-height: 1.4; max-height: 240px; overflow-y: auto; display: block; }
+  .chat-inp { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; font-size: 14px; outline: none; font-family: inherit; resize: none; line-height: 1.4; max-height: 120px; overflow-y: auto; display: block; }
   .chat-inp:focus { border-color: #b73eb4; }
   .input-row { align-items: flex-end; }  /* align send btn to bottom when textarea grows */
   .send-btn { background: linear-gradient(135deg, #b73eb4, #4B55D6); border: none; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -406,7 +391,7 @@
     font-weight: 600; white-space: nowrap; cursor: pointer;
     transition: border-color 0.15s; font-size: 13px;
   }
-  .viewer-btn:hover { border-color: #4d9ff7; }
+  .viewer-btn:hover { border-color: #b73eb4; }
   .summ-spark { flex-shrink: 0; }
 
   .summary-pane {
@@ -417,7 +402,7 @@
   .summary-pane.open { display: flex; }
 
   .pane-header {
-    background: #4d9ff7; color: #fff;
+    background: linear-gradient(135deg, #b73eb4 0%, #4B55D6 100%); color: #fff;
     padding: 0 8px; flex-shrink: 0;
     display: flex; align-items: center;
   }
@@ -433,8 +418,8 @@
     font-family: "DM Sans", -apple-system, sans-serif; font-size: 12px; font-weight: 500;
     cursor: pointer; transition: border-color 0.12s, color 0.12s, background 0.12s;
   }
-  .toggle-btn.active { background: #4d9ff7; color: #fff; border-color: #4d9ff7; }
-  .toggle-btn:hover:not(.active) { border-color: #4d9ff7; color: #4d9ff7; }
+  .toggle-btn.active { background: linear-gradient(135deg, #b73eb4 0%, #4B55D6 100%); color: #fff; border-color: #b73eb4; }
+  .toggle-btn:hover:not(.active) { border-color: #b73eb4; color: #b73eb4; }
 
   .content-wrap { position: relative; flex: 1; overflow: hidden; }
   .summ-wm-canvas {
@@ -443,9 +428,9 @@
   }
   .summary-content { height: 100%; overflow-y: auto; padding: 14px 16px 10px; user-select: none; -webkit-user-select: none; }
   .loading-wrap { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #5d676f; height: 60%; position: relative; z-index: 1; }
-  .spinner { width: 14px; height: 14px; border: 2px solid #e0e8ee; border-top-color: #4d9ff7; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  .spinner { width: 14px; height: 14px; border: 2px solid #e0e8ee; border-top-color: #b73eb4; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .summary-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #4d9ff7; margin-bottom: 5px; position: relative; z-index: 1; }
+  .summary-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #b73eb4; margin-bottom: 5px; position: relative; z-index: 1; }
   .summary-body { position: relative; z-index: 1; }
   .summary-text p { margin-bottom: 9px; font-size: 13px; line-height: 1.65; color: #1a1a1a; }
   .summary-text ul { padding-left: 16px; margin-bottom: 9px; }
@@ -454,7 +439,7 @@
 
   .pane-footer { flex-shrink: 0; border-top: 1px solid #e0e8ee; background: #f2f3f9; overflow: hidden; }
   .summ-disclaimer { padding: 4px 8px; font-size: 11px; color: #5d676f; border-bottom: 1px solid #e0e8ee; background: #f2f3f9; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .summ-disclaimer-link { font-size: 11px; color: #4d9ff7; cursor: pointer; }
+  .summ-disclaimer-link { font-size: 11px; color: #b73eb4; cursor: pointer; }
   .summ-disclaimer-link:hover { text-decoration: underline; }
   /* summ row: 3-col grid — text left | thumbs center | copy right */
   .summ-feedback-row {
@@ -464,6 +449,7 @@
   }
   .summ-feedback-text { font-size: 11px; color: #5d676f; white-space: nowrap; justify-self: start; }
   .summ-feedback-text.thanks { color: #1a9e4a; }
+  .summ-feedback-text.negative { color: #d0021b; }
   .summ-feedback-text.removed { color: #888; }
   .summ-feedback-btns { display: flex; gap: 4px; align-items: center; justify-self: center; }
   .summ-copy-group { display: flex; align-items: center; gap: 4px; justify-self: end; }
@@ -478,17 +464,17 @@
   .summ-feedback-btns { display: flex; gap: 4px; align-items: center; }
   .summ-copy-right { margin-left: 8px; }
   .summ-action-btn { background: none; border: none; cursor: pointer; padding: 2px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.15s, color 0.15s; color: #5d676f; }
-  .summ-action-btn:hover { background: rgba(77,159,247,0.1); }
+  .summ-action-btn:hover { background: rgba(183,62,180,0.08); }
   .summ-action-btn.active-up { color: #1a9e4a; background: rgba(26,158,74,0.1); }
   .summ-action-btn.active-down { color: #d0021b; background: rgba(208,2,27,0.1); }
   .ask-btn {
     display: flex; align-items: center; justify-content: center; gap: 5px;
     width: calc(100% - 14px); margin: 5px 7px 4px;
-    padding: 6px 8px; background: #4d9ff7; border: none; border-radius: 0;
+    padding: 6px 8px; background: linear-gradient(135deg, #b73eb4 0%, #4B55D6 100%); border: none; border-radius: 0;
     color: #fff; font-family: "DM Sans", -apple-system, sans-serif;
-    font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
   }
-  .ask-btn:hover { background: #3a8ee0; }
+  .ask-btn:hover { opacity: 0.88; }
 
   #paneScaler { transform-origin: top left; display: flex; flex-direction: column; }
 
@@ -501,7 +487,7 @@
   .summ-dropdown-title { font-size: 11px; color: #999; font-weight: 500; padding: 4px 14px 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
   .summ-feedback-option { padding: 7px 14px; font-size: 13px; color: #222; cursor: pointer; display: flex; align-items: center; gap: 8px; }
   .summ-feedback-option:hover { background: #f5f5f7; }
-  .summ-feedback-option input { accent-color: #4d9ff7; cursor: pointer; }
+  .summ-feedback-option input { accent-color: #b73eb4; cursor: pointer; }
   .summ-feedback-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 14px 4px; border-top: 1px solid #f0f0f0; margin-top: 4px; }
   .summ-fb-cancel { background: #fff; border: 1.5px solid #e0e8ee; border-radius: 3px; padding: 4px 10px; font-size: 11.5px; color: #5d676f; cursor: pointer; }
   .summ-fb-cancel:hover { border-color: #5d676f; }
@@ -509,7 +495,7 @@
   .summ-fb-submit:hover { background: #c73330; }
   .summ-fb-submit:disabled { background: #ccc; cursor: default; }
   .summ-copy-btn { display: none; background: none; border: none; cursor: pointer; color: #5d676f; padding: 2px; border-radius: 50%; transition: background 0.15s; }
-  .summ-copy-btn:hover { background: rgba(77,159,247,0.1); color: #4d9ff7; }
+  .summ-copy-btn:hover { background: rgba(183,62,180,0.08); color: #b73eb4; }
 
   .about-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 99999; align-items: center; justify-content: center; }
   .about-overlay.open { display: flex; }
@@ -521,8 +507,23 @@
   .about-modal-body p { margin-bottom: 10px; }
   .about-modal-body p:last-child { margin-bottom: 0; }
   .about-modal-footer { padding: 10px 16px 14px; text-align: right; border-top: 1px solid #e0e8ee; }
-  .about-ok-btn { background: #4d9ff7; border: none; border-radius: 3px; padding: 6px 18px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
-  .about-ok-btn:hover { background: #3a8ee0; }
+  .about-ok-btn { background: linear-gradient(135deg, #b73eb4 0%, #4B55D6 100%); border: none; border-radius: 3px; padding: 6px 18px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .about-ok-btn:hover { opacity: 0.88; }
+
+  /* Redaction notice banner */
+  .summ-redact-banner {
+    display: none; align-items: center; gap: 6px;
+    background: #fff8e6; border-bottom: 1px solid #f0d070;
+    padding: 4px 10px; font-size: 11px; color: #7a5800; line-height: 1;
+    flex-shrink: 0; white-space: nowrap; overflow: hidden;
+  }
+  .summ-redact-banner.show { display: flex; }
+  .summ-redact-icon { flex-shrink: 0; display: flex; align-items: center; }
+  .summ-redact-label { white-space: nowrap; }
+  .summ-redact-more {
+    border-bottom: 1px dotted #a07820; cursor: help;
+    white-space: nowrap;
+  }
   /* ─────────────────────────────────────────────────────────────────── */
 </style>
 </head>
@@ -556,6 +557,10 @@
         <button class="toggle-btn" id="btn-detailed" onclick="setLength('detailed')">Detailed</button>
       </div>
     </div>
+    <div class="summ-redact-banner" id="summRedactBanner">
+      <span class="summ-redact-icon"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="13" height="13" viewBox="0 0 32 32"><defs><path id="a" d="M13.81 1.79c1.21-2.39 3.17-2.39 4.38 0L31.3 27.68c1.21 2.39.81 4.32-.9 4.32H1.6c-1.71 0-2.11-1.93-.9-4.32z"/><mask id="b" width="31.998" height="32.002" x="0" y="0" fill="#fff" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox"><use xlink:href="#a"/></mask></defs><g fill="none" fill-rule="evenodd"><use xlink:href="#a" stroke="#F59E0E" stroke-width="7" mask="url(#b)"/><path fill="#F49E0E" fill-rule="nonzero" d="M14.5 23.82h3v3h-3zm0-12.82h3v10.82h-3z"/></g></svg></span>
+      <span class="summ-redact-label">Summarizing redacted version —&nbsp;</span><span class="summ-redact-more" title="Although you have access to the unredacted document, AI Summarizer uses only redacted content, so the summary reflects only the redacted content.">more info</span>
+    </div>
     <div class="content-wrap" id="summContentWrap">
       <canvas class="summ-wm-canvas" id="summWmCanvas"></canvas>
       <div class="summary-content" id="summaryContent">
@@ -586,7 +591,7 @@
       </div>
       <button class="ask-btn" onclick="askAssistantAboutDoc()">
         <svg class="summ-spark" width="14" height="14" viewBox="0 0 24 24" fill="none"><path stroke="white" stroke-width="1.4" stroke-linejoin="round" d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke="white" stroke-width=".75" opacity="0.85" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
-        Ask AI Assistant About This Document
+        Ask AI Assistant about this document
       </button>
     </div>
   </div><!-- end paneScaler -->
@@ -598,6 +603,7 @@
   <label class="summ-feedback-option"><input type="radio" name="sfbproblem" value="harmful"> Harmful content</label>
   <label class="summ-feedback-option"><input type="radio" name="sfbproblem" value="other"> Other</label>
   <textarea class="summ-feedback-comment" id="summFbComment" placeholder="Tell us more (optional)" maxlength="500"></textarea>
+  <div class="feedback-disclosure">Your feedback will be sent to ShareVault to help improve AI Summarizer. This information is not visible to your administrator.</div>
   <div class="summ-feedback-actions">
     <button class="summ-fb-cancel" id="summFbCancel">Cancel</button>
     <button class="summ-fb-submit" id="summFbSubmit" disabled>Submit</button>
@@ -608,9 +614,10 @@
 <div class="summ-dropdown" id="summUpDropdown">
   <div class="summ-dropdown-title">What was useful?</div>
   <textarea class="summ-feedback-comment" id="summUpComment" placeholder="What was useful about this summary? (optional)" maxlength="500"></textarea>
+  <div class="feedback-disclosure">Your feedback will be sent to ShareVault to help improve AI Summarizer. This information is not visible to your administrator.</div>
   <div class="summ-feedback-actions">
     <button class="summ-fb-cancel" id="summUpCancel">Cancel</button>
-    <button class="summ-fb-submit" id="summUpSubmit">Submit</button>
+    <button class="summ-fb-submit" id="summUpSubmit" style="background:#1a9e4a;">Submit</button>
   </div>
 </div>
 
@@ -628,11 +635,12 @@
       <p>Summaries are generated from the document's <strong>indexed text</strong>. Redacted content will appear redacted in summaries even for users with unredacted access.</p>
       <p>Summary content is subject to the same <strong>watermarking and copy protection</strong> policies as the document itself.</p>
       <p>AI-generated content may contain errors. Always verify important information against the original document.</p>
-      <p style="color:#5d676f;"><a href="https://sharevault-pdfs.s3.us-west-2.amazonaws.com/policy/ShareVault+Trusted+AI+Management+Policy+-+Summary.pdf" style="color:#4d9ff7;" target="_blank">ShareVault AI Policy</a></p>
+      <p style="color:#5d676f;">Powered by Claude · <a href="https://www.anthropic.com/legal/privacy" style="color:#b73eb4;" target="_blank">Privacy Policy</a> · <a href="https://www.sharevault.com" style="color:#b73eb4;" target="_blank">About AI Policy</a></p>
     </div>
     <div class="about-modal-footer"><button class="about-ok-btn" onclick="closeAboutSummarizer()">OK</button></div>
   </div>
 </div>
+<!-- ─────────────────────────────────────────────────────────────────── -->
 
 <div class="about-overlay" id="aboutAIOverlay">
   <div class="about-modal">
@@ -643,21 +651,19 @@
       </div>
       <button class="about-modal-close" onclick="closeAboutAI()">✕</button>
     </div>
-	<div class="about-modal-body">
-	  <p><strong>ShareVault AI Assistant</strong> can help you not only with questions about how to use ShareVault, but also — if enabled by your administrator — with questions about the documents in this ShareVault using a generative AI model (Claude Sonnet 4.6 in this ShareVault).</p>
-	  <p>Chat content is private — your questions and AI responses are never visible to other users or administrators. <a href="#" onclick="showTrackingNotice();return false;" style="color:#b73eb4;">What we track</a></p>
-	  <p>When answering document questions, redacted content will be excluded from responses even for users with permission to view redacted documents.</p>
-	  <p>AI-generated responses may contain errors. Always verify important information against the original documents.</p>
-	  <p>ShareVault logs usage metadata for governance purposes — including response times, document citations, and AI-generated topic labels — but never the content of your questions or responses.</p>
-	</div>
+    <div class="about-modal-body">
+      <p><strong>ShareVault AI Assistant</strong> can help you not only with questions about how to use ShareVault, but also — if enabled by your administrator — with questions about the documents in this ShareVault using a generative AI model (Claude Sonnet 4.6 in this ShareVault).</p>
+      <p>Chat content is private — your questions and AI responses are never visible to other users or administrators. <a href="#" onclick="showTrackingNotice();return false;" style="color:#b73eb4;">What we track</a></p>
+      <p>When answering document questions, redacted content will be excluded from responses even for users with permission to view redacted documents.</p>
+      <p>AI-generated responses may contain errors. Always verify important information against the original documents.</p>
+      <p>ShareVault logs usage metadata for governance purposes — including response times, document citations, and AI-generated topic labels — but never the content of your questions or responses.</p>
+    </div>
     <div class="about-modal-footer" style="display:flex;align-items:center;justify-content:space-between;">
-      <a href="https://sharevault-pdfs.s3.us-west-2.amazonaws.com/policy/ShareVault+Trusted+AI+Management+Policy+-+Summary.pdf" style="color:#4d9ff7;font-size:12px;text-decoration:none;" target="_blank">ShareVault AI Policy</a>
+      <a href="https://sharevault-pdfs.s3.us-west-2.amazonaws.com/policy/ShareVault+Trusted+AI+Management+Policy+-+Summary.pdf" style="color:#b73eb4;font-size:12px;text-decoration:none;" target="_blank">ShareVault AI Policy</a>
       <button class="about-ok-btn" onclick="closeAboutAI()">OK</button>
     </div>
   </div>
 </div>
-
-<!-- ─────────────────────────────────────────────────────────────────── -->
 
 <button class="fab" id="fab" onclick="openDrawer()">
   <div class="fab-tooltip">AI Assistant</div>
@@ -736,8 +742,7 @@
     <!-- Tree picker: positioned absolute below chips -->
     <div id="scopeTreePanel" style="position:absolute;left:10px;right:10px;top:100%;background:#fff;border:1px solid #d0bff0;border-radius:8px;box-shadow:0 6px 20px rgba(90,63,160,0.15);z-index:500;max-height:320px;overflow:hidden;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px 5px;border-bottom:1px solid #ede8f8;flex-shrink:0;">
-        <span style="font-size:11px;font-weight:600;color:#5a3fa0;">Select file(s) or folder(s) to focus on:
-</span>
+        <span style="font-size:11px;font-weight:600;color:#5a3fa0;text-transform:uppercase;letter-spacing:0.04em;">Ask about…</span>
         <button onclick="closeScopePicker()" style="background:none;border:none;cursor:pointer;color:#9a86c0;font-size:14px;padding:0;line-height:1;">✕</button>
       </div>
       <div style="padding:5px 10px;border-bottom:1px solid #f0ebf8;flex-shrink:0;display:flex;align-items:center;gap:6px;background:#faf8ff;">
@@ -854,23 +859,16 @@
         <div class="suggestion-item" onclick="askSuggestion(event, 'What do the BOD minutes say about major decisions in 2024?')">What do the BOD minutes say about major decisions in 2024?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'Are there any documents related to intellectual property?')">Are there any documents related to intellectual property?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'What regulatory filings are included in this ShareVault?')">What regulatory filings are included in this ShareVault?</div>
-		<div class="suggestion-item" onclick="askSuggestion(event, 'What are the key terms in the employment agreements?')">What are the key terms in the employment agreements?</div>
-		<div class="suggestion-item" onclick="askSuggestion(event, 'What does the cap table show about ownership structure?')">What does the cap table show about ownership structure?</div>
-		<div class="suggestion-item" onclick="askSuggestion(event, 'What are the key financial risks disclosed in this ShareVault?')">What are the key financial risks disclosed in this ShareVault?</div>
-      </div>
-
-      <div class="suggestions-panel" id="howtoPanel">
-        <div class="suggestions-header">How do I use ShareVault?</div>
-        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I search for documents?')">How do I search for documents?</div>
-        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I view or download files?')">How do I view or download files?</div>
-        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I reach ShareVault support?')">How do I reach ShareVault support?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What regulatory filings are included in this ShareVault?')">What regulatory filings are included in this ShareVault?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key terms in the employment agreements?')">What are the key terms in the employment agreements?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What does the cap table show about ownership structure?')">What does the cap table show about ownership structure?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key financial risks disclosed in this ShareVault?')">What are the key financial risks disclosed in this ShareVault?</div>
       </div>
     </div>
     <div class="disclaimer">AI may make mistakes · <a href="#" onclick="showAINotice();return false;">About AI Assistant</a></div>
   </div>
   </div><!-- end drawerScaler -->
 </div><!-- end drawer -->
-
 
 <script>
 
@@ -908,6 +906,7 @@
     }
     var currentDocParam = params.get('currentDoc');
     if (currentDocParam) window._currentDoc = decodeURIComponent(currentDocParam);
+    window._redactedDoc = params.get('redact') === 'TRUE';
   })();
   // ────────────────────────────────────────────────────────────
 
@@ -1055,19 +1054,64 @@ var conversations = {
     { name: '4.3.5 IPAssignmentAgreement.pdf', path: '4.3.5 Legal / Intellectual Property / IPAssignmentAgreement.pdf' }
   ]
 },
-'How do I search for documents?': {
-      text: 'You can search documents in this ShareVault using the search bar at the top of the Documents page. Type any keyword and results will appear instantly across all documents you have access to. You can filter results by folder, file type, and date. Full-text search is supported — meaning the search looks inside document content, not just file names. For best results, use specific terms like company names, clause types, or financial metrics. You can also use the folder tree on the left to browse documents by category.<br><a href="https://www.sharevault.net/help/search" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Searching documents</a>',
+  
+'How does Tetraplex position itself against its main competitors?': {
+  text: 'Based on the materials in this ShareVault, Tetraplex competes primarily against three players: DataStream Inc., Nexora Analytics, and legacy enterprise vendors like SAP and Oracle in the data processing space. Tetraplex\'s positioning centers on three differentiators. First, processing speed — their proprietary pipeline architecture processes data 4-8x faster than DataStream according to the independent benchmark study in this ShareVault. Second, ease of deployment — average time-to-value is documented at 6 weeks versus an industry average of 4-6 months for comparable enterprise solutions. Third, pricing — Tetraplex\'s consumption-based model is cited in several customer case studies as a key reason for switching from legacy vendors.',
+  sources: [
+    { name: '3.2.1 CompetitiveAnalysis-2024.pdf', path: '3.2.1 Sales / Competitive Intelligence / CompetitiveAnalysis-2024.pdf' },
+    { name: '3.2.4 BenchmarkStudy-DataStream.pdf', path: '3.2.4 Sales / Competitive Intelligence / BenchmarkStudy-DataStream.pdf' },
+    { name: '5.1.2 CustomerCaseStudies-2024.pdf', path: '5.1.2 Marketing / Case Studies / CustomerCaseStudies-2024.pdf' }
+  ]
+},
+'Summarize the key financial highlights from the 2024 annual report': {
+  text: 'Tetraplex reported strong performance in 2024. Revenue grew 18% year-over-year to $142.3M, driven primarily by expansion in the enterprise segment which now represents 67% of total revenue. Gross margin improved to 71%, up from 68% in 2023, reflecting favorable product mix and operational efficiencies. EBITDA reached $28.4M, a 34% increase over the prior year. The company ended 2024 with $47.2M in cash and no long-term debt. ARR grew to $138M with net revenue retention of 118%, indicating strong upsell momentum within the existing customer base.',
+  sources: [
+    { name: '2.1.1 AnnualReport-2024.pdf', path: '2.1.1 Financial / Annual Reports / AnnualReport-2024.pdf' },
+    { name: '2.1.2 AuditedFinancials-2024.pdf', path: '2.1.2 Financial / Annual Reports / AuditedFinancials-2024.pdf' }
+  ]
+},
+'What do the BOD minutes say about major decisions in 2024?': {
+  text: 'The Board of Directors minutes from 2024 reflect several significant decisions. In Q1, the board approved a $15M Series C extension at a $380M post-money valuation. In Q2, the board authorized the acquisition of a smaller competitor, Proxima Analytics, for $8.2M in cash. Q3 minutes reflect approval of a new equity incentive plan, increasing the option pool by 4.2%. The most notable Q4 decision was the board\'s resolution to explore strategic alternatives, including a potential sale of the company — which is the context for this Project Optima ShareVault.',
+  sources: [
+    { name: '4.1.1 BODMinutes-Q1-2024.pdf', path: '4.1.1 Legal / Board Minutes / BODMinutes-Q1-2024.pdf' },
+    { name: '4.1.2 BODMinutes-Q2-2024.pdf', path: '4.1.2 Legal / Board Minutes / BODMinutes-Q2-2024.pdf' },
+    { name: '4.1.3 BODMinutes-Q3-2024.pdf', path: '4.1.3 Legal / Board Minutes / BODMinutes-Q3-2024.pdf' },
+    { name: '4.1.4 BODMinutes-Q4-2024.pdf', path: '4.1.4 Legal / Board Minutes / BODMinutes-Q4-2024.pdf' }
+  ]
+},
+'Are there any documents related to intellectual property?': {
+  text: 'Yes — this ShareVault contains several IP-related documents in the Legal / Intellectual Property folder. There are 14 granted US patents covering Tetraplex\'s core data processing and analytics technology, with expiration dates ranging from 2031 to 2039. Additionally, there are 6 pending patent applications. This ShareVault also includes trademark registrations for the Tetraplex brand in the US, EU, and UK, plus 3 pending international applications. There\'s a comprehensive IP assignment agreement covering all employee and contractor contributions, and a technology license agreement with a third-party data provider.',
+  sources: [
+    { name: '4.3.1 PatentPortfolio-2024.pdf', path: '4.3.1 Legal / Intellectual Property / PatentPortfolio-2024.pdf' },
+    { name: '4.3.3 TrademarkRegistrations.pdf', path: '4.3.3 Legal / Intellectual Property / TrademarkRegistrations.pdf' },
+    { name: '4.3.5 IPAssignmentAgreement.pdf', path: '4.3.5 Legal / Intellectual Property / IPAssignmentAgreement.pdf' }
+  ]
+},
+    'What marketing documents are available?': {
+      text: 'The Marketing folder in this ShareVault contains a product overview deck, three customer case studies (Meridian Financial, Apex Manufacturing, and TechBridge Solutions), a competitive battle card set covering DataStream, Nexora, and Oracle, and a 2024 analyst briefing. There\'s also a brand guidelines document and two recorded product demo videos. The most recent document is a go-to-market strategy deck from Q4 2024 outlining Tetraplex\'s plans for the financial services vertical.',
+      sources: [
+        { name: '5.1.1 SalesDeck-Q4-2024.pdf', path: '5.1.1 Marketing / Sales Materials / SalesDeck-Q4-2024.pdf' },
+        { name: '5.1.2 CustomerCaseStudies-2024.pdf', path: '5.1.2 Marketing / Case Studies / CustomerCaseStudies-2024.pdf' },
+        { name: '5.1.3 SalesPlaybook-2024.pdf', path: '5.1.3 Marketing / Sales Materials / SalesPlaybook-2024.pdf' },
+        { name: '5.2.1 AnalystBriefing-2024.pdf', path: '5.2.1 Marketing / Analyst Relations / AnalystBriefing-2024.pdf' }
+      ]
+    },
+    'What is the Certificate of Incorporation?': {
+      text: 'The Certificate of Incorporation in this ShareVault shows Tetraplex Corporation was incorporated in Delaware on March 12, 2016. The company is authorized to issue 100,000,000 shares of common stock at $0.0001 par value, and 20,000,000 shares of preferred stock. The certificate has been amended three times — in 2018, 2021, and 2023 — primarily to increase authorized share counts in connection with funding rounds. The most recent amendment, filed January 2023, reflects the Series C preferred stock authorization.',
+      sources: [
+        { name: '4.3.2 CertificateOfIncorporation-Tetraplex.pdf', path: '4.3.2 Legal / Intellectual Property / CertificateOfIncorporation-Tetraplex.pdf' },
+        { name: '4.3.4 CertificateOfAmendment-2023.pdf', path: '4.3.4 Legal / Intellectual Property / CertificateOfAmendment-2023.pdf' }
+      ]
+    },
+    'How do I search for documents?': {
+      text: 'You can search documents in this ShareVault using the search bar at the top of the Documents page. Type any keyword and results will appear instantly across all documents you have access to. You can filter results by folder, file type, and date. Full-text search is supported — meaning the search looks inside document content, not just file names. For best results, use specific terms like company names, clause types, or financial metrics. You can also use the folder tree on the left to browse documents by category.\n\n<a href="https://www.sharevault.net/help/search" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Searching documents</a>',
       sources: []
     },
-'How do I view or download files?': {
-      text: 'To view a file, simply click on it in the Documents list and it will open in the secure document viewer. Your administrator has configured this ShareVault with the "Secure Save & Print" policy, which means you can save and print documents but copying text is restricted.<br>To download a file, click the download icon to the right of the filename in the document list, or use the download button in the viewer toolbar. Note that all downloaded files will be watermarked with your name, email, and the date and time of download.<br><a href="https://www.sharevault.net/help/viewing-documents" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Viewing documents</a><br><a href="https://www.sharevault.net/help/batch-download" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Batch download</a>',
+    'How do I view or download files?': {
+      text: 'To view a file, simply click on it in the Documents list and it will open in the secure document viewer. Your administrator has configured this ShareVault with the "Secure Save & Print" policy, which means you can save and print documents but copying text is restricted. To download a file, click the download icon to the right of the filename in the document list, or use the download button in the viewer toolbar. Note that all downloaded files will be watermarked with your name, email, and the date and time of download.\n\n<a href="https://www.sharevault.net/help/viewing-documents" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Viewing documents</a> &nbsp; <a href="https://www.sharevault.net/help/batch-download" target="_blank" style="color:#b73eb4;font-size:12px;">📖 ShareVault help: Batch download</a>',
       sources: []
     },
-'How do I reach ShareVault support?': {
-      text: 'I can connect you with ShareVault support right now. Would you prefer a <b>callback</b>, <b>text message</b> or <b>email</b> response?',
-      sources: [],
-      supportFlow: true
-    },
+
 	'What are the key terms in the employment agreements?': {
 	  text: 'The employment agreements in this ShareVault cover three executives: Arnold Chabot, Kim Fong, and Patrice Leroy. Key terms include at-will employment with 90-day notice for termination without cause, base salary plus performance bonus tied to annual targets, standard confidentiality and IP assignment obligations, and non-compete restrictions for 12 months post-employment within the data processing software industry. Each agreement also includes a companion Non-Compete Agreement that extends restrictions to solicitation of customers and employees.',
 	  sources: [
@@ -1089,15 +1133,20 @@ var conversations = {
 		{ name: '4.2.3 LegalDisclosures-2024.pdf', path: '4.2.3 Legal / Compliance / LegalDisclosures-2024.pdf' },
 		{ name: '4.3.6 PatentDisputeOpinion-OutsideCounsel.pdf', path: '4.3.6 Legal / Intellectual Property / PatentDisputeOpinion-OutsideCounsel.pdf' }
 	  ]
-	}
+	},
+    'How do I reach ShareVault support?': {
+      text: 'I can connect you with ShareVault support right now. Would you prefer a <b>callback</b>, <b>text message</b> or <b>email</b> response?',
+      sources: [],
+      supportFlow: true
+    }
   };
 
   function showAINotice() { document.getElementById('aboutAIOverlay').classList.add('open'); }
   function closeAboutAI() { document.getElementById('aboutAIOverlay').classList.remove('open'); }
 
-function showTrackingNotice() {
-  alert('The content of your questions and AI responses is never logged or visible to anyone else.\n\nOnly limited usage information is logged for governance purposes, including:\n* AI-generated query topics.\n* The file(s) or folders(s) (if selected) you choose to ask about.\n* Feedback you submit (via thumbs-up or thumbs-down), including any comments you provide.\n* Document citations in the AI responses.\n* Number of words in queries and responses.\n* Response times.');
-}
+  function showTrackingNotice() {
+    alert('The content of your questions and AI responses is never logged or visible to anyone else.\n\nOnly limited usage information is logged for governance purposes, including:\n* AI-generated query topics.\n* The file(s) or folders(s) (if selected) you choose to ask about.\n* Feedback you submit (via thumbs-up or thumbs-down), including any comments you provide.\n* Document citations in the AI responses.\n* Number of words in queries and responses.\n* Response times.');
+  }
 
   function drawWatermark() {
     var wrap = document.getElementById('msgsWrap');
@@ -1321,12 +1370,41 @@ function showTrackingNotice() {
     document.getElementById('btnLeft').classList.toggle('active', prevDockState === 'left');
     document.getElementById('btnRight').classList.toggle('active', prevDockState === 'right');
   }
+
+  function positionDropdown(dd, btn) {
+    // Measure actual rendered height
+    dd.style.visibility = 'hidden';
+    dd.classList.add('open');
+    var dropH = dd.offsetHeight;
+    var dropW = dd.offsetWidth || 210;
+    dd.classList.remove('open');
+    dd.style.visibility = '';
+    var rect = btn.getBoundingClientRect();
+    var gap = 12;
+    var spaceAbove = rect.top - gap;
+    var spaceBelow = window.innerHeight - rect.bottom - gap;
+    var top;
+    if (spaceAbove >= dropH || spaceAbove >= spaceBelow) {
+      // Enough space above, or more room above than below → appear above
+      top = Math.max(8, rect.top - dropH - gap);
+    } else {
+      // More room below → appear below, clamped to viewport
+      top = rect.bottom + gap;
+      if (top + dropH > window.innerHeight - 8) top = window.innerHeight - dropH - 8;
+    }
+    var left = Math.max(8, Math.min(
+      rect.left + rect.width / 2 - dropW / 2,
+      window.innerWidth - dropW - 8
+    ));
+    dd.style.top  = top  + 'px';
+    dd.style.left = left + 'px';
+  }
   function closeAllMenus() {
     ['plusMenu','histMenu'].forEach(function(id){ document.getElementById(id).classList.remove('open'); });
     ['plusBtn','histBtn'].forEach(function(id){ document.getElementById(id).classList.remove('active'); });
     document.getElementById('chatKebabMenu').classList.remove('open');
     document.getElementById('suggestionsPanel').classList.remove('open');
-    document.getElementById('howtoPanel').classList.remove('open');
+    if (document.getElementById('howtoPanel')) document.getElementById('howtoPanel').classList.remove('open');
     if (document.getElementById('suggestBtn')) document.getElementById('suggestBtn').classList.remove('active');
     if (document.getElementById('howtoBtn')) document.getElementById('howtoBtn').classList.remove('active');
     document.querySelectorAll('.hist-confirm-row').forEach(function(r){ r.classList.remove('show'); });
@@ -1429,7 +1507,7 @@ function showTrackingNotice() {
   function addAiMessage(text, isLatest, sources, noFeedback) {
     var wrap = document.createElement('div');
     wrap.className = 'msg-wrap-ai';
-    var time = new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true});
+    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     var uid = 'fb' + Date.now() + Math.floor(Math.random()*10000);
     var actionsClass = (isLatest ? 'bubble-actions' : 'bubble-actions hover-only') + (noFeedback ? ' no-thumbs' : '');
     var sourcesHtml = (sources && sources.length) ? src(sources) : '';
@@ -1444,39 +1522,37 @@ function showTrackingNotice() {
     wrap.innerHTML =
       '<div class="msg-label">AI Assistant</div>' +
       '<div class="msg-row ai' + (isLatest ? ' latest' : '') + '">' +
-	  '<div style="display:inline-flex;flex-direction:column;min-width:0;">' +
-	    '<div style="display:flex;align-items:center;gap:6px;">' +
-		  '<div class="bubble-ai">' + text + sourcesHtml + '</div>' +
-		  '<span class="msg-ts">' + time + '</span>' +
-	    '</div>' +
-	    '<div class="' + actionsClass + '" data-uid="' + uid + '">' +
-		  thumbsHtml +
-		  '<span class="bubble-feedback-msg" id="' + uid + 'thanks"></span>' +
-		  (noFeedback ? '' : '<button class="action-btn copy-btn" title="Copy" onclick="copyBubble(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg></button>') +
-	    '</div>' +
-	  '</div>' +
+        '<div style="display:inline-flex;flex-direction:column;min-width:0;">' +
+          '<div class="bubble-ai">' + text + sourcesHtml + '</div>' +
+          '<div class="' + actionsClass + '" data-uid="' + uid + '">' +
+            thumbsHtml +
+            '<span class="bubble-feedback-msg" id="' + uid + 'thanks"></span>' +
+            (noFeedback ? '' : '<button class="action-btn copy-btn" title="Copy" onclick="copyBubble(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg></button>') +
+          '</div>' +
+        '</div>' +
+        '<span class="msg-ts">' + time + '</span>' +
       '</div>' +
-	'<div class="feedback-dropdown" id="' + uid + 'up">' +
-	  '<div class="feedback-dropdown-title">What was useful?</div>' +
-	  '<textarea class="feedback-comment" id="' + uid + 'upcomment" placeholder="What was useful about this response? (optional)" maxlength="500"></textarea>' +
-	  '<div class="feedback-disclosure">Your feedback, including this question and response, will be sent to ShareVault to help improve AI Assistant. This information is not visible to your administrator.</div>' +
-	  '<div class="feedback-actions">' +
-		'<button class="confirm-btn no" id="' + uid + 'upcancel">Cancel</button>' +
-		'<button style="background:#1a9e4a;" class="confirm-btn yes" id="' + uid + 'upsubmit">Submit</button>' +
-	  '</div>' +
-	'</div>' +
-	'<div class="feedback-dropdown" id="' + uid + '">' +
-	  '<div class="feedback-dropdown-title">What was the problem?</div>' +
-	  '<label class="feedback-option"><input type="radio" name="' + uid + '" value="incorrect"> Incorrect information</label>' +
-	  '<label class="feedback-option"><input type="radio" name="' + uid + '" value="harmful"> Harmful content</label>' +
-	  '<label class="feedback-option"><input type="radio" name="' + uid + '" value="other"> Other</label>' +
-	  '<textarea class="feedback-comment" id="' + uid + 'comment" placeholder="Tell us more (optional)" maxlength="500"></textarea>' +
-	  '<div class="feedback-disclosure">Your feedback, including this question and response, will be sent to ShareVault to help improve AI Assistant. This information is not visible to your administrator.</div>' +
-	  '<div class="feedback-actions">' +
-		'<button class="confirm-btn no" id="' + uid + 'cancel">Cancel</button>' +
-		'<button class="confirm-btn yes" id="' + uid + 'submit" disabled>Submit</button>' +
-	  '</div>' +
-	'</div>';
+      '<div class="feedback-dropdown" id="' + uid + 'up">' +
+        '<div class="feedback-dropdown-title">What was useful?</div>' +
+        '<textarea class="feedback-comment" id="' + uid + 'upcomment" placeholder="What was useful about this response? (optional)" maxlength="500"></textarea>' +
+        '<div class="feedback-disclosure">Your feedback, including this question and response, will be sent to ShareVault to help improve AI Assistant. This information is not visible to your administrator.</div>' +
+        '<div class="feedback-actions">' +
+          '<button class="confirm-btn no" id="' + uid + 'upcancel">Cancel</button>' +
+          '<button style="background:#1a9e4a;" class="confirm-btn yes" id="' + uid + 'upsubmit">Submit</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="feedback-dropdown" id="' + uid + '">' +
+        '<div class="feedback-dropdown-title">What was the problem?</div>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="incorrect"> Incorrect information</label>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="harmful"> Harmful content</label>' +
+        '<label class="feedback-option"><input type="radio" name="' + uid + '" value="other"> Other</label>' +
+        '<textarea class="feedback-comment" id="' + uid + 'comment" placeholder="Tell us more (optional)" maxlength="500"></textarea>' +
+        '<div class="feedback-disclosure">Your feedback, including this question and response, will be sent to ShareVault to help improve AI Assistant. This information is not visible to your administrator.</div>' +
+        '<div class="feedback-actions">' +
+          '<button class="confirm-btn no" id="' + uid + 'cancel">Cancel</button>' +
+          '<button class="confirm-btn yes" id="' + uid + 'submit" disabled>Submit</button>' +
+        '</div>' +
+      '</div>';
 
     var actions = wrap.querySelector('[data-uid="' + uid + '"]');
     var upBtn = actions ? actions.querySelectorAll('.action-btn')[0] : null;
@@ -1496,8 +1572,9 @@ function showTrackingNotice() {
       if (dropdown) dropdown.classList.remove('open');
       if (upBtn) upBtn.classList.remove('active-up');
       if (downBtn) downBtn.classList.add('active-down');
-      if (thanks) { thanks.textContent = 'Thanks for your feedback!'; thanks.classList.add('show'); setTimeout(function() { thanks.classList.remove('show'); }, 2000); }
+      if (thanks) showFeedbackMsg(thanks, 'Thanks for your feedback!', 'negative');
     });
+
     var upDropdown = wrap.querySelector('#' + uid + 'up');
     var upCancelBtn = wrap.querySelector('#' + uid + 'upcancel');
     var upSubmitBtn = wrap.querySelector('#' + uid + 'upsubmit');
@@ -1526,13 +1603,7 @@ function showTrackingNotice() {
             document.body.appendChild(upDropdown);
             upDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
           }
-          var rect = upBtn.getBoundingClientRect();
-          var dropH = 140;
-          var top = rect.top - dropH - 4;
-          if (top < 8) top = rect.bottom + 4;
-          var left = Math.max(8, Math.min(rect.left, window.innerWidth - 218));
-          upDropdown.style.top = top + 'px';
-          upDropdown.style.left = left + 'px';
+          positionDropdown(upDropdown, upBtn);
           upDropdown.classList.add('open');
           if (actions) actions.classList.add('dropdown-open');
         }
@@ -1559,24 +1630,11 @@ function showTrackingNotice() {
           document.body.appendChild(dropdown);
           dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
         }
-        var rect = downBtn.getBoundingClientRect();
-        var dropH = 255;
-        var top = rect.top - dropH - 4;
-        if (top < 8) top = rect.bottom + 4;
-        var left = Math.max(8, Math.min(rect.left, window.innerWidth - 218));
-        dropdown.style.top = top + 'px';
-        dropdown.style.left = left + 'px';
+        positionDropdown(dropdown, downBtn);
         dropdown.classList.add('open');
         if (actions) actions.classList.add('dropdown-open');
       }
     });
-    setTimeout(function() {
-	  var ts = wrap.querySelector('.msg-ts');
-	  var actionsDiv = wrap.querySelector('[data-uid="' + uid + '"]');
-	  if (ts && actionsDiv) {
-		actionsDiv.style.paddingRight = ts.offsetWidth + 6 + 'px';
-	  }
-	}, 0);
     return wrap;
   }
 
@@ -1637,7 +1695,6 @@ function showTrackingNotice() {
   }
 
   function newChat() {
-    document.getElementById('inp').placeholder = 'Ask a question…';
     currentScopes = [];
     if (typeof renderScopeChips === 'function') renderScopeChips();
     supportState = null;
@@ -1670,7 +1727,7 @@ function showTrackingNotice() {
     msgs.innerHTML = '';
     var convoDate = convo.yesterday ? new Date(Date.now() - 86400000) : new Date();
     checkDateDivider(msgs, convoDate);
-    msgs.appendChild(addAiMessage('Hi John! Ask me anything about the documents in the "Project Optima" ShareVault, or about how to use ShareVault.', false, [], true));
+    msgs.appendChild(addAiMessage('Hi John! Ask me anything about the documents in the "Project Optima" ShareVault.', false, [], true));
     for (var i = 0; i < convo.messages.length; i++) {
       var m = convo.messages[i];
       var isLatest = (i === convo.messages.length - 1) && m.role === 'ai';
@@ -1777,6 +1834,7 @@ function showTrackingNotice() {
       currentTitle = words;
     }
 
+    document.getElementById('inp').placeholder = 'Reply…';
     var canned = cannedResponses[text];
     if (canned) {
       setTimeout(function() {
@@ -1796,48 +1854,37 @@ function showTrackingNotice() {
         msgs.scrollTop = msgs.scrollHeight;
       }, 600);
     }
-    document.getElementById('inp').placeholder = 'Reply…';
   }
 
   if (!window._copyEnabled) { document.getElementById('msgs').addEventListener('copy', function(e) { e.preventDefault(); }); }
 
-var isResizing = false, startX, startW;
+  var isResizing = false, startX, startW;
+  document.getElementById('resizeHandle').addEventListener('mousedown', function(e) {
+    isResizing = true; startX = e.clientX; startW = document.getElementById('drawer').offsetWidth;
+    document.body.style.cursor = 'ew-resize'; document.body.style.userSelect = 'none';
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!isResizing || maximized) return;
+    var b = getBounds();
+    var zoom = b.scale / REF_SCALE;
+    var d = document.getElementById('drawer');
+    var dx = d.classList.contains('docked-right') ? startX - e.clientX : e.clientX - startX;
+    var newW = Math.max(Math.round(320 * zoom), Math.min(b.imgW * 0.75, startW + dx));
+    d.style.width = newW + 'px';
+    var scaler = document.getElementById('drawerScaler');
+    scaler.style.width = (newW / Math.max(1.0, zoom)) + 'px';
+    // Reset scope picker so it stretches to fill the resized banner
+    var panel = document.getElementById('scopeTreePanel');
+    if (panel) { panel.style.left = '10px'; panel.style.right = '10px'; panel.style.width = ''; }
+    drawWatermark();
+  });
+  document.addEventListener('mouseup', function() {
+    if (isResizing) { isResizing = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+  });
 
-document.getElementById('resizeHandle').addEventListener('mousedown', function(e) {
-  isResizing = true;
-  startX = e.clientX;
-  startW = document.getElementById('drawer').offsetWidth;
-  document.body.style.cursor = 'ew-resize';
-  document.body.style.userSelect = 'none';
-});
-
-document.addEventListener('mousemove', function(e) {
-  if (!isResizing || maximized) return;
-  var b = getBounds();
-  var zoom = b.scale / REF_SCALE;
-  var d = document.getElementById('drawer');
-  var dx = d.classList.contains('docked-right') ? startX - e.clientX : e.clientX - startX;
-  var minW = Math.round(320 * zoom);
-  var maxW = Math.round(b.imgW * 0.75);
-  var newW = Math.max(minW, Math.min(maxW, startW + dx));
-  d.style.width = newW + 'px';
-  var scaler = document.getElementById('drawerScaler');
-  scaler.style.width = (newW / Math.max(1.0, zoom)) + 'px';
-  // Reset scope picker inline styles so it stretches to fill the resized banner
-  var panel = document.getElementById('scopeTreePanel');
-  if (panel) { panel.style.left = '10px'; panel.style.right = '10px'; panel.style.width = ''; }
-  drawWatermark();
-});
-
-document.addEventListener('mouseup', function() {
-  if (isResizing) { isResizing = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
-});
-
-document.getElementById('scopeTreePanel').addEventListener('mousedown', function(e) {
-  e.stopPropagation();
-});
-
-
+  document.getElementById('scopeTreePanel').addEventListener('mousedown', function(e) {
+    e.stopPropagation();
+  });
 
   // ── Scope tree picker ─────────────────────────────────────────────────
   var scopeTreeData = [
@@ -2002,9 +2049,8 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
     if (e) {
       var banner = document.getElementById('scopeBanner');
       var br = banner.getBoundingClientRect();
-      var zoom = parseFloat(document.getElementById('drawerScaler').style.zoom) || 1;
-      var clickX = (e.clientX - br.left) / zoom;
-      var panelW = Math.min(480, br.width / zoom - 20);
+      var clickX = (e.clientX - br.left) / (parseFloat(panel.style.zoom || getComputedStyle(panel.parentElement).zoom) || 1);
+      var panelW = Math.min(480, br.width - 20);
       var left = Math.max(10, Math.min(clickX - panelW/2, br.width - panelW - 10));
       panel.style.left = left + 'px';
       panel.style.right = 'auto';
@@ -2218,7 +2264,7 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
       });
       chatInp.addEventListener('input', function() {
         this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 240) + 'px';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
       });
     }
     var inp = document.getElementById('scopeTreeSearch');
@@ -2349,7 +2395,7 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
     });
     var wrap = document.createElement('div');
     wrap.className = 'msg-wrap-ai';
-    var time = new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true});
+    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     wrap.innerHTML =
       '<div class="msg-label">AI Assistant</div>' +
       '<div class="msg-row ai">' +
@@ -2400,6 +2446,9 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
     resetSummFeedback();
     showSummLoading();
     reposition();
+    var rb = document.getElementById('summRedactBanner');
+    if (rb) rb.classList.toggle('show', !!window._redactedDoc);
+    // native browser title tooltip used on summRedactMore
     if (savedW && drawer) {
       var b = getBounds(), zoom = Math.max(1.0, b.scale / REF_SCALE);
       drawer.style.width = savedW + 'px';
@@ -2449,7 +2498,11 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
   function _showSummMsg(spanId) {
     if (_summMsgTimer) clearTimeout(_summMsgTimer);
     var t = document.getElementById('summFeedbackText');
-    if (t) { t.textContent = spanId === 'summFeedbackThanks' ? 'Thanks for your feedback!' : 'Feedback removed.'; t.className = 'summ-feedback-text ' + (spanId === 'summFeedbackThanks' ? 'thanks' : 'removed'); }
+    if (t) {
+      if (spanId === 'summFeedbackThanks') { t.textContent = 'Thanks for your feedback!'; t.className = 'summ-feedback-text thanks'; }
+      else if (spanId === 'summFeedbackNegative') { t.textContent = 'Thanks for your feedback!'; t.className = 'summ-feedback-text negative'; }
+      else { t.textContent = 'Feedback removed.'; t.className = 'summ-feedback-text removed'; }
+    }
     _summMsgTimer = setTimeout(function() {
       var t = document.getElementById('summFeedbackText');
       if (t) { t.textContent = 'Was this helpful?'; t.className = 'summ-feedback-text'; }
@@ -2482,10 +2535,7 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
     if (!isActive) {
       var dd = document.getElementById('summUpDropdown');
       if (dd.parentNode !== document.body) { document.body.appendChild(dd); dd.addEventListener('click', function(ev){ ev.stopPropagation(); }); }
-      var rect = this.getBoundingClientRect();
-      var top = rect.top - 144; if (top < 8) top = rect.bottom + 4;
-      dd.style.top = top + 'px';
-      dd.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 218)) + 'px';
+      positionDropdown(dd, this);
       dd.classList.add('open');
     } else { _showSummMsg('summFeedbackRemoved'); }
   });
@@ -2506,10 +2556,7 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
         document.body.appendChild(dd);
         dd.addEventListener('click', function(ev){ ev.stopPropagation(); });
       }
-      var rect = this.getBoundingClientRect(), dropH = 190;
-      var top = rect.top - dropH - 4; if (top < 8) top = rect.bottom + 4;
-      dd.style.top = top + 'px';
-      dd.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 218)) + 'px';
+      positionDropdown(dd, this);
       dd.classList.add('open');
     }
   });
@@ -2519,13 +2566,14 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
     closeSummDropdown();
     document.getElementById('summThumbUp').classList.remove('active-up');
     document.getElementById('summThumbDown').classList.add('active-down');
-    _showSummMsg('summFeedbackThanks');
+    _showSummMsg('summFeedbackNegative');
   });
   document.querySelectorAll('input[name="sfbproblem"]').forEach(function(r) {
     r.addEventListener('click', function(e){ e.stopPropagation(); });
     r.addEventListener('change', function(){ document.getElementById('summFbSubmit').disabled = false; });
   });
   document.getElementById('aboutSummOverlay').addEventListener('click', function(e){ if (e.target===this) closeAboutSummarizer(); });
+  document.getElementById('aboutAIOverlay').addEventListener('click', function(e){ if (e.target===this) closeAboutAI(); });
 
   // "Ask AI Assistant about this document" button
   function askAssistantAboutDoc() {
@@ -2546,8 +2594,6 @@ document.getElementById('scopeTreePanel').addEventListener('mousedown', function
       addScope(CURRENT_DOC);  // "Ask me about [doc]" is the first message
     }, 150);
   }
-  
-  document.getElementById('aboutAIOverlay').addEventListener('click', function(e){ if (e.target===this) closeAboutAI(); });
 
   // Summarizer watermark
   function drawSummWatermark() {
