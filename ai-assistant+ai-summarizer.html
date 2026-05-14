@@ -219,7 +219,7 @@
   .feedback-dropdown {
     position: fixed;
     background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 210px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 320px;
     padding: 8px 0; z-index: 2147483647; display: none;
   }
   .feedback-dropdown.open { display: block; }
@@ -480,7 +480,7 @@
 
   .summ-dropdown {
     position: fixed; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 210px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 320px;
     padding: 8px 0; z-index: 99999; display: none;
   }
   .summ-dropdown.open { display: block; }
@@ -631,7 +631,7 @@
       <button class="about-modal-close" onclick="closeAboutSummarizer()">✕</button>
     </div>
     <div class="about-modal-body">
-      <p>The <strong>AI Summarizer</strong> generates a concise summary of the currently open document using ShareVault's AI service.</p>
+      <p>ShareVault <strong>AI Summarizer</strong> generates a concise summary of the currently open document using Claude Sonnet 4.6.</p>
       <p>Summaries are generated from the document's <strong>indexed text</strong>. Redacted content will appear redacted in summaries even for users with unredacted access.</p>
       <p>Summary content is subject to the same <strong>watermarking and copy protection</strong> policies as the document itself.</p>
       <p>AI-generated content may contain errors. Always verify important information against the original document.</p>
@@ -864,6 +864,14 @@
         <div class="suggestion-item" onclick="askSuggestion(event, 'What does the cap table show about ownership structure?')">What does the cap table show about ownership structure?</div>
         <div class="suggestion-item" onclick="askSuggestion(event, 'What are the key financial risks disclosed in this ShareVault?')">What are the key financial risks disclosed in this ShareVault?</div>
       </div>
+      <div class="suggestions-panel" id="howtoPanel">
+        <div class="suggestions-header">How do I use ShareVault?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I view or download files?')">How do I view or download files?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I search and browse ShareVault content?')">How do I search and browse ShareVault content?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I ask questions?')">How do I ask questions?</div>
+        <div class="suggestion-item" onclick="askSuggestion(event, 'How do I reach ShareVault support?')">How do I reach ShareVault support?</div>
+    </div>
+</div>
     </div>
     <div class="disclaimer">AI may make mistakes · <a href="#" onclick="showAINotice();return false;">About AI Assistant</a></div>
   </div>
@@ -1212,6 +1220,13 @@ var conversations = {
     }
     return { imgW: imgW, imgH: imgH, ox: ox, oy: oy, scale: imgW / SRC_W };
   }
+  
+  // Returns the factor by which to DIVIDE screen pixels to get scaler-space pixels.
+  // Clamps at 1.0: only compensates when image is upscaled above reference.
+  // Use this anywhere you're sizing a scaled element from a screen-pixel measurement.
+  function scalerDivisor() {
+      return Math.max(1.0, getBounds().scale / REF_SCALE);
+  }
 
   var DESIGN_DRAWER_W = 400; // drawer width at zoom=1.0
   var REF_SCALE = 1728 / SRC_W; // zoom=1.0 at Mac fullscreen (~1728px)
@@ -1323,28 +1338,29 @@ var conversations = {
     reposition();
     closeAllMenus();
   }
+  
   function dockLeft() {
     var d = document.getElementById('drawer');
-    var b = getBounds(); var zoom = b.scale / REF_SCALE;
     var savedW = d.offsetWidth; // preserve current width
     if (maximized) { d.classList.remove('maximized'); maximized = false; document.getElementById('btnMax').classList.remove('active'); savedW = 0; }
     d.classList.remove('docked-right');
     reposition();
-    if (savedW) { d.style.width = savedW + 'px'; document.getElementById('drawerScaler').style.width = (savedW / zoom) + 'px'; }
+    if (savedW) { d.style.width = savedW + 'px'; document.getElementById('drawerScaler').style.width = (savedW / scalerDivisor()) + 'px'; }
     prevDockState = 'left'; document.getElementById('btnLeft').classList.add('active'); document.getElementById('btnRight').classList.remove('active');
     setTimeout(drawWatermark, 50);
   }
+  
   function dockRight() {
     var d = document.getElementById('drawer');
-    var b = getBounds(); var zoom = b.scale / REF_SCALE;
     var savedW = d.offsetWidth;
     if (maximized) { d.classList.remove('maximized'); maximized = false; document.getElementById('btnMax').classList.remove('active'); savedW = 0; }
     d.classList.add('docked-right');
     reposition();
-    if (savedW) { d.style.width = savedW + 'px'; document.getElementById('drawerScaler').style.width = (savedW / zoom) + 'px'; }
+    if (savedW) { d.style.width = savedW + 'px'; document.getElementById('drawerScaler').style.width = (savedW / scalerDivisor()) + 'px'; }
     prevDockState = 'right'; document.getElementById('btnRight').classList.add('active'); document.getElementById('btnLeft').classList.remove('active');
     setTimeout(drawWatermark, 50);
   }
+  
   function toggleMax() {
     var d = document.getElementById('drawer'); maximized = !maximized;
     if (maximized) {
@@ -1354,7 +1370,9 @@ var conversations = {
       document.getElementById('btnRight').classList.remove('active');
       // Set drawer + scaler to full image width
       var b = getBounds();
-      var zoom = b.scale / REF_SCALE;
+      // Clamp zoom at 1.0: only compensate when image is upscaled above reference.
+      // When letterboxed below reference, scaler should fill image 1:1, not down-scale.
+      var zoom = Math.max(1.0, b.scale / REF_SCALE);
       d.style.width = b.imgW + 'px';
       document.getElementById('drawerScaler').style.width = (b.imgW / zoom) + 'px';
     } else {
@@ -1872,7 +1890,9 @@ var conversations = {
     var newW = Math.max(Math.round(320 * zoom), Math.min(b.imgW * 0.75, startW + dx));
     d.style.width = newW + 'px';
     var scaler = document.getElementById('drawerScaler');
-    scaler.style.width = (newW / Math.max(1.0, zoom)) + 'px';
+    
+	scaler.style.width = (newW / scalerDivisor()) + 'px';
+    
     // Reset scope picker so it stretches to fill the resized banner
     var panel = document.getElementById('scopeTreePanel');
     if (panel) { panel.style.left = '10px'; panel.style.right = '10px'; panel.style.width = ''; }
