@@ -1410,13 +1410,21 @@ var conversations = {
       top = rect.bottom + gap;
       if (top + dropH > window.innerHeight - 8) top = window.innerHeight - dropH - 8;
     }
-    var left = Math.max(8, Math.min(
-      rect.left + rect.width / 2 - dropW / 2,
-      window.innerWidth - dropW - 8
-    ));
+
+    // Clamp to drawer's outer edge: dialog can extend toward content
+    // but not away from it (into the letterbox area).
+    var drawer = document.getElementById('drawer');
+    var dockedRight = drawer.classList.contains('docked-right');
+    var drawerRect = drawer.getBoundingClientRect();
+    var centered = rect.left + rect.width / 2 - dropW / 2;
+    var left = dockedRight
+      ? Math.min(centered, drawerRect.right - dropW - 8)
+      : Math.max(centered, drawerRect.left + 8);
+
     dd.style.top  = top  + 'px';
     dd.style.left = left + 'px';
   }
+  
   function closeAllMenus() {
     ['plusMenu','histMenu'].forEach(function(id){ document.getElementById(id).classList.remove('open'); });
     ['plusBtn','histBtn'].forEach(function(id){ document.getElementById(id).classList.remove('active'); });
@@ -2542,6 +2550,26 @@ var conversations = {
   }
   function showAboutSummarizer() { document.getElementById('aboutSummOverlay').classList.add('open'); }
   function closeAboutSummarizer() { document.getElementById('aboutSummOverlay').classList.remove('open'); }
+  
+  function positionFeedbackDialog(dialog, triggerEl) {
+  var rect = triggerEl.getBoundingClientRect();
+  var dialogW = dialog.offsetWidth;
+  var viewportW = window.innerWidth;
+  var margin = 12;
+
+  // Default: anchor left edge to trigger, grow right
+  var left = rect.left;
+  
+  // If that would overflow the right edge, flip: anchor right edge to trigger
+  if (left + dialogW + margin > viewportW) {
+    left = rect.right - dialogW;
+  }
+  
+  // Final safety clamp: never go past either edge
+  left = Math.max(margin, Math.min(left, viewportW - dialogW - margin));
+  
+  dialog.style.left = left + 'px';
+}
 
   document.getElementById('summUpCancel').addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('summUpDropdown').classList.remove('open'); document.getElementById('summThumbUp').classList.remove('active-up'); });
   document.getElementById('summUpSubmit').addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('summUpDropdown').classList.remove('open'); _showSummMsg('summFeedbackThanks'); });
