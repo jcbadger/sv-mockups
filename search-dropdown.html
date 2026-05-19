@@ -285,7 +285,7 @@ function boldIdx(display,query){
 }
 function isIdx(q){return /^\d/.test(q);}
 function matchIdx(full,query){
-  const norm=s=>s.replace(/\s*\(/g,'(').toLowerCase();
+  const norm=s=>s.replace(/\s*\(/g,'(').replace(/\.(\d+)$/,'($1)').toLowerCase();
   return norm(full).startsWith(norm(query));
 }
 
