@@ -274,19 +274,36 @@ function boldM(text,query){
   return text.slice(0,idx)+`<strong style="color:${P};">`+text.slice(idx,idx+query.length)+'</strong>'+text.slice(idx+query.length);
 }
 function boldIdx(display,query){
-  const norm=s=>s.replace(/\s*\(/g,'(').toLowerCase();
-  if(norm(display).startsWith(norm(query))){
-    const matchLen=norm(display).indexOf(norm(query))+norm(query).length;
-    // find the actual end position in the original display string
-    const end=display.length-norm(display).slice(matchLen).length;
-    return `<strong style="color:${P};">`+display.slice(0,end)+'</strong>'+display.slice(end);
+  const normSpace=s=>s.replace(/\s*\(/g,'(').toLowerCase();
+  let matchQuery=query;
+  // If not a direct match, try file format conversion
+  if(!normSpace(display).startsWith(normSpace(query))){
+    const fileQuery=query.replace(/\.(\d+)$/,'($1)');
+    if(fileQuery!==query && normSpace(display).startsWith(normSpace(fileQuery))){
+      matchQuery=fileQuery;
+    } else {
+      return display;
+    }
   }
-  return display;
+  // Calculate bold length accounting for space normalization
+  const normD=normSpace(display), normQ=normSpace(matchQuery);
+  if(!normD.startsWith(normQ)) return display;
+  const end=display.length-normD.slice(normQ.length).length;
+  return `<strong style="color:${P};">`+display.slice(0,end)+'</strong>'+display.slice(end);
 }
 function isIdx(q){return /^\d/.test(q);}
 function matchIdx(full,query){
-  const norm=s=>s.replace(/\s*\(/g,'(').replace(/\.(\d+)$/,'($1)').toLowerCase();
-  return norm(full).startsWith(norm(query));
+  const normSpace=s=>s.replace(/\s*\(/g,'(').toLowerCase();
+  // If query ends with dot, folder-only intent — match as-is
+  if(query.endsWith('.')){
+    return full.toLowerCase().startsWith(query.toLowerCase());
+  }
+  // Try direct match first (for folder matches)
+  if(normSpace(full).startsWith(normSpace(query))) return true;
+  // Also try converting last .N to (N) for file matches
+  const fileQuery=query.replace(/\.(\d+)$/,'($1)');
+  if(fileQuery!==query && normSpace(full).startsWith(normSpace(fileQuery))) return true;
+  return false;
 }
 
 function pinItem(id){
