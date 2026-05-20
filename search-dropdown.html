@@ -16,6 +16,129 @@ body,input{font-family:'DM Sans',sans-serif;background:#f2f3f9;}
 @keyframes fadeOut{from{opacity:1}to{opacity:0}}
 .fade-in{animation:fadeIn 0.3s ease-in;}
 .fade-out{animation:fadeOut 0.2s ease-out forwards;}
+/* Help icon trigger in dropdown */
+.search-help-trigger {
+  background: none;
+  border: none;
+  padding: 2px;
+  margin-left: 6px;
+  cursor: pointer;
+  color: #4a90e2;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 50%;
+  transition: background 0.12s;
+}
+.search-help-trigger:hover {
+  background: rgba(74, 144, 226, 0.12);
+}
+.search-help-trigger svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Modal overlay */
+.search-help-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.search-help-overlay.is-open {
+  display: flex;
+}
+
+/* Modal dialog */
+.search-help-dialog {
+  background: #fff;
+  width: 720px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 64px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  font-family: inherit;
+}
+
+.search-help-header {
+  background: #1e3a8a;
+  color: #fff;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.search-help-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.search-help-header-title svg { width: 20px; height: 20px; }
+.search-help-close {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+}
+.search-help-close:hover { background: rgba(255, 255, 255, 0.15); }
+.search-help-close svg { width: 18px; height: 18px; }
+
+.search-help-body {
+  padding: 22px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.search-help-lead {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #1a1a1a;
+  margin: 0 0 22px;
+}
+.search-help-lead strong { font-weight: 500; }
+
+.search-help-section { margin-bottom: 18px; }
+.search-help-section:last-of-type { margin-bottom: 0; }
+.search-help-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #1e3a8a;
+  margin-bottom: 6px;
+}
+.search-help-section-body {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #555;
+  margin: 0;
+}
+
+.search-help-footer {
+  padding: 16px 24px 20px;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.search-help-ok {
+  background: #10b981;
+  color: #fff;
+  border: none;
+  padding: 8px 28px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 0;
+}
+.search-help-ok:hover { background: #0ea372; }
 </style>
 </head>
 <body>
@@ -46,14 +169,19 @@ body,input{font-family:'DM Sans',sans-serif;background:#f2f3f9;}
         Folders
       </label>
       
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#000;cursor:pointer;margin-left:8px;padding-left:16px;border-left:1px solid #e0e8ee;">
+      <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:#b73eb4;cursor:pointer;margin-left:8px;padding-left:16px;border-left:1.5px solid #ddd;">
         <span id="meaning-checkbox" style="display:inline-flex;flex-shrink:0;"></span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="#b73eb4" viewBox="0 0 24 24"><path d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>
-        Meaning
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="#b73eb4" viewBox="0 0 24 24"><path d="m13 4 1.753 4.444c.188.477.282.715.426.916q.192.269.461.461c.201.144.439.238.916.426L21 12l-4.444 1.753c-.477.188-.715.282-.916.426a2 2 0 0 0-.461.461c-.144.201-.238.439-.426.916L13 20l-1.753-4.444c-.188-.477-.282-.715-.426-.916a2 2 0 0 0-.461-.461c-.201-.144-.439-.238-.916-.426L5 12l4.444-1.753c.477-.188.715-.282.916-.426q.269-.192.461-.461c.144-.201.238-.439.426-.916z"/><path stroke-width=".75" d="m5.989 4.279.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376a1 1 0 0 0 .196-.091.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196zM4.986 16.308l.376.953c.04.102.06.153.091.196q.04.057.099.099a1 1 0 0 0 .196.091l.953.376-.953.376c-.102.04-.153.06-.196.091a.4.4 0 0 0-.099.099 1 1 0 0 0-.091.196l-.376.953-.376-.953a1 1 0 0 0-.091-.196.4.4 0 0 0-.099-.099 1 1 0 0 0-.196-.091l-.953-.376.953-.376c.102-.04.153-.06.196-.091a.5.5 0 0 0 .099-.099 1 1 0 0 0 .091-.196z"/></svg>AI Search
       </label>
       
       <span style="margin-left:auto;flex-shrink:0;cursor:pointer;">
-        <svg width="16" height="16" viewBox="77 526 16 16"><path fill="#4d9ff7" fill-rule="evenodd" d="M85 527.143A6.865 6.865 0 0 1 91.857 534 6.866 6.866 0 0 1 85 540.857 6.865 6.865 0 0 1 78.143 534 6.864 6.864 0 0 1 85 527.143M85 526a8 8 0 1 0 0 16 8 8 0 0 0 0-16m-2.094 6.89q0-.504.152-.915.15-.411.438-.704.288-.292.695-.453.406-.16.91-.16.42 0 .781.124.362.122.631.356.27.234.425.58.156.35.156.787 0 .32-.069.553a1.47 1.47 0 0 1-.442.704q-.147.132-.294.26a8 8 0 0 0-.32.284 1.6 1.6 0 0 0-.256.307q-.11.17-.169.397-.059.229-.058.558h-.989q0-.403.041-.681.042-.279.133-.49t.224-.37q.132-.159.315-.315.145-.129.28-.238.132-.11.237-.242a1.03 1.03 0 0 0 .224-.69q0-.274-.096-.471a1 1 0 0 0-.233-.316.9.9 0 0 0-.293-.173.8.8 0 0 0-.273-.055q-.567 0-.838.37-.27.37-.27.992zm1.454 3.309h1.225v1.143H84.36z"/></svg>
+		<button class="search-help-trigger" onclick="openSearchHelp()" aria-label="About Search" title="About Search">
+		  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<circle cx="12" cy="12" r="10"/>
+			<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+			<line x1="12" y1="17" x2="12.01" y2="17"/>
+		  </svg>
+		</button>
       </span>
     </div>
     <div id="list-container" style="padding:6px 0;"></div>
@@ -68,11 +196,64 @@ body,input{font-family:'DM Sans',sans-serif;background:#f2f3f9;}
   Type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">2.1 (1)</code> — folder index with file index in parentheses<br>
   Type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">12345678</code> — exact file ID match<br>
   Switch to <strong>Folders</strong> mode and type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">fin</code><br>
-  Check <strong>Meaning</strong> and type anything<br>
+  Check <strong>AI Search</strong> and type anything<br>
   Type <code style="background:#e0e8ee;padding:1px 5px;border-radius:3px;">doc</code> — matches folder descriptions (hover 💬 icon)
 </div>
 
 <div id="fixed-tip"></div>
+</div>
+
+<!-- Search help modal -->
+<div class="search-help-overlay" id="searchHelpOverlay" role="dialog" aria-modal="true" aria-labelledby="searchHelpTitle">
+  <div class="search-help-dialog">
+    <div class="search-help-header">
+      <div class="search-help-header-title" id="searchHelpTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>About Search</span>
+      </div>
+      <button class="search-help-close" id="searchHelpClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="search-help-body">
+      <p class="search-help-lead">
+        Search lets you find content in this ShareVault in different ways. Choose <strong>Files</strong> or <strong>Folders</strong> to set what you're searching for, then optionally turn on <strong>AI Search</strong> to search by concept rather than by exact words.
+      </p>
+
+      <div class="search-help-section">
+        <div class="search-help-section-title">Files</div>
+        <p class="search-help-section-body">Searches for individual files by filename, file index number, file contents, file description, or file ID. Use this when you're looking for specific files or want search results at the file level based on matching the keywords you've entered. </p>
+      </div>
+
+      <div class="search-help-section">
+        <div class="search-help-section-title">Folders</div>
+        <p class="search-help-section-body">Searches for folders by folder name, folder index number, or folder description showing matching folders. Use this when you want to quickly navigate to a particular folder or subfolder, ignoring the files themselves.       
+        </p>
+      </div>
+
+      <div class="search-help-section">
+        <div class="search-help-section-title" style="color:#b73eb4">AI Search</div>
+        <p class="search-help-section-body">Searches by concept and intent rather than by exact text matches. Describe what you're looking for in your own words and the search will find relevant results even when they don't match specific keywords. Use this when you're unsure of the exact wording, when you're exploring a topic, or when relevant material may be phrased many different ways. Works with either Files or Folders. Give it a try — AI Search suggests ideas for what to look for in this ShareVault.</p>
+      </div>
+      
+      <div class="search-help-section">
+        <div class="search-help-section-title">Selecting a folder</div>
+        <p class="search-help-section-body">Whether you're in Files mode or Folders mode, selecting a folder from the suggestions checks the folder in the Index to the left, filtering the file list to that folder.</p>
+
+    </div>
+
+    <div class="search-help-footer">
+      <button class="search-help-ok" id="searchHelpOk">OK</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -162,8 +343,14 @@ let recent=[{id:3,text:'limited liability',count:8,type:'file'},{id:4,text:'fina
 let meaningRecent=['clauses that limit our liability','change of control provisions'];
 const meaningExamples=['termination rights','indemnification obligations','representations about intellectual property','debt covenants and restrictions','employee retention agreements'];
 
-let mode='files',searchCommitted=false,nextId=100,isOpen=false,tipTimer=null;
-let meaning=false;
+let mode='files';        // 'files' | 'folders' only — radio state
+let meaning=false;       // AI Search checkbox state (independent)
+let searchCommitted=false,nextId=100,isOpen=false,tipTimer=null;
+
+// Returns the effective rendering mode by combining the radio (mode) and checkbox (meaning).
+// Use this anywhere rendering decisions are made. The raw `mode` variable should only be
+// read/written by radio-button logic.
+function effectiveMode(){return meaning?'meaning':mode;}
 
 function ph(m){return m==='files'?'Search Files':m==='folders'?'Search Folders':'Describe what you\'re looking for';}
 
@@ -199,7 +386,7 @@ function applyMode(m){
   document.getElementById('files-radio').innerHTML=m==='files'?RADIO_ON:RADIO_OFF;
   document.getElementById('folders-radio').innerHTML=m==='folders'?RADIO_ON:RADIO_OFF;
 }
-function setMode(m){applyMode(m);const inp=document.getElementById('search-input');if(!inp.value)inp.placeholder=ph(m);render();}
+function setMode(m){applyMode(m);const inp=document.getElementById('search-input');if(!inp.value)inp.placeholder=ph(effectiveMode());render();}
 
 function isAlreadyPinned(q){return!!pinned.find(p=>p.text===q);}
 
@@ -208,7 +395,7 @@ function updatePinFieldIcon(){
   const btn=document.getElementById('pin-btn');
   const svg=btn.querySelector('svg');
   const el=svg.querySelector('line');
-  if(!q||mode==='meaning'){btn.style.display='none';return;}
+  if(!q||effectiveMode()==='meaning'){btn.style.display='none';return;}
   btn.style.display='inline-flex';
   if(isAlreadyPinned(q)){
     btn.title='Unpin this search';svg.setAttribute('fill','#999');
@@ -222,7 +409,7 @@ function updatePinFieldIcon(){
 
 function pinCurrentSearch(){
   const q=document.getElementById('search-input').value.trim();
-  if(!q||mode==='meaning')return;
+  if(!q||effectiveMode()==='meaning')return;
   if(isAlreadyPinned(q)){
     const idx=pinned.findIndex(p=>p.text===q);
     if(idx!==-1){recent.unshift(pinned.splice(idx,1)[0]);if(recent.length>5)recent=recent.slice(0,5);}
@@ -472,10 +659,11 @@ function renderSuggestions(query){
 function render(){
   const query=document.getElementById('search-input').value;
   const hasQ=query.length>0;
+  const em=effectiveMode();
   document.getElementById('clear-btn').style.display=hasQ?'inline-flex':'none';
-  if(hasQ&&searchCommitted&&mode!=='meaning')updatePinFieldIcon();
-  else if(!hasQ||mode==='meaning')document.getElementById('pin-btn').style.display='none';
-  if(mode==='meaning'){renderMeaning(query);return;}
+  if(hasQ&&searchCommitted&&em!=='meaning')updatePinFieldIcon();
+  else if(!hasQ||em==='meaning')document.getElementById('pin-btn').style.display='none';
+  if(em==='meaning'){renderMeaning(query);return;}
   const c=document.getElementById('list-container');
   if(hasQ){
     const isI=isIdx(query);
@@ -494,6 +682,27 @@ function render(){
     recent.slice(0,5).forEach(item=>c.appendChild(makeRow(item,false)));
   }
 }
+// Search help modal
+(function initSearchHelp() {
+  const overlay = document.getElementById('searchHelpOverlay');
+  const closeBtn = document.getElementById('searchHelpClose');
+  const okBtn = document.getElementById('searchHelpOk');
+
+  function open() { overlay.classList.add('is-open'); }
+  function close() { overlay.classList.remove('is-open'); }
+
+  closeBtn.addEventListener('click', close);
+  okBtn.addEventListener('click', close);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();  // click outside dialog closes
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('is-open')) close();
+  });
+
+  // Expose for the (?) trigger
+  window.openSearchHelp = open;
+})();
 
 const sb=document.getElementById('search-box');
 const si=document.getElementById('search-input');
@@ -506,6 +715,8 @@ document.querySelector('#mode-bar label:last-of-type').addEventListener('click',
   e.stopPropagation();
   meaning=!meaning;
   document.getElementById('meaning-checkbox').innerHTML=meaning?CHECKBOX_ON:CHECKBOX_OFF;
+  const inp=document.getElementById('search-input');
+  if(!inp.value)inp.placeholder=ph(effectiveMode());
   render();
 });
 
@@ -517,10 +728,13 @@ mb.addEventListener('click',e=>{
   else if(lbl.querySelector('#folders-radio'))setMode('folders');
 });
 
-si.addEventListener('focus',()=>{if(!si.value)si.placeholder=ph(mode);openDD();render();});
+si.addEventListener('focus',()=>{if(!si.value)si.placeholder=ph(effectiveMode());openDD();render();});
 si.addEventListener('keydown',e=>{if(e.key==='Enter')commitSearch();});
 si.addEventListener('input',()=>{searchCommitted=false;document.getElementById('pin-btn').style.display='none';if(!isOpen)openDD();render();});
-document.addEventListener('click',e=>{if(!sb.parentElement.contains(e.target)){closeDD();if(!si.value)si.placeholder='Search';}});
+document.addEventListener('click',e=>{
+  if(e.target.closest('.search-help-overlay'))return;
+  if(!sb.parentElement.contains(e.target)){closeDD();if(!si.value)si.placeholder='Search';}
+});
 </script>
 </body>
 </html>
