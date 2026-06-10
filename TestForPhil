@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Root Cause Analysis Training — ShareVault</title>
+<style>
+  :root {
+    --sv-blue: #0072f3;
+    --sv-blue-dark: #005ac2;
+    --sv-blue-light: #e8f1ff;
+    --sv-navy: #0a1628;
+    --sv-navy-mid: #1a2e4a;
+    --text: #1a2038;
+    --text-muted: #5a6a80;
+    --border: #d0dcea;
+    --bg: #f4f7fc;
+    --white: #ffffff;
+    --success: #00875a;
+    --success-bg: #e3fcef;
+    --error: #c0392b;
+    --error-bg: #fdecea;
+    --warn: #d68a00;
+    --warn-bg: #fff8e1;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,114,243,0.08);
+  }
+
+  .screen-logo {
+    display: block;
+    margin-bottom: 18px;
+  }
+  .screen-logo svg { height: 28px; width: auto; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--sv-navy);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+  }
+
+  .logo-wrap svg { height: 30px; width: auto; }
+  .logo-wrap svg path, .logo-wrap svg .st0 { fill: #fff !important; }
+
+  .header-tag {
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-bar-wrap {
+    background: var(--sv-navy-mid);
+    height: 4px;
+  }
+  #progress-bar {
+    height: 4px;
+    background: var(--sv-blue);
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── LAYOUT ── */
+  .shell {
+    display: flex;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    gap: 28px;
+    align-items: flex-start;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  nav.sidenav {
+    width: 220px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 84px;
+  }
+
+  .sidenav-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+
+  .sidenav ul { list-style: none; }
+  .sidenav ul li { margin-bottom: 2px; }
+
+  .sidenav ul li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .sidenav ul li a .nav-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .sidenav ul li a.active {
+    background: var(--sv-blue-light);
+    color: var(--sv-blue-dark);
+  }
+  .sidenav ul li a.active .nav-num {
+    background: var(--sv-blue);
+    color: #fff;
+  }
+  .sidenav ul li a.done {
+    color: var(--success);
+  }
+  .sidenav ul li a.done .nav-num {
+    background: var(--success);
+    color: #fff;
+  }
+  .sidenav ul li a:hover:not(.active) {
+    background: var(--sv-blue-light);
+    color: var(--sv-blue-dark);
+  }
+
+  /* ── MAIN CONTENT ── */
+  main { flex: 1; min-width: 0; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px 40px;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--sv-navy);
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--sv-navy);
+    margin-bottom: 14px;
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--sv-navy);
+    margin-bottom: 10px;
+  }
+
+  p { margin-bottom: 12px; color: var(--text); }
+  p:last-child { margin-bottom: 0; }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sv-blue);
+    margin-bottom: 8px;
+  }
+
+  /* ── PROCESS FLOW DIAGRAM ── */
+  .process-flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 24px 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .pf-step {
+    flex: 1;
+    min-width: 110px;
+    padding: 16px 12px;
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    text-align: center;
+    position: relative;
+  }
+  .pf-step:last-child { border-right: none; }
+  .pf-step:hover { background: var(--sv-blue-light); }
+  .pf-step.active-step { background: var(--sv-blue); }
+  .pf-step.active-step .pf-num { background: #fff; color: var(--sv-blue); }
+  .pf-step.active-step .pf-name { color: #fff; }
+  .pf-step.done-step { background: var(--success-bg); }
+  .pf-step.done-step .pf-num { background: var(--success); color: #fff; }
+
+  .pf-num {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--sv-blue-light);
+    color: var(--sv-blue);
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+  }
+
+  .pf-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  /* ── OWNERSHIP TABLE ── */
+  .owner-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-top: 16px;
+  }
+  .owner-table th {
+    background: var(--sv-navy);
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .owner-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .owner-table tr:last-child td { border-bottom: none; }
+  .owner-table tr:nth-child(even) td { background: var(--bg); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--sv-blue-light);
+    color: var(--sv-blue-dark);
+  }
+  .badge-audit {
+    background: var(--warn-bg);
+    color: var(--warn);
+  }
+
+  /* ── STEP DETAIL ── */
+  .step-detail {
+    border-left: 4px solid var(--sv-blue);
+    padding-left: 20px;
+    margin: 20px 0;
+  }
+
+  .checklist { list-style: none; margin-top: 12px; }
+  .checklist li {
+    padding: 7px 0 7px 28px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 2px solid var(--sv-blue);
+  }
+
+  /* ── WHAT CHANGED GRID ── */
+  .change-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .change-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 14px;
+    text-align: center;
+  }
+  .change-icon { font-size: 24px; margin-bottom: 6px; }
+  .change-label { font-size: 13px; font-weight: 600; color: var(--sv-navy); }
+
+  /* ── 5 WHYS INTERACTIVE ── */
+  .whys-drill {
+    margin-top: 16px;
+  }
+  .why-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 10px;
+    opacity: 0.35;
+    transition: opacity 0.2s;
+  }
+  .why-row.unlocked { opacity: 1; }
+  .why-label {
+    width: 60px;
+    flex-shrink: 0;
+    background: var(--sv-blue);
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 0;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  .why-input {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+    resize: vertical;
+    min-height: 42px;
+  }
+  .why-input:focus { outline: none; border-color: var(--sv-blue); }
+  .why-input:disabled { background: var(--bg); color: var(--text-muted); }
+
+  /* ── QUIZ ── */
+  .quiz-q {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+  .quiz-q p { font-weight: 600; margin-bottom: 14px; color: var(--sv-navy); }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    cursor: pointer;
+    font-size: 14px;
+    transition: border-color 0.15s, background 0.15s;
+    text-align: left;
+  }
+  .quiz-opt:hover { border-color: var(--sv-blue); background: var(--sv-blue-light); }
+  .quiz-opt.correct { border-color: var(--success); background: var(--success-bg); color: var(--success); font-weight: 600; }
+  .quiz-opt.wrong { border-color: var(--error); background: var(--error-bg); color: var(--error); }
+  .quiz-opt.disabled { pointer-events: none; }
+  .quiz-opt .opt-letter {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .quiz-opt.correct .opt-letter { background: var(--success); color: #fff; }
+  .quiz-opt.wrong .opt-letter { background: var(--error); color: #fff; }
+
+  .feedback-box {
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 10px;
+    font-size: 13.5px;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct { background: var(--success-bg); color: var(--success); border: 1px solid #b2dfdb; }
+  .feedback-box.wrong { background: var(--error-bg); color: var(--error); border: 1px solid #ffcdd2; }
+
+  /* ── PRACTICE SCENARIO ── */
+  .scenario-header {
+    background: var(--sv-navy);
+    border-radius: 8px 8px 0 0;
+    padding: 16px 20px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .scenario-body {
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 20px;
+  }
+  .scenario-field { margin-bottom: 16px; }
+  .scenario-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .scenario-field textarea, .scenario-field input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  .scenario-field textarea:focus, .scenario-field input:focus {
+    outline: none;
+    border-color: var(--sv-blue);
+  }
+
+  .jira-note {
+    background: var(--warn-bg);
+    border: 1px solid #ffe0b2;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--warn);
+    margin-top: 12px;
+    display: block;
+    line-height: 1.6;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s, transform 0.1s;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--sv-blue); color: #fff; }
+  .btn-primary:hover { background: var(--sv-blue-dark); }
+  .btn-secondary {
+    background: var(--white);
+    color: var(--sv-blue);
+    border: 1.5px solid var(--sv-blue);
+  }
+  .btn-secondary:hover { background: var(--sv-blue-light); }
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
+
+  .btn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── SCORE / COMPLETION ── */
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--sv-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: #fff;
+  }
+  .score-circle .score-num { font-size: 36px; font-weight: 800; line-height: 1; }
+  .score-circle .score-lbl { font-size: 12px; opacity: 0.8; }
+
+  .completion-badge {
+    text-align: center;
+    padding: 40px;
+  }
+
+  /* ── DRAG & DROP ── */
+  .drag-zone {
+    min-height: 52px;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    transition: border-color 0.15s;
+  }
+  .drag-zone.over { border-color: var(--sv-blue); background: var(--sv-blue-light); }
+
+  .drag-chip {
+    background: var(--sv-blue-light);
+    color: var(--sv-blue-dark);
+    border: 1.5px solid var(--sv-blue);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: grab;
+    user-select: none;
+  }
+  .drag-chip:active { cursor: grabbing; opacity: 0.7; }
+
+  .drop-targets {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .drop-slot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-height: 48px;
+    transition: border-color 0.15s;
+    background: var(--white);
+  }
+  .drop-slot.over { border-color: var(--sv-blue); background: var(--sv-blue-light); }
+  .drop-slot .slot-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .drop-slot .slot-chip { font-size: 13px; font-weight: 600; color: var(--sv-navy); }
+  .drop-slot.correct { border-color: var(--success); background: var(--success-bg); }
+  .drop-slot.wrong { border-color: var(--error); background: var(--error-bg); }
+  .drop-slot.correct .slot-num { background: var(--success); color: #fff; }
+
+  /* ── JIRA PANEL MOCKUP ── */
+  .jira-mock {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+  .jira-mock-header {
+    background: #0052cc;
+    color: #fff;
+    padding: 10px 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .jira-mock-body { padding: 0; }
+  .jira-field {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+  }
+  .jira-field:last-child { border-bottom: none; }
+  .jira-field-label {
+    width: 140px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 12px;
+    padding-top: 2px;
+  }
+  .jira-field-value { color: var(--text); }
+  .jira-field-value.highlight { color: var(--sv-blue); font-weight: 600; }
+  .jira-field-value.required { color: var(--error); font-style: italic; }
+
+  /* ── UTILITIES ── */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    margin-bottom: 16px;
+    display: block;
+    line-height: 1.6;
+  }
+  .alert-info { background: var(--sv-blue-light); color: var(--sv-blue-dark); border: 1px solid #b3d4ff; }
+  .alert-audit { background: var(--warn-bg); color: var(--warn); border: 1px solid #ffe0b2; }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  @media (max-width: 768px) {
+    .shell { flex-direction: column; padding: 16px; }
+    nav.sidenav { width: 100%; position: static; }
+    .two-col { grid-template-columns: 1fr; }
+    .change-grid { grid-template-columns: repeat(2, 1fr); }
+    .card { padding: 24px 20px; }
+    header { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 250">
+      <defs><style>.st0{fill:#fff}</style></defs>
+      <path class="st0" d="M1149.7,166.1c-4,2.8-9.1,4.2-15,4.2-14.6,0-24.1-8.1-24.1-25.2v-47.6h39.1v-11.6h-39.1v-33.2h-12.7v92.3c0,24.6,15,36.9,36.8,36.9s10.6-.8,15-2.4v-13.5h0Z"/>
+      <g><path class="st0" d="M184.2,62.8h-116.7c-9.5,0-17.2,7.7-17.2,17.2v108.3c0,9.5,7.7,17.2,17.2,17.2h116.7c9.5,0,17.2-7.7,17.2-17.2v-108.3c0-9.5-7.7-17.2-17.2-17.2ZM174.1,160.9l-1.1,1.8c-1,1.8-3.4,2.4-5.2,1.4l-27.1-15.7c-2.7,2.9-6.2,4.9-10.2,5.9v31.3c0,2.1-1.7,3.8-3.8,3.8h-2.1c-2.1,0-3.8-1.7-3.8-3.8v-31.3c-3.9-.9-7.4-3-10.2-5.9l-27.1,15.7c-1.8,1.1-4.1.4-5.2-1.4l-1.1-1.8c-1.1-1.8-.4-4.1,1.4-5.2l27-15.7c-.6-1.9-.9-3.9-.9-5.9s.3-4,.9-5.9l-27.1-15.7c-1.8-1-2.4-3.3-1.4-5.2l1.1-1.8c1-1.8,3.3-2.4,5.2-1.4l27.1,15.7c2.7-2.9,6.2-4.9,10.2-5.9v-31.3c0-2.1,1.7-3.8,3.8-3.8h2.1c2.1,0,3.8,1.7,3.8,3.8v31.3c3.9.9,7.4,3,10.2,5.8l27.1-15.7c1.8-1.1,4.1-.4,5.2,1.4l1.1,1.8c1.1,1.8.4,4.1-1.4,5.2l-27,15.7c.6,1.9.9,3.9.9,5.9s-.3,4-.9,5.9l27.1,15.7c1.8,1,2.4,3.4,1.4,5.2h0Z"/>
+      <path class="st0" d="M125.8,144.9c-5.9,0-10.7-4.8-10.7-10.7s4.8-10.7,10.7-10.7,10.7,4.8,10.7,10.7-4.8,10.7-10.7,10.7ZM125.8,126c-4.5,0-8.1,3.6-8.1,8.1s3.6,8.1,8.1,8.1,8.1-3.6,8.1-8.1-3.6-8.1-8.1-8.1Z"/></g>
+      <path class="st0" d="M236.4,153.8h23.3c.2,6.4,5.8,10.7,17,10.7s16.9-4.8,16.9-10.7-8.5-8.3-18.8-9.7c-14.7-1.9-36.4-4.5-36.4-27.9s14.9-32.4,38-32.4,37.8,13.2,38.4,30h-22.9c-.6-5.8-6-9.9-15.1-9.9s-15.1,4.8-15.1,10.5,8.7,8.5,19,9.9c12.8,1.7,36.2,4.3,36.2,28.1s-15.7,32.2-40.1,32.2-39.7-13-40.3-30.8h0Z"/>
+      <path class="st0" d="M442.4,135.2c0-30.4,21.3-51.3,51.7-51.3s51,20.3,51,51.2v47.1h-21.1v-18.8c-5.8,14.1-18.8,21.3-33.9,21.3-23.2,0-47.7-16.7-47.7-49.4h0ZM522,134.2c0-16.9-11.2-28.9-28.1-28.9s-28.3,12-28.3,28.9,11.4,28.9,28.3,28.9,28.1-12,28.1-28.9Z"/>
+      <path class="st0" d="M621.6,118.1c5.8-5.8,11.6-11.6,17.4-17.4-7.1-11.4-19.6-16.9-35.4-16.9-25,0-42,13.8-42,42.6v55.6h23.1v-55.6c0-15.5,7.8-21.1,19-21.1s15.6,3.6,18,12.8h0Z"/>
+      <path class="st0" d="M639,134.3c0-29.1,21.3-50.4,51.5-50.4s51.2,21.3,51.2,50.4v8.1h-78.5c3.1,13.9,13.8,21.3,27.3,21.3s17.8-2.9,22.7-9.1h24.6c-7.2,18.2-24.6,30-47.3,30s-51.5-21.3-51.5-50.4h0ZM717.3,124c-3.7-12.8-14.2-19.2-26.7-19.2s-23.1,6.6-26.7,19.2h53.5,0Z"/>
+      <path class="st0" d="M383.1,83.8c-11.1,0-20.3,4.7-26.7,13.3v-52.6h-23.1v137.6h23.1v-61.6c3.5-10,11.8-15.1,22.4-15.1s24.2,8.7,24.2,26.9v49.8h23.1v-49.8c0-34.1-20.9-48.4-43-48.4h0Z"/>
+      <path class="st0" d="M742.7,83.8h14.3l35.8,83.6,35.8-83.6h13.9l-42.2,98.2h-15.2l-42.2-98.2h0Z"/>
+      <path class="st0" d="M843.1,134.8c0-29.8,21.6-50.9,52.3-50.9s52.1,20.7,52.1,50.9v47.3h-12.2v-23.7c-6.9,17.1-23,26.1-41.9,26.1-27.3,0-50.3-19.2-50.3-49.8ZM934.4,134.2c0-22.1-15.7-38.4-38.9-38.4s-38.9,16.3-38.9,38.4,15.7,38.4,38.9,38.4,38.9-16.3,38.9-38.4Z"/>
+      <path class="st0" d="M1069,44.5h12.8v137.6h-12.8V44.5Z"/>
+      <path class="st0" d="M1039.7,83.8v50.2c0,22.3-12.3,34.9-31.5,36h0c-19.1-1.1-31.4-13.7-31.4-36v-50.2h-13v50.2c0,30.6,17.7,46.9,44.3,48h.1c26.7-1,44.4-17.4,44.4-48v-50.2h-13,0Z"/>
+    </svg>
+  </div>
+  <span class="header-tag">RCA Training</span>
+</header>
+<div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidenav">
+    <div class="sidenav-label">Modules</div>
+    <ul id="sidenav-list">
+      <li><a href="#" class="active" data-screen="s0"><span class="nav-num">→</span> Intro</a></li>
+      <li><a href="#" data-screen="s1"><span class="nav-num">1</span> Define the Problem</a></li>
+      <li><a href="#" data-screen="s2"><span class="nav-num">2</span> Collect Data</a></li>
+      <li><a href="#" data-screen="s3"><span class="nav-num">3</span> ID Causal / Contributing Factors</a></li>
+      <li><a href="#" data-screen="s4"><span class="nav-num">4</span> Root Cause (5 Whys)</a></li>
+      <li><a href="#" data-screen="s5"><span class="nav-num">5</span> Recommendations</a></li>
+      <li><a href="#" data-screen="s6"><span class="nav-num">6</span> Solutions in Jira</a></li>
+      <li><a href="#" data-screen="s7"><span class="nav-num">7</span> Test &amp; Validate</a></li>
+      <li><a href="#" data-screen="s8"><span class="nav-num">8</span> Continually Improve</a></li>
+      <li><a href="#" data-screen="sq"><span class="nav-num">?</span> Knowledge Check</a></li>
+      <li><a href="#" data-screen="sp"><span class="nav-num">★</span> Practice Scenarios</a></li>
+      <li><a href="#" data-screen="sdone"><span class="nav-num">✓</span> Completion</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- INTRO -->
+    <div id="s0" class="screen active">
+      <div class="card">
+        <div class="eyebrow">ShareVault Root Cause Analysis Training, V3, 2026</div>
+        <h1>Stop treating symptoms.<br>Fix the cause.</h1>
+        <p style="font-size:16px; color:var(--text-muted); margin-top:8px;">Every unresolved root cause creates a bug burden that compounds. This training walks through ShareVault's 8-step RCA process so you can apply it consistently — and so every analysis we produce holds up to audit.</p>
+        <div class="divider"></div>
+        <h2>When do we do an RCA?</h2>
+        <p>We can't analyze every bug — we triage by risk. RCA is required for:</p>
+        <div class="two-col" style="margin-top:12px;">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:6px;">🔁</div>
+            <div style="font-weight:700;margin-bottom:4px;">Repeat offenders</div>
+            <div style="font-size:13px;color:var(--text-muted);">Bugs in core functions that keep coming back — degradation issues and regression patterns.</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:6px;">⚠️</div>
+            <div style="font-weight:700;margin-bottom:4px;">Untouched code that broke</div>
+            <div style="font-size:13px;color:var(--text-muted);">Core functions outside new features that broke without being directly modified.</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:6px;">🔐</div>
+            <div style="font-weight:700;margin-bottom:4px;">Security & compliance issues</div>
+            <div style="font-size:13px;color:var(--text-muted);">Any issue that implicates access controls, data integrity, or audit requirements.</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:6px;">🔥</div>
+            <div style="font-weight:700;margin-bottom:4px;">Production incidents</div>
+            <div style="font-size:13px;color:var(--text-muted);">Customer-impacting outages or degradations that required emergency response.</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h2>The ShareVault 8-Step Process</h2>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:0;">Click any step to jump to it. Complete each module in order to track your progress.</p>
+        <div class="process-flow" style="margin-top:14px;">
+          <div class="pf-step" onclick="goTo('s1')"><div class="pf-num">1</div><div class="pf-name">Define the Problem</div></div>
+          <div class="pf-step" onclick="goTo('s2')"><div class="pf-num">2</div><div class="pf-name">Collect Data</div></div>
+          <div class="pf-step" onclick="goTo('s3')"><div class="pf-num">3</div><div class="pf-name">ID Causes</div></div>
+          <div class="pf-step" onclick="goTo('s4')"><div class="pf-num">4</div><div class="pf-name">Root Analysis</div></div>
+          <div class="pf-step" onclick="goTo('s5')"><div class="pf-num">5</div><div class="pf-name">Recommendations</div></div>
+          <div class="pf-step" onclick="goTo('s6')"><div class="pf-num">6</div><div class="pf-name">Solutions</div></div>
+          <div class="pf-step" onclick="goTo('s7')"><div class="pf-num">7</div><div class="pf-name">Test &amp; Validate</div></div>
+          <div class="pf-step" onclick="goTo('s8')"><div class="pf-num">8</div><div class="pf-name">Continually Improve</div></div>
+        </div>
+        <div class="divider"></div>
+        <h2>Process at a Glance</h2>
+        <table class="owner-table">
+          <thead><tr><th>Step</th><th>Primary Owner</th><th>Tools / Notes</th></tr></thead>
+          <tbody>
+            <tr><td><strong>1. Define the Problem</strong></td><td>Everyone</td><td>Jira ticket · RCA worksheet if complex</td></tr>
+            <tr><td><strong>2. Collect Data</strong></td><td>System / Process owner</td><td>Logs, screenshots, linked tickets</td></tr>
+            <tr><td><strong>3. ID Causal Factors</strong></td><td>System / Process owner</td><td>Fault Tree model</td></tr>
+            <tr><td><strong>4. Root Analysis</strong></td><td>System / Process owner</td><td>5 Whys technique</td></tr>
+            <tr><td><strong>5. Recommendations</strong></td><td>System / Process owner</td><td>Multiple options with ROI rationale</td></tr>
+            <tr><td><strong>6. Solutions</strong></td><td>Department leads</td><td>Jira "Root Cause" + "Corrective Actions" panels</td></tr>
+            <tr><td><strong>7. Test &amp; Validate</strong></td><td>QA</td><td>Jira Issue Type: Corrective <span class="badge badge-audit">Audited</span></td></tr>
+            <tr><td><strong>8. Continually Improve</strong></td><td>Department</td><td>Linked improvements in Jira <span class="badge badge-audit">Audited</span></td></tr>
+          </tbody>
+        </table>
+        <div class="btn-row" style="justify-content:flex-end;">
+          <button class="btn btn-primary" onclick="goTo('s1')">Start Training →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div id="s1" class="screen">
+      <div class="card">
+        <div class="eyebrow">Step 1 of 8</div>
+        <h1>Define the Problem</h1>
+        <div class="alert alert-info">📋 Start with the right Jira ticket type. If the issue is complex, attach the RCA worksheet.</div>
+        <div class="step-detail">
+          <h3>What belongs in the problem statement</h3>
+          <ul class="checklist">
+            <li>Expected behavior vs. observed behavior (or observed symptoms)</li>
+            <li>Direct and indirect impact — who is affected and how</li>
+            <li>Stakeholders involved and consequences of not fixing it</li>
+            <li>Scope: how widespread is the problem?</li>
+          </ul>
+        </div>
+        <div class="divider"></div>
+        <h3>🚫 What does NOT belong in the problem statement</h3>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+          <div style="background:var(--error-bg);border:1px solid #ffcdd2;border-radius:8px;padding:14px 18px;flex:1;min-width:180px;">
+            <div style="font-weight:700;color:var(--error);margin-bottom:4px;">❌ Suspected root cause</div>
+            <div style="font-size:13px;color:var(--text-muted);">"The bug happened because the cache wasn't cleared."</div>
+          </div>
+          <div style="background:var(--error-bg);border:1px solid #ffcdd2;border-radius:8px;padding:14px 18px;flex:1;min-width:180px;">
+            <div style="font-weight:700;color:var(--error);margin-bottom:4px;">❌ Proposed solution</div>
+            <div style="font-size:13px;color:var(--text-muted);">"We need to add a cache-busting header."</div>
+          </div>
+          <div style="background:var(--error-bg);border:1px solid #ffcdd2;border-radius:8px;padding:14px 18px;flex:1;min-width:180px;">
+            <div style="font-weight:700;color:var(--error);margin-bottom:4px;">❌ "We need to…"</div>
+            <div style="font-size:13px;color:var(--text-muted);">Action items belong in Steps 5–6, not the problem definition.</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h3>Example: Good vs. Poor Problem Statements</h3>
+        <div class="two-col" style="margin-top:12px;">
+          <div style="background:var(--success-bg);border:1px solid #b2dfdb;border-radius:8px;padding:16px;">
+            <div style="font-weight:700;color:var(--success);margin-bottom:8px;">✅ Good</div>
+            <p style="font-size:13px;margin:0;">"Admin permission edits for vaults with &gt;500 files take over 30 seconds to respond. Expected response is under 3 seconds. Affects all TMF admins. Customer-reported, reproduced in prod."</p>
+          </div>
+          <div style="background:var(--error-bg);border:1px solid #ffcdd2;border-radius:8px;padding:16px;">
+            <div style="font-weight:700;color:var(--error);margin-bottom:8px;">❌ Poor</div>
+            <p style="font-size:13px;margin:0;">"Vault is slow. We need to fix the database query and add indexing."</p>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s0')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('s2')">Next: Collect Data →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="s2" class="screen">
+      <div class="card">
+        <div class="eyebrow">Step 2 of 8</div>
+        <h1>Collect the Data</h1>
+        <p>Evidence drives analysis. Collect everything that establishes context, scope, and history before drawing conclusions.</p>
+        <div class="step-detail">
+          <h3>Data collection checklist</h3>
+          <ul class="checklist">
+            <li>Screenshots, screen recordings, or error messages showing the problem</li>
+            <li>Event logs from the time of the incident — post them directly in the ticket</li>
+            <li>Exact timestamp: when did this start?</li>
+            <li>What else was happening at that time? (deployments, config changes, vendor issues)</li>
+            <li>Has this happened before? If yes, link the previous ticket and its resolution</li>
+            <li>Links to related bug reports or support cases</li>
+            <li>Scope: how many users, vaults, or transactions are affected?</li>
+          </ul>
+        </div>
+        <div class="divider"></div>
+        <h3>Key questions to answer in the ticket</h3>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px;">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;">
+            <div style="font-size:18px;margin-bottom:4px;">🕐</div>
+            <div style="font-weight:600;font-size:13px;">When did this start?</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Exact date/time, not "recently"</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;">
+            <div style="font-size:18px;margin-bottom:4px;">🔄</div>
+            <div style="font-weight:600;font-size:13px;">Is this a repeat?</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Link previous analysis if it's recurred</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;">
+            <div style="font-size:18px;margin-bottom:4px;">🌐</div>
+            <div style="font-weight:600;font-size:13px;">What was going on?</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Concurrent changes, deployments, incidents</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;">
+            <div style="font-size:18px;margin-bottom:4px;">📏</div>
+            <div style="font-weight:600;font-size:13px;">What's the scope?</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Specific users vs. all users, prod vs. staging</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s1')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('s3')">Next: ID Causes →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="s3" class="screen">
+      <div class="card">
+        <div class="eyebrow">Step 3 of 8</div>
+        <h1>Identify Possible Causal or Contributing Factors</h1>
+        <p>Before identifying the <em>root</em> cause, list all possible contributing factors. Cast wide, then narrow.</p>
+        <h3 style="margin-top:20px;">What changed?</h3>
+        <p style="font-size:13px;color:var(--text-muted);">Start by examining every dimension of change around the time of the incident.</p>
+        <div class="change-grid">
+          <div class="change-card"><div class="change-icon">💻</div><div class="change-label">Code</div></div>
+          <div class="change-card"><div class="change-icon">⚙️</div><div class="change-label">Configuration</div></div>
+          <div class="change-card"><div class="change-icon">🖥️</div><div class="change-label">Server / Infra</div></div>
+          <div class="change-card"><div class="change-icon">📐</div><div class="change-label">Design / Schema</div></div>
+          <div class="change-card"><div class="change-icon">📋</div><div class="change-label">Process / Procedure</div></div>
+          <div class="change-card"><div class="change-icon">👤</div><div class="change-label">Human Action</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="step-detail">
+          <h3>Build your causal factor list</h3>
+          <ul class="checklist">
+            <li>Trace the chain of events leading to the problem</li>
+            <li>Identify where boundaries changed (e.g., new data volumes, new vendor behavior)</li>
+            <li>Identify controls that were in place — did any fail?</li>
+            <li>Was there a human action that contributed? (configuration, deployment, response)</li>
+            <li>Look for underlying contributing factors below the obvious surface causes</li>
+            <li>Document everything in the Jira ticket or the attached RCA worksheet</li>
+          </ul>
+        </div>
+        <div class="alert alert-info" style="margin-top:20px;">
+          💡 <strong>Fault Tree tip:</strong> Start from the problem at the top and work downward. For each event, ask "what could cause this?" and branch out. List all branches before narrowing to root causes in Step 4.
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s2')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('s4')">Next: Root Analysis →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div id="s4" class="screen">
+      <div class="card">
+        <div class="eyebrow">Step 4 of 8</div>
+        <h1>Identify Root Cause(s)</h1>
+        <p>From your causal factor list, find the deepest points in the event chain. Use the <strong>5 Whys</strong> technique: ask "why?" repeatedly until you reach the systemic source.</p>
+        <div class="alert alert-info">📌 Simple problems may have a single root cause. Repeat problems almost always require deeper inspection. Complex issues often have multiple contributing root causes.</div>
+        <div class="divider"></div>
+        <h3>Try it: Interactive 5 Whys</h3>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Work through a practice scenario. Type your answer in each "Why" — the next level unlocks when you enter text.</p>
+
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:18px;">
+          <div style="font-weight:700;font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Scenario (SV-9115)</div>
+          <div style="font-weight:600;">Vault admin permission editing is extremely slow — over 30 seconds — for vaults with many files.</div>
+        </div>
+
+        <div class="whys-drill" id="whys-drill">
+          <div class="why-row unlocked" data-level="1">
+            <div class="why-label">Why 1</div>
+            <textarea class="why-input" placeholder="Why is the permission edit slow?" oninput="unlockNext(1)"></textarea>
+          </div>
+          <div class="why-row" data-level="2">
+            <div class="why-label">Why 2</div>
+            <textarea class="why-input" placeholder="Unlock by answering Why 1" disabled oninput="unlockNext(2)"></textarea>
+          </div>
+          <div class="why-row" data-level="3">
+            <div class="why-label">Why 3</div>
+            <textarea class="why-input" placeholder="Unlock by answering Why 2" disabled oninput="unlockNext(3)"></textarea>
+          </div>
+          <div class="why-row" data-level="4">
+            <div class="why-label">Why 4</div>
+            <textarea class="why-input" placeholder="Unlock by answering Why 3" disabled oninput="unlockNext(4)"></textarea>
+          </div>
+          <div class="why-row" data-level="5">
+            <div class="why-label">Why 5</div>
+            <textarea class="why-input" placeholder="Unlock by answering Why 4" disabled></textarea>
+          </div>
+        </div>
+
+        <div class="alert alert-info" style="margin-top:18px;">
+          💡 <strong>Rule:</strong> If your Why-5 answer points to a <em>process gap, missing control, or policy issue</em> rather than a technical detail, you've likely found the true root cause.
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s3')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('s5')">Next: Recommendations →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div id="s5" class="screen">
+      <div class="card">
+        <div class="eyebrow">Step 5 of 8</div>
+        <h1>Recommendations</h1>
+        <p>Don't stop at one fix. Generate multiple options and evaluate them — the best solution may not be the most obvious one.</p>
+        <div class="step-detail">
+          <h3>Generate multiple options</h3>
+          <p style="font-size:13.5px;">Root causes are often process problems that surface as technical failures. Solutions may need to address multiple layers:</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+          <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+            <div style="font-size:22px;flex-shrink:0;">🔧</div>
+            <div><div style="font-weight:600;">Repair / Patch</div><div style="font-size:13px;color:var(--text-muted);">Restores function quickly — but does not address the root cause on its own.</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+            <div style="font-size:22px;flex-shrink:0;">📋</div>
+            <div><div style="font-weight:600;">Process change</div><div style="font-size:13px;color:var(--text-muted);">Modifies how we do things — often the real fix when root cause is procedural.</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+            <div style="font-size:22px;flex-shrink:0;">🛡️</div>
+            <div><div style="font-weight:600;">Compensating / preventive controls</div><div style="font-size:13px;color:var(--text-muted);">Monitoring, alerting, port filtering — reduces blast radius or detects early.</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+            <div style="font-size:22px;flex-shrink:0;">🧑‍🏫</div>
+            <div><div style="font-weight:600;">Training / policy change</div><div style="font-size:13px;color:var(--text-muted);">Addresses human behavior root causes — includes updating playbooks and runbooks.</div></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="jira-note">⚠️ Both technical <strong>and</strong> non-technical recommendations must be entered into Jira. Do not leave any recommendation as a verbal agreement or a Slack message.</div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s4')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('s6')">Next: Solutions →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 6 -->
+    <div id="s6" class="screen">
+      <div class="card">
+        <div class="eyebrow">Step 6 of 8</div>
+        <h1>Solutions in Jira</h1>
+        <p>Selecting and documenting the solution is as important as finding the root cause. Every decision must be traceable in Jira.</p>
+        <h3 style="margin-top:16px;">Jira documentation requirements</h3>
+        <div class="jira-mock">
+          <div class="jira-mock-header">
+            <span style="background:#fff;color:#0052cc;border-radius:3px;padding:2px 8px;font-size:12px;font-weight:800;">BUG</span>
+            SV-XXXX · Root Cause Analysis
+          </div>
+          <div class="jira-mock-body">
+            <div class="jira-field">
+              <div class="jira-field-label">Root Cause panel</div>
+              <div class="jira-field-value highlight">All root causes documented here, or linked from here</div>
+            </div>
+            <div class="jira-field">
+              <div class="jira-field-label">Corrective Actions</div>
+              <div class="jira-field-value highlight">Summary of all recommendations from Step 5</div>
+            </div>
+            <div class="jira-field">
+              <div class="jira-field-label">Selected solution</div>
+              <div class="jira-field-value">Most viable option(s) chosen based on ROI. Rationale documented.</div>
+            </div>
+            <div class="jira-field">
+              <div class="jira-field-label">Sub-tickets</div>
+              <div class="jira-field-value">Created as needed for individual corrective actions, linked back to this ticket</div>
+            </div>
+            <div class="jira-field">
+              <div class="jira-field-label">Issue Type (sub)</div>
+              <div class="jira-field-value highlight">Set to <strong>"Corrective"</strong> — required for audit trail</div>
+            </div>
+            <div class="jira-field">
+              <div class="jira-field-label">Ticket status</div>
+              <div class="jira-field-value required">Cannot close until root cause is documented</div>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-info" style="margin-top:20px;">💡 Production issues require a repair to restore function quickly — but the ticket <strong>cannot be closed</strong> until root cause analysis is complete and documented.</div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s5')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('s7')">Next: Test & Validate →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 7 -->
+    <div id="s7" class="screen">
+      <div class="card">
+        <div class="eyebrow">Step 7 of 8</div>
+        <h1>Test &amp; Validate</h1>
+        <div class="alert alert-audit">🔍 <strong>Audit requirement:</strong> All validation activity is subject to audit. Document everything in Jira.</div>
+        <div class="step-detail" style="margin-top:16px;">
+          <ul class="checklist">
+            <li>All Jira tickets have a workflow to QA — use it</li>
+            <li>QA verifies both technical fixes and non-technical changes (process, training, policy)</li>
+            <li>Non-technical changes with compliance implications go through risk assessment</li>
+            <li>Create a Jira Issue Type <strong>"Corrective"</strong> for each verified change</li>
+            <li>Every Corrective ticket links back to the original RCA ticket</li>
+          </ul>
+        </div>
+        <div class="divider"></div>
+        <h3>What QA is verifying</h3>
+        <div class="two-col" style="margin-top:12px;">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-weight:700;margin-bottom:6px;">Technical changes</div>
+            <div style="font-size:13px;color:var(--text-muted);">The fix resolves the originally reported behavior. Regression test for related functions. No new issues introduced.</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-weight:700;margin-bottom:6px;">Non-technical changes</div>
+            <div style="font-size:13px;color:var(--text-muted);">Process or policy change is documented and communicated. Training has occurred. Playbooks are updated.</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s6')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('s8')">Next: Continually Improve →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 8 -->
+    <div id="s8" class="screen">
+      <div class="card">
+        <div class="eyebrow">Step 8 of 8</div>
+        <h1>Continually Improve</h1>
+        <div class="alert alert-audit">🔍 <strong>Audit requirement:</strong> Improvements are key to the future of the company and <strong>will be audited</strong>.</div>
+        <p style="margin-top:16px;">A closed bug is not an improved system. Every major issue should leave us better than before — not just restored to the previous state.</p>
+        <div class="step-detail">
+          <ul class="checklist">
+            <li>Any major issue that goes beyond "restore to previous state" is tracked as an improvement</li>
+            <li>Improvement entered in Jira as Issue Type <strong>"Corrective"</strong></li>
+            <li>All improvement tickets link back to the original RCA ticket</li>
+            <li>Improvements are reviewed for patterns — repeat root causes signal systemic gaps</li>
+          </ul>
+        </div>
+        <div class="divider"></div>
+        <h3>Ask after every RCA:</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;gap:12px;">
+            <div style="font-size:18px;">🔁</div>
+            <div style="font-size:14px;">Could a process change prevent this class of problem from recurring?</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;gap:12px;">
+            <div style="font-size:18px;">📚</div>
+            <div style="font-size:14px;">Does our runbook / playbook need updating based on what we learned?</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;gap:12px;">
+            <div style="font-size:18px;">🔔</div>
+            <div style="font-size:14px;">Do we have monitoring or alerting that would have caught this earlier?</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;gap:12px;">
+            <div style="font-size:18px;">🧑‍💻</div>
+            <div style="font-size:14px;">Is there a single point of failure (person or vendor) this exposed?</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s7')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('sq')">Knowledge Check →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KNOWLEDGE CHECK -->
+    <div id="sq" class="screen">
+      <div class="card">
+        <div class="eyebrow">Knowledge Check</div>
+        <h1>Test Your Understanding</h1>
+        <p style="color:var(--text-muted);">Answer each question — feedback appears immediately. All 5 must be answered before you can proceed to practice scenarios.</p>
+        <div id="quiz-score-bar" style="display:none;background:var(--sv-blue-light);border:1px solid var(--sv-blue);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-weight:600;color:var(--sv-blue-dark);"></div>
+
+        <!-- Q1 -->
+        <div class="quiz-q" id="qq1">
+          <p>1. Which of the following belongs in a problem statement?</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer('qq1',this,false)"><span class="opt-letter">A</span> "We need to add a retry mechanism to the API call."</button>
+            <button class="quiz-opt" onclick="answer('qq1',this,false)"><span class="opt-letter">B</span> "The root cause is a missing database index."</button>
+            <button class="quiz-opt" onclick="answer('qq1',this,true)"><span class="opt-letter">C</span> "Admin permission edits take over 30 seconds; expected behavior is under 3 seconds. Affects all TMF admins in production."</button>
+            <button class="quiz-opt" onclick="answer('qq1',this,false)"><span class="opt-letter">D</span> "The vault is slow sometimes."</button>
+          </div>
+          <div class="feedback-box" id="fb-qq1"></div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="quiz-q" id="qq2">
+          <p>2. When should an RCA ticket be closed?</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer('qq2',this,false)"><span class="opt-letter">A</span> As soon as the production fix is deployed.</button>
+            <button class="quiz-opt" onclick="answer('qq2',this,true)"><span class="opt-letter">B</span> After root cause is documented and corrective actions are recorded in Jira.</button>
+            <button class="quiz-opt" onclick="answer('qq2',this,false)"><span class="opt-letter">C</span> When the customer confirms the issue is resolved.</button>
+            <button class="quiz-opt" onclick="answer('qq2',this,false)"><span class="opt-letter">D</span> After the next sprint retrospective.</button>
+          </div>
+          <div class="feedback-box" id="fb-qq2"></div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="quiz-q" id="qq3">
+          <p>3. You're investigating an outage and realize DevOps was the only person who could respond due to limited availability. What type of root cause does this represent?</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer('qq3',this,false)"><span class="opt-letter">A</span> Code defect</button>
+            <button class="quiz-opt" onclick="answer('qq3',this,false)"><span class="opt-letter">B</span> Configuration error</button>
+            <button class="quiz-opt" onclick="answer('qq3',this,true)"><span class="opt-letter">C</span> Single point of failure (SPOF) — human/organizational</button>
+            <button class="quiz-opt" onclick="answer('qq3',this,false)"><span class="opt-letter">D</span> Vendor issue</button>
+          </div>
+          <div class="feedback-box" id="fb-qq3"></div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="quiz-q" id="qq4">
+          <p>4. Which Jira Issue Type must be used for corrective actions and improvements to maintain the audit trail?</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer('qq4',this,false)"><span class="opt-letter">A</span> Story</button>
+            <button class="quiz-opt" onclick="answer('qq4',this,false)"><span class="opt-letter">B</span> Task</button>
+            <button class="quiz-opt" onclick="answer('qq4',this,true)"><span class="opt-letter">C</span> Corrective</button>
+            <button class="quiz-opt" onclick="answer('qq4',this,false)"><span class="opt-letter">D</span> Bug</button>
+          </div>
+          <div class="feedback-box" id="fb-qq4"></div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="quiz-q" id="qq5">
+          <p>5. You apply the 5 Whys to an incident and your Why-5 answer is: "There is no written runbook for this failure mode." What does this indicate?</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer('qq5',this,false)"><span class="opt-letter">A</span> You should go deeper with Why-6.</button>
+            <button class="quiz-opt" onclick="answer('qq5',this,true)"><span class="opt-letter">B</span> You've likely found a true root cause — a process/documentation gap.</button>
+            <button class="quiz-opt" onclick="answer('qq5',this,false)"><span class="opt-letter">C</span> The issue is low priority and can be deferred.</button>
+            <button class="quiz-opt" onclick="answer('qq5',this,false)"><span class="opt-letter">D</span> Only engineering can resolve this, not ops.</button>
+          </div>
+          <div class="feedback-box" id="fb-qq5"></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('s8')">← Back</button>
+          <button class="btn btn-primary" id="btn-to-practice" disabled onclick="goTo('sp')">Practice Scenarios →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRACTICE SCENARIOS -->
+    <div id="sp" class="screen">
+      <div class="card">
+        <div class="eyebrow">Practice Scenarios</div>
+        <h1>Apply the Process</h1>
+        <p style="color:var(--text-muted);">Work through three real ShareVault incidents. Fill in each section as you would in an actual Jira ticket. There's no single right answer — focus on structure and completeness.</p>
+
+        <!-- Scenario Tabs -->
+        <div style="display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" id="tab-p1" onclick="showScenario(1)">Scenario 1: SV-9083</button>
+          <button class="btn btn-secondary btn-sm" id="tab-p2" onclick="showScenario(2)">Scenario 2: SV-8654</button>
+          <button class="btn btn-secondary btn-sm" id="tab-p3" onclick="showScenario(3)">Scenario 3: SV-9115</button>
+        </div>
+
+        <!-- Scenario 1 -->
+        <div id="p1" style="margin-top:16px;">
+          <div class="scenario-header">
+            <div>
+              <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Incident</div>
+              <div style="font-weight:700;font-size:16px;">SV-9083 — Cloudflare Outage Response</div>
+            </div>
+            <span style="background:rgba(255,255,255,0.15);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">Production</span>
+          </div>
+          <div class="scenario-body">
+            <div style="background:var(--bg);border-radius:6px;padding:14px;margin-bottom:16px;font-size:13px;">
+              <strong>Context:</strong> During a Cloudflare incident, users were impacted but received no proper error display. Support had no accurate information to give customers. The DR solution deployed degraded service further.
+            </div>
+            <div class="scenario-field">
+              <label>Problem Statement</label>
+              <textarea rows="3" placeholder="Describe the expected behavior, observed behavior, and impact. Do NOT include suspected causes or proposed fixes."></textarea>
+            </div>
+            <div class="scenario-field">
+              <label>Data Collected</label>
+              <textarea rows="3" placeholder="What data, logs, or evidence would you collect? What timeline questions would you answer?"></textarea>
+            </div>
+            <div class="scenario-field">
+              <label>Causal Factors (list at least 3)</label>
+              <textarea rows="3" placeholder="List possible contributing factors. Consider: what changed? what controls failed? who was involved?"></textarea>
+            </div>
+            <div style="font-weight:600;font-size:14px;margin:16px 0 10px;">5 Whys</div>
+            <div class="scenario-field"><label>Why 1</label><input type="text" placeholder="Why did users receive no error display?"></div>
+            <div class="scenario-field"><label>Why 2</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 3</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 4</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 5</label><input type="text" placeholder=""></div>
+            <div class="scenario-field">
+              <label>Recommendations (at least 2 options)</label>
+              <textarea rows="3" placeholder="List multiple solution options. For each, note whether it's a patch, process change, control, or training."></textarea>
+            </div>
+            <div class="jira-note">⚠️ Reminder: Enter your recommendations in Jira's <strong>Root Cause</strong> and <strong>Corrective Actions</strong> panels. Create sub-tickets as Issue Type <strong>"Corrective"</strong>.</div>
+
+            <details style="margin-top:20px;">
+              <summary style="cursor:pointer;font-weight:600;color:var(--sv-blue);font-size:13px;">Show reference analysis ▾</summary>
+              <div style="background:var(--bg);border-radius:8px;padding:16px;margin-top:10px;font-size:13px;">
+                <p><strong>Root causes identified in original review:</strong></p>
+                <ul style="margin-left:20px;margin-top:8px;line-height:1.8;">
+                  <li>Error page was in Cloudflare — no fallback when www.sharevault.net is unreachable</li>
+                  <li>DR process repurposed the outage page, blocking proper routing</li>
+                  <li>Mass redirect to error page was impractical since not all users were affected</li>
+                  <li>Support was not informed in time and had no playbook for a newly discovered outage</li>
+                  <li>CloudFlare is a SPOF (single point of failure) vendor</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- Scenario 2 -->
+        <div id="p2" style="display:none;margin-top:16px;">
+          <div class="scenario-header">
+            <div>
+              <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Incident</div>
+              <div style="font-weight:700;font-size:16px;">SV-8654 — CloudFlare Bypass Outage</div>
+            </div>
+            <span style="background:rgba(255,255,255,0.15);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">Production</span>
+          </div>
+          <div class="scenario-body">
+            <div style="background:var(--bg);border-radius:6px;padding:14px;margin-bottom:16px;font-size:13px;">
+              <strong>Context:</strong> Extended outage involving CloudFlare. Support had no valid answers for customers. Monitoring was delayed. Work was coordinated over cell phone instead of Zoom. UptimeRobot account had been deleted. CloudFlare restoration was delayed due to vendor uncertainty. DevOps was a SPOF due to limited availability.
+            </div>
+            <div class="scenario-field">
+              <label>Problem Statement</label>
+              <textarea rows="3" placeholder="Note: the original ticket had a bad problem statement. Write a correct one based on the context above."></textarea>
+            </div>
+            <div class="scenario-field">
+              <label>Data Collected</label>
+              <textarea rows="3" placeholder="What data, logs, or evidence would you collect?"></textarea>
+            </div>
+            <div class="scenario-field">
+              <label>Causal Factors</label>
+              <textarea rows="4" placeholder="This incident had many contributing factors. List as many as you can identify."></textarea>
+            </div>
+            <div style="font-weight:600;font-size:14px;margin:16px 0 10px;">5 Whys — Focus: Why did Support have no valid answers to give customers?</div>
+            <div class="scenario-field"><label>Why 1</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 2</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 3</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 4</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 5</label><input type="text" placeholder=""></div>
+            <div class="scenario-field">
+              <label>Recommendations</label>
+              <textarea rows="4" placeholder="Given the multiple SPOFs and process gaps, what categories of recommendations would you make?"></textarea>
+            </div>
+
+            <details style="margin-top:20px;">
+              <summary style="cursor:pointer;font-weight:600;color:var(--sv-blue);font-size:13px;">Show reference analysis ▾</summary>
+              <div style="background:var(--bg);border-radius:8px;padding:16px;margin-top:10px;font-size:13px;">
+                <p><strong>Key lessons from original review:</strong></p>
+                <ul style="margin-left:20px;margin-top:8px;line-height:1.8;">
+                  <li>Support was not informed timely — no escalation process for newly discovered outages</li>
+                  <li>Monitoring and feedback loop failed to trigger promptly</li>
+                  <li>Coordination happened over cell phone — not a proper incident channel</li>
+                  <li>Playbook list and content incomplete for this scenario</li>
+                  <li>CloudFlare is a SPOF vendor — no bypass plan was validated</li>
+                  <li>DevOps SPOF — limited availability during incident</li>
+                  <li>UptimeRobot account deleted and not transitioned — email notification was missed</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- Scenario 3 -->
+        <div id="p3" style="display:none;margin-top:16px;">
+          <div class="scenario-header">
+            <div>
+              <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Incident</div>
+              <div style="font-weight:700;font-size:16px;">SV-9115 — Vault Permission Editing Performance</div>
+            </div>
+            <span style="background:rgba(255,255,255,0.15);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">Production</span>
+          </div>
+          <div class="scenario-body">
+            <div style="background:var(--bg);border-radius:6px;padding:14px;margin-bottom:16px;font-size:13px;">
+              <strong>Context:</strong> A customer reported extremely slow admin permission editing. The ShareVault team observed 30+ second response times while on a screenshare with a new TMF admin editing vault "Momentum AXS 07 301" (SVid 5156). Engineering confirmed the issue: an incorrect value was passed and the server could not parse it. Three developers and one week were required to fix it.
+            </div>
+            <div class="scenario-field">
+              <label>Problem Statement</label>
+              <textarea rows="3" placeholder="Expected behavior, observed behavior, scope, and impact."></textarea>
+            </div>
+            <div class="scenario-field">
+              <label>Data Collected</label>
+              <textarea rows="3" placeholder="What data would you collect? What questions about timing, scope, and history would you answer?"></textarea>
+            </div>
+            <div class="scenario-field">
+              <label>Causal Factors</label>
+              <textarea rows="3" placeholder="List possible causal factors."></textarea>
+            </div>
+            <div style="font-weight:600;font-size:14px;margin:16px 0 10px;">5 Whys — Focus: Why did the permission edit take 30+ seconds?</div>
+            <div class="scenario-field"><label>Why 1</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 2</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 3</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 4</label><input type="text" placeholder=""></div>
+            <div class="scenario-field"><label>Why 5</label><input type="text" placeholder=""></div>
+            <div class="scenario-field">
+              <label>Recommendations</label>
+              <textarea rows="3" placeholder="What fixes and process improvements would you recommend?"></textarea>
+            </div>
+
+            <details style="margin-top:20px;">
+              <summary style="cursor:pointer;font-weight:600;color:var(--sv-blue);font-size:13px;">Show reference analysis ▾</summary>
+              <div style="background:var(--bg);border-radius:8px;padding:16px;margin-top:10px;font-size:13px;">
+                <p><strong>Key findings:</strong></p>
+                <ul style="margin-left:20px;margin-top:8px;line-height:1.8;">
+                  <li>An incorrect value was passed to the server — server could not parse it, causing a timeout loop</li>
+                  <li>No input validation caught the malformed value before it hit the server</li>
+                  <li>No timeout or graceful failure path existed for this code path</li>
+                  <li>The bug required 3 developers and a week to resolve — suggesting inadequate test coverage for permission editing with edge-case data</li>
+                  <li>Jira ticket was initially submitted with insufficient detail, delaying diagnosis</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('sq')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('sdone')">Complete Training →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETION -->
+    <div id="sdone" class="screen">
+      <div class="card">
+
+        <!-- Step 1: Info entry form -->
+        <div id="done-form">
+          <div class="completion-badge" style="padding-bottom:0;">
+            <div class="score-circle">
+              <div class="score-num" id="final-score">—</div>
+              <div class="score-lbl">Quiz Score</div>
+            </div>
+            <h1 style="margin-bottom:8px;">Training Complete</h1>
+            <p style="color:var(--text-muted);max-width:420px;margin:0 auto 16px;">Enter your name and ShareVault email to submit your completion record, then save your certificate.</p>
+          </div>
+
+          <div style="max-width:420px;margin:0 auto;padding:0 0 32px;">
+            <div class="scenario-field">
+              <label>Full Name</label>
+              <input type="text" id="rec-name" placeholder="Jane Smith" autocomplete="name">
+            </div>
+            <div class="scenario-field">
+              <label>ShareVault Email</label>
+              <input type="email" id="rec-email" placeholder="jane@sharevault.com" autocomplete="email">
+            </div>
+            <div id="submit-error" style="display:none;background:var(--error-bg);border:1px solid #ffcdd2;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--error);margin-bottom:12px;"></div>
+            <button class="btn btn-primary" id="btn-submit-record" onclick="submitRecord()" style="width:100%;justify-content:center;">
+              Submit Completion Record →
+            </button>
+            <p style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:10px;">Your name, email, score, and completion time will be recorded in the ShareVault training log.</p>
+          </div>
+        </div>
+
+        <!-- Step 2: Confirmed certificate -->
+        <div id="done-confirmed" style="display:none;">
+          <div class="completion-badge">
+            <div style="font-size:48px;margin-bottom:12px;">✅</div>
+            <div class="score-circle" style="margin-bottom:20px;">
+              <div class="score-num" id="cert-score">—</div>
+              <div class="score-lbl">Quiz Score</div>
+            </div>
+            <h1 style="margin-bottom:4px;">Record Submitted</h1>
+            <p id="cert-name-line" style="font-size:17px;font-weight:600;color:var(--sv-blue);margin-bottom:4px;"></p>
+            <p id="cert-date-line" style="font-size:13px;color:var(--text-muted);margin-bottom:24px;"></p>
+
+            <div style="background:var(--sv-blue-light);border:1px solid var(--sv-blue);border-radius:8px;padding:20px 24px;text-align:left;max-width:460px;margin:0 auto 24px;">
+              <div style="font-weight:700;color:var(--sv-blue-dark);margin-bottom:12px;">Quick Reference</div>
+              <div style="font-size:13px;color:var(--text);line-height:2;">
+                1️⃣ Define the Problem &nbsp;|&nbsp; 2️⃣ Collect Data<br>
+                3️⃣ ID Causal Factors &nbsp;|&nbsp; 4️⃣ 5 Whys<br>
+                5️⃣ Recommendations &nbsp;|&nbsp; 6️⃣ Solutions in Jira<br>
+                7️⃣ Test &amp; Validate &nbsp;|&nbsp; 8️⃣ Continually Improve
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+              <button class="btn btn-secondary" onclick="goTo('s0')">← Review from Start</button>
+              <button class="btn btn-primary" onclick="printPage()">🖨 Save Certificate PDF</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const SCREENS = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','sq','sp','sdone'];
+  const TOTAL = SCREENS.length;
+  let quizAnswers = {};
+  let quizCorrect = 0;
+
+  // ── CONFIG: paste your Apps Script Web App URL here after deploying ──
+  const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/sharevault.com/s/AKfycbzNIgVVT1UZLqPA3LKl2Ur7c_rrTT3k-CW9gOxZYk9ifb2LaKvvw6ca_HBsutiXoj51Zg/exec';
+  const TRAINING_VERSION = 'RCA-v3-2025';
+
+  function goTo(id) {
+    SCREENS.forEach(s => {
+      document.getElementById(s).classList.remove('active');
+    });
+    document.getElementById(id).classList.add('active');
+    updateNav(id);
+    updateProgress(id);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    if (id === 'sdone') {
+      document.getElementById('final-score').textContent = quizCorrect + '/5';
+    }
+  }
+
+  async function submitRecord() {
+    const name = document.getElementById('rec-name').value.trim();
+    const email = document.getElementById('rec-email').value.trim();
+    const errBox = document.getElementById('submit-error');
+    errBox.style.display = 'none';
+
+    if (!name) { showErr('Please enter your full name.'); return; }
+    if (!email || !email.includes('@')) { showErr('Please enter a valid email address.'); return; }
+
+    const btn = document.getElementById('btn-submit-record');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const payload = {
+      name,
+      email,
+      scoreLabel: quizCorrect + '/5',
+      scorePercent: Math.round((quizCorrect / 5) * 100),
+      timestamp: new Date().toISOString(),
+      trainingVersion: TRAINING_VERSION,
+      userAgent: navigator.userAgent
+    };
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Apps Script requires no-cors
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      showCertificate(name, payload.scoreLabel, payload.timestamp);
+    } catch (err) {
+      showErr('Could not reach the submission endpoint. Please screenshot this page and send to your manager. Error: ' + err.message);
+      btn.disabled = false;
+      btn.textContent = 'Submit Completion Record →';
+    }
+  }
+
+  function showErr(msg) {
+    const e = document.getElementById('submit-error');
+    e.textContent = msg;
+    e.style.display = 'block';
+  }
+
+  function showCertificate(name, scoreLabel, isoTimestamp) {
+    document.getElementById('done-form').style.display = 'none';
+    document.getElementById('done-confirmed').style.display = 'block';
+    document.getElementById('cert-score').textContent = scoreLabel;
+    document.getElementById('cert-name-line').textContent = name;
+    const d = new Date(isoTimestamp);
+    document.getElementById('cert-date-line').textContent =
+      'Completed ' + d.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) +
+      ' at ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function updateNav(activeId) {
+    const visited = new Set(JSON.parse(sessionStorage.getItem('sv_visited') || '[]'));
+    visited.add(activeId);
+    sessionStorage.setItem('sv_visited', JSON.stringify([...visited]));
+
+    document.querySelectorAll('#sidenav-list a').forEach(a => {
+      const s = a.dataset.screen;
+      a.classList.remove('active','done');
+      if (s === activeId) {
+        a.classList.add('active');
+        a.querySelector('.nav-num').textContent = s === 'sq' ? '?' : s === 'sp' ? '★' : s === 'sdone' ? '✓' : s === 's0' ? '→' : s.replace('s','');
+      } else if (visited.has(s) && s !== activeId) {
+        a.classList.add('done');
+        a.querySelector('.nav-num').innerHTML = '✓';
+      }
+    });
+  }
+
+  function updateProgress(id) {
+    const idx = SCREENS.indexOf(id);
+    const pct = Math.round(((idx) / (TOTAL - 1)) * 100);
+    document.getElementById('progress-bar').style.width = pct + '%';
+  }
+
+  // 5 Whys unlock
+  function unlockNext(level) {
+    const rows = document.querySelectorAll('.why-row');
+    const current = document.querySelector(`.why-row[data-level="${level}"] .why-input`);
+    if (current && current.value.trim().length > 2 && level < 5) {
+      const next = document.querySelector(`.why-row[data-level="${level + 1}"]`);
+      if (next) {
+        next.classList.add('unlocked');
+        const inp = next.querySelector('.why-input');
+        inp.disabled = false;
+        inp.placeholder = 'Why does that happen?';
+      }
+    }
+  }
+
+  // Quiz
+  const feedbackText = {
+    qq1: { right: "Correct! A good problem statement describes observed vs. expected behavior, scope, and impact — without proposed solutions or suspected causes.", wrong: "Not quite. A problem statement should describe what happened and who was affected, not propose solutions or name suspected causes." },
+    qq2: { right: "Correct! Production fixes can be deployed immediately, but the ticket must stay open until root cause is documented and corrective actions are recorded.", wrong: "Not quite. Fixing the symptom isn't enough — root cause must be documented in Jira before the ticket can be closed." },
+    qq3: { right: "Correct! DevOps being the only person who could respond is a human SPOF — an organizational risk that belongs in the root cause analysis.", wrong: "Not quite. This is a human/organizational single point of failure (SPOF) — the system depends on one person's availability." },
+    qq4: { right: "Correct! Issue Type 'Corrective' is required for both corrective actions and improvements. This creates the audit trail.", wrong: "Not quite. Corrective actions and improvements must be entered as Issue Type 'Corrective' in Jira to satisfy audit requirements." },
+    qq5: { right: "Correct! When your Why-5 points to a process gap, missing documentation, or policy failure, you've reached a true root cause — something systemic that can be fixed.", wrong: "Not quite. A process or documentation gap at Why-5 typically indicates you've found a true, systemic root cause." },
+  };
+
+  function answer(qid, btn, isCorrect) {
+    if (quizAnswers[qid] !== undefined) return;
+    quizAnswers[qid] = isCorrect;
+    if (isCorrect) quizCorrect++;
+
+    const q = document.getElementById(qid);
+    q.querySelectorAll('.quiz-opt').forEach(b => b.classList.add('disabled'));
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+    if (!isCorrect) {
+      q.querySelectorAll('.quiz-opt').forEach(b => {
+        // mark the correct one
+        const onclickStr = b.getAttribute('onclick') || '';
+        if (onclickStr.includes(',true)')) b.classList.add('correct');
+      });
+    }
+
+    const fb = document.getElementById('fb-' + qid);
+    fb.textContent = feedbackText[qid][isCorrect ? 'right' : 'wrong'];
+    fb.className = 'feedback-box show ' + (isCorrect ? 'correct' : 'wrong');
+
+    if (Object.keys(quizAnswers).length === 5) {
+      const bar = document.getElementById('quiz-score-bar');
+      bar.style.display = 'block';
+      bar.textContent = `You scored ${quizCorrect}/5. ${quizCorrect >= 4 ? 'Great work — proceed to practice scenarios.' : 'Review the steps above if any answers surprised you.'}`;
+      document.getElementById('btn-to-practice').disabled = false;
+    }
+  }
+
+  // Scenario tabs
+  function showScenario(n) {
+    [1,2,3].forEach(i => {
+      document.getElementById('p'+i).style.display = i===n ? 'block' : 'none';
+      const tab = document.getElementById('tab-p'+i);
+      tab.className = i===n ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+    });
+  }
+
+  function printPage() { window.print(); }
+
+  // Inject SV logo at top of every card
+  const SV_LOGO_SVG = `<div class="screen-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 250"><defs><style>.slst0{fill:#0072f3}</style></defs><path class="slst0" d="M1149.7,166.1c-4,2.8-9.1,4.2-15,4.2-14.6,0-24.1-8.1-24.1-25.2v-47.6h39.1v-11.6h-39.1v-33.2h-12.7v92.3c0,24.6,15,36.9,36.8,36.9s10.6-.8,15-2.4v-13.5h0Z"/><g><path class="slst0" d="M184.2,62.8h-116.7c-9.5,0-17.2,7.7-17.2,17.2v108.3c0,9.5,7.7,17.2,17.2,17.2h116.7c9.5,0,17.2-7.7,17.2-17.2v-108.3c0-9.5-7.7-17.2-17.2-17.2ZM174.1,160.9l-1.1,1.8c-1,1.8-3.4,2.4-5.2,1.4l-27.1-15.7c-2.7,2.9-6.2,4.9-10.2,5.9v31.3c0,2.1-1.7,3.8-3.8,3.8h-2.1c-2.1,0-3.8-1.7-3.8-3.8v-31.3c-3.9-.9-7.4-3-10.2-5.9l-27.1,15.7c-1.8,1.1-4.1.4-5.2-1.4l-1.1-1.8c-1.1-1.8-.4-4.1,1.4-5.2l27-15.7c-.6-1.9-.9-3.9-.9-5.9s.3-4,.9-5.9l-27.1-15.7c-1.8-1-2.4-3.3-1.4-5.2l1.1-1.8c1-1.8,3.3-2.4,5.2-1.4l27.1,15.7c2.7-2.9,6.2-4.9,10.2-5.9v-31.3c0-2.1,1.7-3.8,3.8-3.8h2.1c2.1,0,3.8,1.7,3.8,3.8v31.3c3.9.9,7.4,3,10.2,5.8l27.1-15.7c1.8-1.1,4.1-.4,5.2,1.4l1.1,1.8c1.1,1.8.4,4.1-1.4,5.2l-27,15.7c.6,1.9.9,3.9.9,5.9s-.3,4-.9,5.9l27.1,15.7c1.8,1,2.4,3.4,1.4,5.2h0Z"/><path class="slst0" d="M125.8,144.9c-5.9,0-10.7-4.8-10.7-10.7s4.8-10.7,10.7-10.7,10.7,4.8,10.7,10.7-4.8,10.7-10.7,10.7ZM125.8,126c-4.5,0-8.1,3.6-8.1,8.1s3.6,8.1,8.1,8.1,8.1-3.6,8.1-8.1-3.6-8.1-8.1-8.1Z"/></g><path class="slst0" d="M236.4,153.8h23.3c.2,6.4,5.8,10.7,17,10.7s16.9-4.8,16.9-10.7-8.5-8.3-18.8-9.7c-14.7-1.9-36.4-4.5-36.4-27.9s14.9-32.4,38-32.4,37.8,13.2,38.4,30h-22.9c-.6-5.8-6-9.9-15.1-9.9s-15.1,4.8-15.1,10.5,8.7,8.5,19,9.9c12.8,1.7,36.2,4.3,36.2,28.1s-15.7,32.2-40.1,32.2-39.7-13-40.3-30.8h0Z"/><path class="slst0" d="M442.4,135.2c0-30.4,21.3-51.3,51.7-51.3s51,20.3,51,51.2v47.1h-21.1v-18.8c-5.8,14.1-18.8,21.3-33.9,21.3-23.2,0-47.7-16.7-47.7-49.4h0ZM522,134.2c0-16.9-11.2-28.9-28.1-28.9s-28.3,12-28.3,28.9,11.4,28.9,28.3,28.9,28.1-12,28.1-28.9Z"/><path class="slst0" d="M621.6,118.1c5.8-5.8,11.6-11.6,17.4-17.4-7.1-11.4-19.6-16.9-35.4-16.9-25,0-42,13.8-42,42.6v55.6h23.1v-55.6c0-15.5,7.8-21.1,19-21.1s15.6,3.6,18,12.8h0Z"/><path class="slst0" d="M639,134.3c0-29.1,21.3-50.4,51.5-50.4s51.2,21.3,51.2,50.4v8.1h-78.5c3.1,13.9,13.8,21.3,27.3,21.3s17.8-2.9,22.7-9.1h24.6c-7.2,18.2-24.6,30-47.3,30s-51.5-21.3-51.5-50.4h0ZM717.3,124c-3.7-12.8-14.2-19.2-26.7-19.2s-23.1,6.6-26.7,19.2h53.5,0Z"/><path class="slst0" d="M383.1,83.8c-11.1,0-20.3,4.7-26.7,13.3v-52.6h-23.1v137.6h23.1v-61.6c3.5-10,11.8-15.1,22.4-15.1s24.2,8.7,24.2,26.9v49.8h23.1v-49.8c0-34.1-20.9-48.4-43-48.4h0Z"/><path class="slst0" d="M742.7,83.8h14.3l35.8,83.6,35.8-83.6h13.9l-42.2,98.2h-15.2l-42.2-98.2h0Z"/><path class="slst0" d="M843.1,134.8c0-29.8,21.6-50.9,52.3-50.9s52.1,20.7,52.1,50.9v47.3h-12.2v-23.7c-6.9,17.1-23,26.1-41.9,26.1-27.3,0-50.3-19.2-50.3-49.8ZM934.4,134.2c0-22.1-15.7-38.4-38.9-38.4s-38.9,16.3-38.9,38.4,15.7,38.4,38.9,38.4,38.9-16.3,38.9-38.4Z"/><path class="slst0" d="M1069,44.5h12.8v137.6h-12.8V44.5Z"/><path class="slst0" d="M1039.7,83.8v50.2c0,22.3-12.3,34.9-31.5,36h0c-19.1-1.1-31.4-13.7-31.4-36v-50.2h-13v50.2c0,30.6,17.7,46.9,44.3,48h.1c26.7-1,44.4-17.4,44.4-48v-50.2h-13,0Z"/></svg></div>`;
+
+  document.querySelectorAll('main .card').forEach(card => {
+    card.insertAdjacentHTML('afterbegin', SV_LOGO_SVG);
+  });
+
+  // Init
+  updateNav('s0');
+  updateProgress('s0');
+</script>
+</body>
+</html>
